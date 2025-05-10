@@ -1,4 +1,4 @@
-# YapSpace (oder anderer Name)
+# Chatapult (oder anderer Name)
 Hier einige Notizen fürs Development.
 
 ## Ideen
@@ -21,12 +21,3 @@ Ermöglicht:
 - RAG-Integration für inhaltliche Fragen
 - Mind-Map-Darstellung der Themen
   => Sehr effizienter Überblick über alle Themen
-
-#### Challenges beim AI-Processing
-Es ist nicht direkt mit E2EE kompatibel,
-der Server muss Zugriff auf die Plain-Text-Messages haben.
-
-=> Alternativer Encryption-Modus, wenn dieses Feature
-aktiviert ist.
-
-=> Z.B. Shared Symmetric Key, der serverseitig gespeichert wird.
