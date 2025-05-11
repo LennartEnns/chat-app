@@ -4,6 +4,11 @@ Hier einige Notizen fürs Development.
 ## Ideen
 (Grobe) Konzepte, was umgesetzt werden muss/kann.
 
+### Rate Limiter für Edge Functions
+Mehr Infos hier: https://supabase.com/docs/guides/functions/examples/rate-limiting
+
+Redis ist auch nützlich für Caching, inkl. LLM-Cache.
+
 ### E2EE (End-to-End-Encryption)
 Im Grunde PKI. In Group-Chats Sender-Keys benutzen.
 
