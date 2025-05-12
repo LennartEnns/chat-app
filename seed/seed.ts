@@ -55,8 +55,6 @@ const main = async () => {
   //   }
   // ])
 
-  // Type completion not working? You might want to reload your TypeScript Server to pick up the changes
-
   console.log("Database seeded successfully!");
 
   process.exit();
