@@ -2,7 +2,15 @@
   <UApp>
     <div class="flex justify-center border-2 border-solid pageWrap h-100">
       <div class="mainContainer">
-        <UIcon name="i-lucide-settings" class="size-5" />
+        <UButton
+          :icon="
+            isDark ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'
+          "
+          variant="ghost"
+          aria-label="Theme"
+          @click="isDark = !isDark"
+        />
+        <!-- <UIcon name="i-lucide-settings" class="size-5" /> -->
         <!-- BIOGRAPHY -->
         <USeparator label="Change bio" />
         <UFormField description="Tell us something about yourself." size="lg">
@@ -127,6 +135,16 @@ const showNewCheck = ref(false);
 const passwordOld = ref("");
 const passwordNew = ref("");
 const passwordNewCheck = ref("");
+
+const colorMode = useColorMode();
+const isDark = computed({
+  get() {
+    return colorMode.value === "dark";
+  },
+  set() {
+    colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
+  },
+});
 </script>
 
 <style>
