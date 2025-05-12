@@ -149,15 +149,23 @@ const isDark = computed({
 
 <style>
 .pageWrap {
+  padding: 5%;
   min-height: 100vh;
   /* border: 1px solid blue; */
 }
 .mainContainer {
-  width: 60%;
+  width: 50%;
+  min-width: 24rem;
   min-height: 100%; /* 
   border: 1px solid red; */
 }
 .mainContainer > * {
   margin-bottom: 3%;
+}
+.bioGroup {
+  width: 100%;
+}
+.bioInput {
+  width: 60%;
 }
 </style>
