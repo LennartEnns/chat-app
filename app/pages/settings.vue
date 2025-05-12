@@ -1,6 +1,14 @@
 <template>
   <UApp class="flex align-content-center justify-center">
     <div class="mainContainer">
+      <UIcon name="i-lucide-settings" class="size-5" />
+      <UFormField
+        label="Bio"
+        description="Tell us something about yourself."
+        size="lg"
+      >
+        <UInput placeholder="Enter your bio here" class="w-full" />
+      </UFormField>
       <URadioGroup v-model="value" :items="items" variant="card" />
 
       <UCollapsible class="flex flex-col gap-2 w-48">
