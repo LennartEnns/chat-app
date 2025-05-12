@@ -62,7 +62,6 @@
         <UCollapsible class="flex flex-col gap-2 w-48">
           <UButton
             class="group"
-            label="Open"
             color="neutral"
             variant="subtle"
             trailing-icon="i-lucide-chevron-down"
@@ -71,73 +70,83 @@
                 'group-data-[state=open]:rotate-180 transition-transform duration-200',
             }"
             block
-          />
-          <UFormField
-            label="Change password"
-            description="enter your old password to continue"
-            size="lg"
-          ></UFormField>
+          >
+            <UFormField
+              label="Change password"
+              description="enter your old password to continue"
+              size="lg"
+            ></UFormField
+          ></UButton>
 
           <template #content>
-            <UInput
-              v-model="passwordOld"
-              placeholder="Old password"
-              :type="showOld ? 'text' : 'password'"
-              :ui="{ trailing: 'pe-1' }"
-            >
-              <template #trailing>
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  size="sm"
-                  :icon="showOld ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                  :aria-label="showOld ? 'Hide password' : 'Show password'"
-                  :aria-pressed="showOld"
-                  aria-controls="password"
-                  @click="showOld = !showOld"
-                />
-              </template>
-            </UInput>
+            <UContainer class="changePW">
+              <UInput
+                v-model="passwordOld"
+                placeholder="Old password"
+                :type="showOld ? 'text' : 'password'"
+                :ui="{ trailing: 'pe-1' }"
+                required
+              >
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    size="sm"
+                    :icon="showOld ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                    :aria-label="showOld ? 'Hide password' : 'Show password'"
+                    :aria-pressed="showOld"
+                    aria-controls="password"
+                    @click="showOld = !showOld"
+                  />
+                </template> </UInput
+            ></UContainer>
 
-            <UInput
-              v-model="passwordNew"
-              placeholder="New password"
-              :type="showNew ? 'text' : 'password'"
-              :ui="{ trailing: 'pe-1' }"
-            >
-              <template #trailing>
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  size="sm"
-                  :icon="showNew ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                  :aria-label="showNew ? 'Hide password' : 'Show password'"
-                  :aria-pressed="showNew"
-                  aria-controls="password"
-                  @click="showNew = !showNew"
-                />
-              </template>
-            </UInput>
+            <UContainer class="changePW"
+              ><UInput
+                v-model="passwordNew"
+                placeholder="New password"
+                :type="showNew ? 'text' : 'password'"
+                :ui="{ trailing: 'pe-1' }"
+              >
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    size="sm"
+                    :icon="showNew ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                    :aria-label="showNew ? 'Hide password' : 'Show password'"
+                    :aria-pressed="showNew"
+                    aria-controls="password"
+                    @click="showNew = !showNew"
+                  />
+                </template>
+              </UInput>
 
-            <UInput
-              v-model="passwordNewCheck"
-              placeholder="Re-enter new password"
-              :type="showNewCheck ? 'text' : 'password'"
-              :ui="{ trailing: 'pe-1' }"
-            >
-              <template #trailing>
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  size="sm"
-                  :icon="showNewCheck ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                  :aria-label="showNewCheck ? 'Hide password' : 'Show password'"
-                  :aria-pressed="showNewCheck"
-                  aria-controls="password"
-                  @click="showNewCheck = !showNewCheck"
-                />
-              </template>
-            </UInput>
+              <UInput
+                v-model="passwordNewCheck"
+                placeholder="Re-enter new password"
+                :type="showNewCheck ? 'text' : 'password'"
+                :ui="{ trailing: 'pe-1' }"
+              >
+                <template #trailing>
+                  <UButton
+                    color="neutral"
+                    variant="link"
+                    size="sm"
+                    :icon="showNewCheck ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                    :aria-label="
+                      showNewCheck ? 'Hide password' : 'Show password'
+                    "
+                    :aria-pressed="showNewCheck"
+                    aria-controls="password"
+                    @click="showNewCheck = !showNewCheck"
+                  />
+                </template> </UInput
+            ></UContainer>
+            <UContainer class="savePW">
+              <UButton class="savePWbtn">Save</UButton>
+              <UButton variant="ghost">Reset old password</UButton>
+            </UContainer>
           </template>
         </UCollapsible>
       </div>
@@ -196,5 +205,20 @@ const isDark = computed({
 }
 .bioInput {
   width: 60%;
+}
+.changePW div {
+  margin: 1.5% 0;
+  margin-right: 3%;
+}
+.changePW {
+  padding: 0;
+  width: 100%;
+}
+.savePW {
+  padding: 0;
+}
+.savePWbtn {
+  margin: 1.5% 0;
+  margin-right: 3%;
 }
 </style>
