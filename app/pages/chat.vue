@@ -10,7 +10,7 @@
         variant="outline"
       ></UButton>
     </UContainer>
-    <UContainer class="align-column scroll-smooth">
+    <UContainer class="align-column">
       <UModal class="bar-item" v-model:open="open">
         <UButton
           label="Search users..."
