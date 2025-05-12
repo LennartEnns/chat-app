@@ -1,0 +1,52 @@
+.alignment {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 4fr 10fr;
+}
+
+.alignment > div {
+  border: solid red 1px;
+  display: flex;
+}
+
+.alignment > div > div {
+  border: solid red 1px;
+  display: flex;
+}
+
+.full {
+  width: 100%;
+}
+
+.align-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-content: flex-start;
+}
+
+.message {
+  margin-top: 10px;
+  max-width: 300px;
+}
+
+.write {
+  margin-top: 30px;
+  padding: 0%;
+  display: flex;
+  flex-direction: row;
+}
+
+.chat {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.bar-item {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.profile-picture {
+  margin-top: 10px;
+}
