@@ -12,6 +12,13 @@
       <USeparator label="Change theme" />
       <URadioGroup v-model="value" :items="items" variant="card" />
 
+      <!-- USPECIFIED FEATURE SWITCH -->
+      <USwitch
+        unchecked-icon="i-lucide-x"
+        checked-icon="i-lucide-check"
+        default-value
+        label="Use this feature"
+      />
       <!-- Change PASSWORD -->
       <USeparator label="Change password" />
       <UCollapsible class="flex flex-col gap-2 w-48">
