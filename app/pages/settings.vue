@@ -13,10 +13,35 @@
         <!-- <UIcon name="i-lucide-settings" class="size-5" /> -->
         <!-- BIOGRAPHY -->
         <USeparator label="Change bio" />
-        <UFormField description="Tell us something about yourself." size="lg">
+        <p>{{ currentBio }}</p>
+        <UButton
+          label="Edit Bio"
+          @click="editBio = true"
+          v-if="!editBio"
+          icon="i-material-symbols-edit-outline"
+        />
+        <UFormField
+          description="Tell us something about yourself."
+          size="lg"
+          v-if="editBio"
+        >
           <UButtonGroup size="sm" orientation="horizontal" class="bioGroup">
-            <UInput label="Enter your bio here" class="bioInput" />
-            <UButton icon="i-material-symbols-save-outline" />
+            <UInput
+              label="Enter your bio here"
+              class="bioInput"
+              v-model="bio"
+              placeholder="Enter your bio here"
+            />
+            <UButton
+              icon="i-material-symbols-save-outline"
+              @click="
+                if (bio) {
+                  currentBio = bio;
+                  bio = '';
+                }
+                editBio = false;
+              "
+            />
           </UButtonGroup>
         </UFormField>
 
@@ -127,6 +152,10 @@ import type { RadioGroupItem, RadioGroupValue } from "@nuxt/ui";
 
 const items = ref<RadioGroupItem[]>(["System", "Light", "Dark"]);
 const value = ref<RadioGroupValue>("System");
+
+let editBio = ref(false);
+let currentBio = ref("This is my bio");
+const bio = ref("");
 
 const showOld = ref(false);
 
