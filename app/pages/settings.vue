@@ -6,7 +6,10 @@
         <!-- BIOGRAPHY -->
         <USeparator label="Change bio" />
         <UFormField description="Tell us something about yourself." size="lg">
-          <UInput placeholder="Enter your bio here" class="w-full" />
+          <UButtonGroup size="sm" orientation="horizontal" class="bioGroup">
+            <UInput label="Enter your bio here" class="bioInput" />
+            <UButton icon="i-material-symbols-save-outline" />
+          </UButtonGroup>
         </UFormField>
 
         <!-- SELECT THEME -->
