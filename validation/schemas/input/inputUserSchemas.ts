@@ -1,11 +1,21 @@
-import baseUserSchema from "../base/baseUserSchema";
 import { z } from 'zod';
+import baseUserSchema from "../base/baseUserSchema";
+import { validateUsername, usernameFormatMessage } from '~~/validation/commonRules';
 
 export const registrationSchema = baseUserSchema
-    .omit({
-        userID: true, // Automatically generated
-        displayname: true, // Determined later in the profile setup
-    })
-    .extend({
-        password: z.string().nonempty("Please enter a password"),
-    });
+  .omit({
+    userID: true, // Automatically generated
+    displayname: true, // Determined later in the profile setup
+  })
+  .extend({
+    username: baseUserSchema.shape.username.refine((name) => validateUsername(name), usernameFormatMessage),
+    password: z.string().min(8, "Password must have at least 8 characters"),
+  });
+
+export const loginSchema = registrationSchema
+  .pick({
+    password: true,
+  })
+  .extend({
+    usernameOrEmail: z.string().nonempty("Required"),
+  });
