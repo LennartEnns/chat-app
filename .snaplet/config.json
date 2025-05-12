@@ -1,0 +1,4 @@
+{
+  "adapter": "pg",
+  "projectDescription": "This project is about a web application or platform that involves user management, authentication (including multi-factor authentication), real-time messaging, file storage using S3, chat room functionality, and migration management. It also includes features related to HTTP requests and responses, audit logging, and subscription handling."
+}

@@ -6,7 +6,7 @@ using (
   is_user_in_chatroom(auth.uid(), messages.chatroom_id)
 );
 
-create policy "Users can insert their own messages into chatrooms they belong to"
+create policy "Users can insert own messages into own chatrooms"
 on messages for insert
 with check (
   is_user_in_chatroom(auth.uid(), messages.chatroom_id)
