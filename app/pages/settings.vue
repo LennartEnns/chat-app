@@ -2,15 +2,18 @@
   <UApp class="flex align-content-center justify-center">
     <div class="mainContainer">
       <UIcon name="i-lucide-settings" class="size-5" />
-      <UFormField
-        label="Bio"
-        description="Tell us something about yourself."
-        size="lg"
-      >
+      <!-- BIOGRAPHY -->
+      <USeparator label="Change bio" />
+      <UFormField description="Tell us something about yourself." size="lg">
         <UInput placeholder="Enter your bio here" class="w-full" />
       </UFormField>
+
+      <!-- SELECT THEME -->
+      <USeparator label="Change theme" />
       <URadioGroup v-model="value" :items="items" variant="card" />
 
+      <!-- Change PASSWORD -->
+      <USeparator label="Change password" />
       <UCollapsible class="flex flex-col gap-2 w-48">
         <UButton
           class="group"
