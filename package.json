@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev-prestart": "supabase start && supabase functions serve login-with-username --no-verify-jwt",
+    "supabase-gen-types": "supabase gen types typescript --local > database.types.ts",
+    "supabase-local": "supabase start && supabase functions serve",
+    "reset-db": "supabase db reset",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

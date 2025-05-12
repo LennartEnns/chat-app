@@ -1,15 +1,29 @@
 import { getAdminClient } from '../_shared/supabaseAdmin.ts';
+import jsonResponse from '../_shared/utils/jsonResponse.ts';
+import { corsHeaders } from '../_shared/cors.ts'
 
-const supabase = getAdminClient();
+const clientOptions =  {
+  auth: {
+    flowType: 'implicit',
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false
+  }
+};
+const supabase = getAdminClient(clientOptions);
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
-    const { identifier, password } = await req.json();
-    if (typeof identifier !== 'string' || typeof password !== 'string') {
+    const { username, password } = await req.json();
+    if (typeof username !== 'string' || typeof password !== 'string') {
       throw new Error('Invalid login credentials');
     }
 
-    const email = await getEmail(identifier);
+    const email = await getEmail(username);
     if (!email) {
       throw new Error('Invalid login credentials');
     }
@@ -26,15 +40,15 @@ Deno.serve(async (req) => {
 });
 
 /**
- * Retrieve email by identifier (email or username).
- * @param {string} identifier - The email or username.
+ * Retrieve email by username
+ * @param {string} username - The username
  * @returns {Promise<string | undefined>} The email address or undefined if not found.
  */
-async function getEmail(identifier: string): Promise<string | undefined> {
+async function getEmail(username: string): Promise<string | undefined> {
   const { data: profile } = await supabase
     .from('profiles')
     .select('user_id')
-    .eq('username', identifier)
+    .eq('username', username)
     .single();
 
   if (!profile?.user_id) {
@@ -43,11 +57,4 @@ async function getEmail(identifier: string): Promise<string | undefined> {
 
   const { data: user } = await supabase.auth.admin.getUserById(profile.user_id);
   return user.user!.email;
-}
-
-function jsonResponse(body: object, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    headers: { 'Content-Type': 'application/json' },
-    status
-  });
 }
