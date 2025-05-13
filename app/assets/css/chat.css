@@ -1,4 +1,4 @@
-.alignment {
+.main-layout {
   height: 98vh;
   margin-top: 10px;
   display: grid;
@@ -6,12 +6,12 @@
 }
 
 .alignment > div {
-  border: solid red 1px;
+  /* border: solid red 1px; */
   display: flex;
 }
 
 .alignment > div > div {
-  border: solid red 1px;
+  /*  border: solid red 1px; */
   display: flex;
 }
 
@@ -23,17 +23,27 @@
   overflow: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   justify-content: flex-start;
 }
 
 .message {
   margin-top: 10px;
   max-width: 300px;
+  min-width: 300px;
+}
+
+.messages {
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100vh;
+  padding: 1rem;
 }
 
 .write {
-  margin-top: 30px;
+  margin-top: auto;
   padding: 0%;
   display: flex;
   flex-direction: row;
@@ -44,11 +54,21 @@
   margin-bottom: 10px;
 }
 
-.bar-item {
+.profile-bar {
+  margin-bottom: auto;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.search-bar {
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
 .profile-picture {
   margin-top: 10px;
+  width: fit-content;
+}
+
+.quick-settings {
 }

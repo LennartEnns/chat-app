@@ -1,6 +1,6 @@
 <template>
-  <UContainer class="alignment">
-    <UContainer class="align-column">
+  <UContainer class="main-layout">
+    <UContainer class="align-column quick-settings">
       <UButton
         class="profile-picture"
         :avatar="{
@@ -11,7 +11,7 @@
       ></UButton>
     </UContainer>
     <UContainer class="align-column">
-      <UModal class="bar-item" v-model:open="open">
+      <UModal class="search-bar" v-model:open="open">
         <UButton
           label="Search users..."
           color="neutral"
@@ -48,27 +48,29 @@
       >
     </UContainer>
     <UContainer class="align-column">
-      <UCard class="bar-item">
-        <Placeholder class="h-32" />
+      <UCard class="profile-bar">
+        <h1>Florian Steckchen</h1>
       </UCard>
-      <UTextarea
-        :avatar="{
-          src: 'https://github.com/nuxt.png',
-        }"
-        disabled
-        class="message"
-        autoresize
-        model-value="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-      />
-      <UTextarea
-        :avatar="{
-          src: 'https://github.com/nuxt.png',
-        }"
-        disabled
-        class="message"
-        autoresize
-        model-value="Lorem fjdksj kljaskl jdkl jk"
-      />
+      <UContainer class="messages">
+        <UTextarea
+          :avatar="{
+            src: 'https://github.com/nuxt.png',
+          }"
+          disabled
+          class="message partner"
+          autoresize
+          model-value="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+        />
+        <UTextarea
+          :avatar="{
+            src: 'https://github.com/nuxt.png',
+          }"
+          disabled
+          class="message user"
+          autoresize
+          model-value="Lorem fjdksj kljaskl jdkl jk"
+        />
+      </UContainer>
       <UContainer class="write">
         <UTextarea
           class="full"
