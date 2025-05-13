@@ -35,11 +35,18 @@
 .messages {
   overflow: auto;
   display: flex;
-  align-items: flex-start;
   flex-direction: column;
   justify-content: flex-start;
   height: 100vh;
   padding: 1rem;
+}
+
+.partner {
+  align-self: flex-start;
+}
+
+.user {
+  align-self: flex-end;
 }
 
 .write {
