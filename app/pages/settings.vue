@@ -212,14 +212,16 @@ import type { RadioGroupItem, RadioGroupValue } from "@nuxt/ui";
 
 // --- Color Mode ---
 const colorMode = useColorMode();
-const isDark = computed({
-  get() {
-    return colorMode.value === "dark";
-  },
-  set() {
-    colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
-  },
-});
+const isDark = ref(
+  computed({
+    get() {
+      return colorMode.value === "dark";
+    },
+    set() {
+      colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
+    },
+  })
+);
 
 // --- Bio ---
 const editBio = ref(false);
