@@ -26,11 +26,16 @@
           v-if="editBio"
         >
           <UButtonGroup size="sm" orientation="horizontal" class="bioGroup">
-            <UInput
-              label="Enter your bio here"
-              class="bioInput"
+            <UTextarea
               v-model="bio"
               placeholder="Enter your bio here"
+              label="Enter your bio here"
+              class="bioInput"
+              variant="outline"
+              color="primary"
+              :rows="2"
+              :maxrows="2"
+              :autoresize="true"
             />
             <UButton
               icon="i-material-symbols-save-outline"
@@ -47,7 +52,7 @@
 
         <!-- SELECT THEME -->
         <USeparator label="Change theme" />
-        <URadioGroup v-model="value" :items="items" variant="card" />
+        <URadioGroup v-model="value" :items="radioItems" variant="card" />
 
         <!-- USPECIFIED FEATURE SWITCH -->
         <USeparator label="Customization" />
@@ -171,6 +176,11 @@
             </UContainer>
           </template>
         </UCollapsible>
+        <UTabs
+          :items="tabItems"
+          orientation="vertical"
+          :ui="{ wrapper: 'flex items-center gap-4', list: { width: 'w-48' } }"
+        />
       </div>
     </div>
   </UApp>
@@ -181,8 +191,26 @@ import RegistrationForm from "~/components/Form/RegistrationForm.vue";
 // import UFormField from "~/components/Form/FormField.vue";
 import type { RadioGroupItem, RadioGroupValue } from "@nuxt/ui";
 
-const items = ref<RadioGroupItem[]>(["System", "Light", "Dark"]);
+const radioItems = ref<RadioGroupItem[]>(["System", "Light", "Dark"]);
 const value = ref<RadioGroupValue>("System");
+
+const tabItems = [
+  {
+    label: "Tab1",
+    icon: "i-heroicons-information-circle",
+    content: "This is the content shown for Tab1",
+  },
+  {
+    label: "Tab2",
+    icon: "i-heroicons-arrow-down-tray",
+    content: "And, this is the content for Tab2",
+  },
+  {
+    label: "Tab3",
+    icon: "i-heroicons-eye-dropper",
+    content: "Finally, this is the content for Tab3",
+  },
+];
 
 let editBio = ref(false);
 let currentBio = ref("This is my bio");
@@ -230,6 +258,11 @@ const isDark = computed({
 .bioInput {
   width: 60%;
 }
+.bioInput > * {
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
 .changePW div {
   margin: 1.5% 0;
   margin-right: 3%;
