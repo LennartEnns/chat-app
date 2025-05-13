@@ -1,0 +1,64 @@
+<template>
+  <div class="min-h-screen flex flex-col text-white font-sans landing-background">
+    <Header />
+    <Body class="flex-grow" />
+    <Footer />
+  </div>
+</template>
+
+<script setup lang="ts">
+import Header from '~/components/landingPage/Header.vue'
+import Body from '~/components/landingPage/Body.vue'
+import Footer from '~/components/landingPage/Footer.vue'
+
+import { onMounted, onUnmounted } from 'vue';
+
+onMounted(() => {
+  const handleWheel = (event: WheelEvent) => {
+    const scrollTop = window.scrollY
+    const documentHeight = document.documentElement.scrollHeight;
+    const windowHeight = window.innerHeight;
+
+    // interfere, when user is at top
+    if (scrollTop === 0 && event.deltaY < 0) {
+      event.preventDefault();
+      return;
+    }
+
+    // interfere, when user is at bottom
+    if (scrollTop + windowHeight === documentHeight && event.deltaY > 0) {
+      event.preventDefault();
+      return;
+    }
+  };
+
+  window.addEventListener('wheel', handleWheel, { passive: false });
+  onUnmounted(() => {
+    window.removeEventListener('wheel', handleWheel);
+  });
+});
+
+</script>
+
+<style scoped>
+.landing-background {
+  position: relative;
+  background:
+    radial-gradient(ellipse 150% 50% at 50% 1%, #0C1223 0%, transparent 70%),
+    radial-gradient(circle at 20% 10%, var(--color-green-700), #0C1223 75%);
+  background-color: #0c0c0c;
+  overflow: hidden;
+  background-attachment: initial
+}
+
+.landing-background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('~assets/images/noise.png');
+  background-repeat: repeat;
+  opacity: 0.03;
+  mix-blend-mode: soft-light;
+  z-index: 0;
+}
+</style>
