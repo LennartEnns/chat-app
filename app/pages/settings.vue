@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center border-2 border-solid pageWrap h-100">
+  <div class="flex justify-center border-2 border-solid pageWrap min-h-screen">
     <div class="mainContainer">
       <div>
         <UButton
