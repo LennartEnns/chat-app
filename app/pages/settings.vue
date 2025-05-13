@@ -98,8 +98,12 @@
                     aria-controls="password"
                     @click="showOld = !showOld"
                   />
-                </template> </UInput
-            ></UContainer>
+                </template>
+              </UInput>
+              <p v-if="passwordOld != pw && passwordOld && savePW">
+                The entered password does not match the old password
+              </p>
+            </UContainer>
 
             <UContainer class="changePW"
               ><UInput
@@ -143,8 +147,26 @@
                   />
                 </template> </UInput
             ></UContainer>
-            <UContainer class="savePW">
-              <UButton class="savePWbtn">Save</UButton>
+            <p
+              v-if="
+                passwordNew != passwordNewCheck &&
+                passwordNew &&
+                passwordNewCheck &&
+                savePW
+              "
+            >
+              Please make sure the passwords match
+            </p>
+            <UContainer
+              class="savePW"
+              @click="
+                savePW = true;
+                if (passwordOld == pw && passwordNew == passwordNewCheck) {
+                  pw = passwordNew;
+                }
+              "
+            >
+              <UButton class="savePWbtn">Change password</UButton>
               <UButton variant="ghost">Reset old password</UButton>
             </UContainer>
           </template>
@@ -166,6 +188,8 @@ let editBio = ref(false);
 let currentBio = ref("This is my bio");
 const bio = ref("");
 
+const pw = ref("jan");
+const savePW = ref(false);
 const showOld = ref(false);
 
 const showNew = ref(false);
