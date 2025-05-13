@@ -89,8 +89,8 @@
         </UButton>
 
         <template #content>
-          <div class="flex flex-col gap-3 p-2">
-            <UContainer class="changePW">
+          <div class="flex flex-col gap-3 p-2 changePW">
+            <UContainer>
               <UInput
                 v-model="passwordOld"
                 placeholder="Old password"
@@ -127,7 +127,7 @@
               </p>
             </UContainer>
 
-            <UContainer class="changePW">
+            <UContainer>
               <UInput
                 v-model="passwordNew"
                 placeholder="New password"
@@ -151,7 +151,7 @@
                   />
                 </template>
               </UInput>
-
+              <br />
               <UInput
                 v-model="passwordNewCheck"
                 placeholder="Re-enter new password"
@@ -176,18 +176,18 @@
                   />
                 </template>
               </UInput>
+              <p
+                v-if="
+                  attemptedPasswordChange &&
+                  passwordNew &&
+                  passwordNewCheck &&
+                  passwordNew !== passwordNewCheck
+                "
+                class="text-red-500 text-xs mt-1"
+              >
+                Please make sure the new passwords match.
+              </p>
             </UContainer>
-            <p
-              v-if="
-                attemptedPasswordChange &&
-                passwordNew &&
-                passwordNewCheck &&
-                passwordNew !== passwordNewCheck
-              "
-              class="text-red-500 text-xs mt-1"
-            >
-              Please make sure the new passwords match.
-            </p>
 
             <UContainer class="savePW_actions flex gap-2 mt-2">
               <UButton class="savePWbtn" @click="handleChangePassword"
@@ -243,19 +243,18 @@ const themeRadioItems = ref<RadioGroupItem[]>([
   { value: "dark", label: "Dark" },
 ]);
 const selectedTheme = ref<RadioGroupValue>("system");
-// Watch selectedTheme to potentially apply changes if not automatically handled by Nuxt UI / ColorMode
-// watch(selectedTheme, (newTheme) => {
-//   if (newTheme === 'system') colorMode.preference = 'system';
-//   else if (newTheme === 'light') colorMode.preference = 'light';
-//   else if (newTheme === 'dark') colorMode.preference = 'dark';
-// });
+watch(selectedTheme, (newTheme) => {
+  if (newTheme === "system") colorMode.preference = "system";
+  else if (newTheme === "light") colorMode.preference = "light";
+  else if (newTheme === "dark") colorMode.preference = "dark";
+});
 
 // --- Custom Feature Switch ---
-const featureEnabled = ref(true); // Default value from original `default-value`
+const featureEnabled = ref(true);
 
 // --- Password Management ---
-const currentActualPassword = ref("jan"); // Stored current password
-const attemptedPasswordChange = ref(false); // To control when validation messages appear
+const currentActualPassword = ref("jan");
+const attemptedPasswordChange = ref(false);
 
 const showOldPassword = ref(false);
 const showNewPassword = ref(false);
@@ -277,45 +276,37 @@ const resetPasswordForm = () => {
 
 const handleChangePassword = () => {
   attemptedPasswordChange.value = true;
-
   if (passwordOld.value !== currentActualPassword.value) {
-    // Old password does not match
-    // Error message is shown via template conditional
-    return;
+    return; // Old password does not match
   }
 
   if (!passwordNew.value) {
-    // New password cannot be empty
-    // Could add a specific error message or rely on general mismatch if check is also empty
-    return;
+    return; // New password cannot be empty
   }
 
   if (passwordNew.value !== passwordNewCheck.value) {
-    // New passwords do not match
-    // Error message is shown via template conditional
-    return;
+    return; // New passwords do not match
   }
-
   // All checks passed
   currentActualPassword.value = passwordNew.value;
-  alert("Password changed successfully!"); // Replace with a proper notification
+  alert("Password changed successfully!");
   resetPasswordForm();
 };
 
 // --- Tabs ---
 const tabItems = [
   {
-    label: "Profile", // Renamed for potential clarity
+    label: "Profile",
     icon: "i-heroicons-information-circle",
     content: "This is the content shown for Profile.",
   },
   {
-    label: "Downloads", // Renamed
+    label: "Downloads",
     icon: "i-heroicons-arrow-down-tray",
     content: "And, this is the content for Downloads.",
   },
   {
-    label: "Appearance", // Renamed
+    label: "Appearance",
     icon: "i-heroicons-eye-dropper",
     content: "Finally, this is the content for Appearance.",
   },
@@ -323,11 +314,8 @@ const tabItems = [
 </script>
 
 <style scoped>
-/* Add any component-specific styles here if needed */
 .pageWrap {
-  /* Example: min-height: 100vh; */
-  /* h-100 is likely a utility class, ensure it does what you expect */
-  padding: 20px; /* Added some padding for better spacing */
+  padding: 20px;
 }
 
 .mainContainer {
@@ -335,7 +323,7 @@ const tabItems = [
   flex-direction: column;
   gap: 1rem; /* Consistent spacing between sections */
   width: 100%;
-  max-width: 600px; /* Constrain width for better readability */
+  max-width: 30rem;
 }
 
 .bioGroup {
@@ -356,7 +344,9 @@ const tabItems = [
   min-height: 100%;
 }
 
-.changePW {
+.changePW div {
+  padding-left: 0;
+  margin-top: 1%;
 }
 
 .savePW_actions {
