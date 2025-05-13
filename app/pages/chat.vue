@@ -2,6 +2,7 @@
   <UContainer class="main-layout">
     <UContainer class="align-column quick-settings">
       <UButton
+        to="/profile"
         class="profile-picture"
         :avatar="{
           src: 'https://avatars.githubusercontent.com/u/182207917?v=4',
@@ -51,7 +52,8 @@
       <UCard class="profile-bar">
         <h1>Florian Steckchen</h1>
       </UCard>
-      <UContainer class="messages">
+      <UContainer class="messages" ref="messagesContainerRef">
+        <!--example messages-->
         <UTextarea
           :avatar="{
             src: 'https://github.com/nuxt.png',
@@ -70,15 +72,7 @@
           autoresize
           model-value="Lorem fjdksj kljaskl jdkl jk"
         />
-        <UTextarea
-          :avatar="{
-            src: 'https://github.com/nuxt.png',
-          }"
-          disabled
-          class="message partner"
-          autoresize
-          model-value="Loras been the industry's standar hfjash kjjahs jf h ajksdfk h jshjkhjkd dummy text ever si."
-        />
+        <!---->
         <UTextarea
           v-for="(message, index) in userMessages"
           :key="index"
@@ -110,6 +104,7 @@ const users = ref([]); // Placeholder for command palette groups
 
 const newMessage = ref("");
 const userMessages = ref([]);
+const messagesContainerRef = ref(null);
 
 function sendMessage() {
   if (newMessage.value.trim()) {
@@ -124,6 +119,22 @@ function handleKeyDown(event) {
     sendMessage();
   }
 }
+
+const scrollToBottom = async () => {
+  await nextTick();
+  if (messagesContainerRef.value && messagesContainerRef.value.$el) {
+    const containerElement = messagesContainerRef.value.$el;
+    containerElement.scrollTop = containerElement.scrollHeight;
+  }
+};
+
+watch(
+  userMessages,
+  () => {
+    scrollToBottom();
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
