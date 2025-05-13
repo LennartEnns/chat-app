@@ -20,10 +20,10 @@
       Sign Up
       <UModal v-model:open="showSuccessModal" title="Registration successful" description="Open the link in your confirmation email." :dismissible="false">
         <template #body>
-          <a href="/login" class="flex align-center">
+          <ULink to="/login" class="flex align-center">
             <div>Return to login</div>
             <UIcon name="i-lucide-arrow-right" class="self-center ml-1"/>
-          </a>
+          </ULink>
         </template>
       </UModal>
     </UButton>
