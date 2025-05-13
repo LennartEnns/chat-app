@@ -79,24 +79,59 @@
           autoresize
           model-value="Loras been the industry's standar hfjash kjjahs jf h ajksdfk h jshjkhjkd dummy text ever si."
         />
+        <UTextarea
+          v-for="(message, index) in userMessages"
+          :key="index"
+          :avatar="{ src: 'https://github.com/nuxt.png' }"
+          disabled
+          class="message user"
+          autoresize
+          :model-value="message"
+        />
       </UContainer>
       <UContainer class="write">
         <UTextarea
           class="full"
           placeholder="Write a message..."
-          v-model="value"
+          v-model="newMessage"
           autoresize
           :rows="4"
           :maxrows="4"
         />
-        <UButton><Icon name="ic:baseline-send" /></UButton>
+        <UButton @click="sendMessage"><Icon name="ic:baseline-send" /></UButton>
       </UContainer>
     </UContainer>
   </UContainer>
 </template>
 
 <script setup>
-const value = ref("");
+const open = ref(false);
+const users = ref([]); // Placeholder for command palette groups
+
+const newMessage = ref("");
+const userMessages = ref([]);
+
+function sendMessage() {
+  if (newMessage.value.trim()) {
+    userMessages.value.push(newMessage.value.trim());
+    newMessage.value = "";
+  }
+}
+
+function handleKeyDown(event) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <style>
