@@ -18,8 +18,6 @@ Alternativ direkt über migration files (`supabase migration new <migration-name
 
 Weitere Details zum Thema Migrations/Seeding bitte in den Docs nachlesen: https://supabase.com/docs/guides/deployment/database-migrations
 
-Lokale Seeds können mit Snaplet generiert werden: https://supabase.com/docs/guides/local-development/seeding-your-database#generating-seed-data
-
 **Datenbank resetten und Testdaten anlegen**
 supabase db reset && npm run gen-seeds
 
