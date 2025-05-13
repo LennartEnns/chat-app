@@ -19,7 +19,6 @@ Deno.serve(async (req) => {
 
   try {
     const { username, password } = await req.json();
-    console.log(username, password)
     if (typeof username !== 'string' || typeof password !== 'string') {
       throw new Error('Invalid login credentials');
     }
