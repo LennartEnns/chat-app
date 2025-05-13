@@ -14,6 +14,9 @@ Weitere Details zum Thema Migrations/Seeding bitte in den Docs nachlesen: https:
 
 Lokale Seeds können mit Snaplet generiert werden: https://supabase.com/docs/guides/local-development/seeding-your-database#generating-seed-data
 
+**Datenbank resetten und Testdaten anlegen**
+supabase db reset && npm run gen-seeds
+
 **Mit Remote-Instanz verbinden:** \
 `supabase login` und dann `supabase link`
 
