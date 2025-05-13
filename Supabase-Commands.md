@@ -1,7 +1,13 @@
 # Supabase Essentials
-**Lokalen Container starten:**
+Hilfs-Scripts sind in [package.json](./package.json) zu sehen.
+
+**Lokale Entwicklung starten:**
 - Zuerst Podman Machine starten
-- `supabase start`
+- `npm run supabase-local`
+- `npm run dev`
+
+App: http://localhost:3000 \
+Supabase Studio (lokal): http://localhost:54323
 
 **Konfiguration anpassen** (z.B. auth oder seeds): \
 `supabase/config.toml` bearbeiten.
@@ -23,7 +29,7 @@ supabase db reset && npm run gen-seeds
 **DB pushen:** \
 `supabase db push`
 
-**Edge-Function deployen**: \
+**Edge-Function zum Remote-Projekt deployen**: \
 `supabase functions deploy your-function-name`
 
 **config.toml pushen:** \
