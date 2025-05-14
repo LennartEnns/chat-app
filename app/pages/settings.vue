@@ -9,8 +9,8 @@
           color="primary"
           variant="ghost"
           aria-label="Theme"
-          @click="isDark = !isDark"
           size="sm"
+          @click="isDark = !isDark"
         />
       </div>
 
@@ -19,24 +19,24 @@
       <div>
         <UButton
           v-if="!editBio"
+          class="mt-2"
           label="Edit Bio"
           icon="i-material-symbols-edit-outline"
           @click="editBio = true"
-          class="mt-2"
         />
       </div>
       <UFormField
         v-if="editBio"
+        class="mt-2"
         description="Tell us something about yourself."
         size="lg"
-        class="mt-2"
       >
-        <UButtonGroup size="sm" orientation="horizontal" class="bioGroup">
+        <UButtonGroup class="bioGroup" size="sm" orientation="horizontal">
           <UTextarea
             v-model="bioInput"
+            class="bioInput"
             placeholder="Enter your bio here"
             label="Enter your bio here"
-            class="bioInput"
             variant="outline"
             color="primary"
             :rows="2"
@@ -44,9 +44,9 @@
             autoresize
           />
           <UButton
+            class="saveBioBtn"
             icon="i-material-symbols-save-outline"
             @click="saveBio"
-            class="saveBioBtn"
           />
         </UButtonGroup>
       </UFormField>
@@ -151,7 +151,7 @@
                   />
                 </template>
               </UInput>
-              <br />
+              <br>
               <UInput
                 v-model="passwordNewCheck"
                 placeholder="Re-enter new password"
