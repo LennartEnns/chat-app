@@ -16,8 +16,16 @@
       <UInput v-model="state.confirmPassword" type="password" />
     </UFormField>
 
-    <UButton type="submit">
+    <UButton class="button" type="submit">
       Sign Up
+      <UModal v-model:open="showSuccessModal" title="Registration successful" description="Open the link in your confirmation email." :dismissible="false">
+        <template #body>
+          <ULink to="/login" class="flex align-center">
+            <div>Return to login</div>
+            <UIcon name="i-lucide-arrow-right" class="self-center ml-1"/>
+          </ULink>
+        </template>
+      </UModal>
     </UButton>
   </UForm>
 </template>
@@ -25,10 +33,12 @@
 <script setup lang="ts">
   import * as z from 'zod'
   import type { FormSubmitEvent } from '@nuxt/ui'
-  import { registrationSchema } from '../../validation/schemas/input/inputUserSchemas'
-  import { getAuthErrorMessage } from '../../errors/authErrors'
+  import { registrationSchema } from '../../../validation/schemas/input/inputUserSchemas'
+  import { getAuthErrorMessage } from '../../../errors/authErrors'
 
   const supabase = useSupabaseClient()
+
+  const showSuccessModal = ref(false)
 
   // Extend the registration schema with a confirmPassword property
   let schemaPassword = ''
@@ -52,6 +62,21 @@
 
   const toast = useToast()
   async function onSubmit(event: FormSubmitEvent<Schema>) {
+    // Check if the username already exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('username', event.data.username)
+      .maybeSingle()
+    if (existingUser) {
+      toast.add({
+        title: 'Error',
+        description: 'Username already taken',
+        color: 'error',
+      })
+      return
+    }
+
     const { error } = await supabase.auth.signUp({
       email: event.data.email,
       password: event.data.password,
@@ -63,12 +88,20 @@
     })
     if (!error) {
       toast.add({ title: 'Success', description: 'We have sent you a confirmation email.', color: 'success' })
+      showSuccessModal.value = true
     } else {
+      console.error(`An auth error occured during registration: ${ Object.keys(error) } \n ${ Object.values(error) }`)
       toast.add({
         title: 'Error',
-        description: getAuthErrorMessage(error.message, 'Unknown error during registration'),
-        color: 'success',
+        description: getAuthErrorMessage(error.code, 'Unknown error during registration'),
+        color: 'error',
       })
     }
   }
 </script>
+
+<style scoped>
+  .button {
+    cursor: pointer;
+  }
+</style>
