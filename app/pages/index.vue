@@ -55,10 +55,12 @@ onMounted(() => {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url('~assets/images/noise.png');
+  background-image: url('~/assets/images/stars.png');
   background-repeat: repeat;
-  opacity: 0.03;
-  mix-blend-mode: soft-light;
+  background-size: cover;
+  opacity: 0.10;
   z-index: 0;
+  mix-blend-mode: color-dodge;
+  pointer-events: none;
 }
 </style>
