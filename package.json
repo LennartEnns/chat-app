@@ -29,6 +29,7 @@
     "@nuxtjs/supabase": "^1.5.0",
     "@types/pg": "^8.15.1",
     "eslint": "^9.26.0",
+    "nuxt-particles": "^0.3.0",
     "pg": "^8.15.6",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"

@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxt/eslint',
     '@nuxt/test-utils',
-    '@nuxtjs/supabase'
+    '@nuxtjs/supabase',
+    'nuxt-particles',
   ],
 
   css: ['~/assets/css/main.css'],
@@ -23,5 +24,10 @@ export default defineNuxtConfig({
       callback: '/confirm',
       exclude: ['/', '/register'],
     }
+  },
+
+  particles: {
+    mode: 'slim',
+    lazy: true,
   }
 })

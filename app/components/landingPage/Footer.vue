@@ -1,25 +1,24 @@
 <template>
-    <footer class="footer-bar">
-      <p>
-        © 2025 YapSpace · <a href="#" class="footer-link">AGB</a> · <a href="#" class="footer-link">Datenschutz</a>
-      </p>
-    </footer>
-  </template>
+  <footer class="footer-bar">
+    <p>
+      © 2025 YapSpace · <a href="#" class="footer-link">AGB</a> · <a href="#" class="footer-link">Datenschutz</a>
+    </p>
+  </footer>
+</template>
   
-  <script setup>
-  </script>
+<script setup>
+</script>
   
-  <style scoped>
+<style scoped>
   .footer-bar {
-
     color: white;
     padding: 1rem;
     text-align: center;
     font-size: 0.875rem;
+    z-index: 1;
   }
-  
   .footer-link {
     text-decoration: underline;
     margin: 0 0.5rem;
   }
-  </style>
+</style>
