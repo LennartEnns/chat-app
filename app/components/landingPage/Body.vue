@@ -1,9 +1,9 @@
 <template>
   <main class="body-section">
     <div class="main-content">
-      <h1 class="headline">The modern<br />Chat App</h1>
+      <h1 class="headline">The modern<br>Chat App</h1>
       <p class="subtext">
-        We've got a super innovate creation, never seen before, YapSpace.
+        We've got a super innovate creation, never seen before: <b>YapSpace</b>.
       </p>
     </div>
   </main>
@@ -34,6 +34,7 @@
   font-size: 2.5rem;
   font-weight: bold;
   line-height: 1.2;
+  z-index: 1;
 }
 
 .subtext {

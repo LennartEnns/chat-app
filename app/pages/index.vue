@@ -1,8 +1,9 @@
 <template>
   <div class="min-h-screen flex flex-col text-white font-sans landing-background">
-    <Header />
-    <Body class="flex-grow" />
-    <Footer />
+    <NuxtParticles id="particles" :options="particleOptions" />
+    <Header z-index="1" />
+    <Body class="flex-grow" z-index="1" />
+    <Footer z-index="1" />
   </div>
 </template>
 
@@ -38,6 +39,68 @@ onMounted(() => {
   });
 });
 
+const particleOptions = {
+  fullScreen: {
+    enable: true,
+    zIndex: 0,
+  },
+  background: {
+    color: {
+      value: 'transparent'
+    }
+  },
+  fpsLimit: 60,
+  interactivity: {
+    events: {
+      onHover: {
+        enable: true,
+        parallax: {
+          enable: true,
+          force: 60, // How strong the parallax movement is
+          smooth: 10 // Smoothness of the movement
+        }
+      },
+      resize: true
+    },
+  },
+  particles: {
+    color: {
+      value: "#eee"
+    },
+    opacity: {
+      value: 0.1
+    },
+    move: {
+      enable: true,
+      direction: "right",
+      speed: 2,
+    },
+    number: {
+      value: 100,
+      density: {
+        enable: true,
+        area: 800
+      }
+    },
+    size: {
+      value: {
+        min: 1,
+        max: 10,
+      },
+    },
+    modes: {
+      parallax: {
+        enable: true,
+        force: 60, // How strong the parallax movement is
+        smooth: 10 // Smoothness of the movement
+      }
+    },
+    shape: {
+      type: "square"
+    },
+  },
+  detectRetina: true
+}
 </script>
 
 <style scoped>

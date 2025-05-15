@@ -86,18 +86,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          description: string
           displayname: string | null
-          id: string
+          user_id: string
           username: string
         }
         Insert: {
+          description?: string
           displayname?: string | null
-          id: string
+          user_id: string
           username: string
         }
         Update: {
+          description?: string
           displayname?: string | null
-          id?: string
+          user_id?: string
           username?: string
         }
         Relationships: []

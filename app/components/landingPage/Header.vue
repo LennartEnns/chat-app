@@ -18,19 +18,19 @@
 <template>
   <header class="w-full px-4 py-3 bg-transparent text-white relative z-20">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-      
+
       <div class="flex-shrink-0 text-xl font-bold">
         Yapspace
       </div>
 
       <div class="w-full md:w-auto">
         <UNavigationMenu
+          v-model="active"
           :items="navigationItems"
           class="justify-center"
           arrow
           content-orientation="vertical"
           color="neutral"
-          v-model="active"
         />
       </div>
 
