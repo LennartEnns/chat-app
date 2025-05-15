@@ -151,7 +151,7 @@
                   />
                 </template>
               </UInput>
-              <br>
+              <br />
               <UInput
                 v-model="passwordNewCheck"
                 placeholder="Re-enter new password"
@@ -207,30 +207,33 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
+import type { Ref, ComputedRef } from "vue";
 import type { RadioGroupItem, RadioGroupValue } from "@nuxt/ui";
 
 // --- Color Mode ---
 const colorMode = useColorMode();
-const isDark = ref(
+
+// Use ComputedRef type for computed properties
+const isDark: Ref<boolean> = ref(
   computed({
-    get() {
+    get(): boolean {
       return colorMode.value === "dark";
     },
-    set() {
+    set(): void {
       colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
     },
   })
 );
 
 // --- Bio ---
-const editBio = ref(false);
-const currentBio = ref(
+const editBio: Ref<boolean> = ref(false);
+const currentBio: Ref<string> = ref(
   "This is my bio. My name is JJ i am 1500m tall, I have big eyes and a very hairy back."
 );
-const bioInput = ref("");
+const bioInput: Ref<string> = ref("");
 
-const saveBio = () => {
+const saveBio = (): void => {
   if (bioInput.value.trim()) {
     currentBio.value = bioInput.value.trim();
     bioInput.value = "";
@@ -239,34 +242,36 @@ const saveBio = () => {
 };
 
 // --- Theme Selection ---
-const themeRadioItems = ref<RadioGroupItem[]>([
+const themeRadioItems: Ref<RadioGroupItem[]> = ref([
   { value: "system", label: "System" },
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
 ]);
-const selectedTheme = ref<RadioGroupValue>("system");
-watch(selectedTheme, (newTheme) => {
+
+const selectedTheme: Ref<RadioGroupValue> = ref("system");
+
+watch(selectedTheme, (newTheme: RadioGroupValue) => {
   if (newTheme === "system") colorMode.preference = "system";
   else if (newTheme === "light") colorMode.preference = "light";
   else if (newTheme === "dark") colorMode.preference = "dark";
 });
 
 // --- Custom Feature Switch ---
-const featureEnabled = ref(true);
+const featureEnabled: Ref<boolean> = ref(true);
 
 // --- Password Management ---
-const currentActualPassword = ref("jan");
-const attemptedPasswordChange = ref(false);
+const currentActualPassword: Ref<string> = ref("jan");
+const attemptedPasswordChange: Ref<boolean> = ref(false);
 
-const showOldPassword = ref(false);
-const showNewPassword = ref(false);
-const showNewPasswordCheck = ref(false);
+const showOldPassword: Ref<boolean> = ref(false);
+const showNewPassword: Ref<boolean> = ref(false);
+const showNewPasswordCheck: Ref<boolean> = ref(false);
 
-const passwordOld = ref("");
-const passwordNew = ref("");
-const passwordNewCheck = ref("");
+const passwordOld: Ref<string> = ref("");
+const passwordNew: Ref<string> = ref("");
+const passwordNewCheck: Ref<string> = ref("");
 
-const resetPasswordForm = () => {
+const resetPasswordForm = (): void => {
   passwordOld.value = "";
   passwordNew.value = "";
   passwordNewCheck.value = "";
@@ -276,7 +281,7 @@ const resetPasswordForm = () => {
   attemptedPasswordChange.value = false;
 };
 
-const handleChangePassword = () => {
+const handleChangePassword = (): void => {
   attemptedPasswordChange.value = true;
   if (passwordOld.value !== currentActualPassword.value) {
     return; // Old password does not match
@@ -296,7 +301,14 @@ const handleChangePassword = () => {
 };
 
 // --- Tabs ---
-const tabItems = [
+// Define a type for tab items
+interface TabItem {
+  label: string;
+  icon: string;
+  content: string;
+}
+
+const tabItems: TabItem[] = [
   {
     label: "Profile",
     icon: "i-heroicons-information-circle",
@@ -313,6 +325,27 @@ const tabItems = [
     content: "Finally, this is the content for Appearance.",
   },
 ];
+
+// export {
+//   isDark,
+//   editBio,
+//   currentBio,
+//   bioInput,
+//   saveBio,
+//   themeRadioItems,
+//   selectedTheme,
+//   featureEnabled,
+//   showOldPassword,
+//   showNewPassword,
+//   showNewPasswordCheck,
+//   passwordOld,
+//   passwordNew,
+//   passwordNewCheck,
+//   resetPasswordForm,
+//   handleChangePassword,
+//   tabItems,
+//   attemptedPasswordChange,
+// };
 </script>
 
 <style scoped>
