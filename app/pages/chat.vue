@@ -98,33 +98,34 @@
   </UContainer>
 </template>
 
-<script setup>
-const open = ref(false);
-const users = ref([]); // Placeholder for command palette groups
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 
-const newMessage = ref("");
-const userMessages = ref([]);
-const messagesContainerRef = ref(null);
+const open = ref<boolean>(false); //placeholder for command pallete (search bar)
+const users = ref<any[]>([]); //placeholder for command pallete (search bar)
+const newMessage = ref<string>("");
+const userMessages = ref<string[]>([]);
+const messagesContainerRef = ref<any>(null);
 
-function sendMessage() {
+function sendMessage(): void {
   if (newMessage.value.trim()) {
     userMessages.value.push(newMessage.value.trim());
     newMessage.value = "";
   }
 }
 
-function handleKeyDown(event) {
+function handleKeyDown(event: KeyboardEvent): void {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 }
 
-const scrollToBottom = async () => {
+const scrollToBottom = async (): Promise<void> => {
   await nextTick();
-  if (messagesContainerRef.value && messagesContainerRef.value.$el) {
-    const containerElement = messagesContainerRef.value.$el;
-    containerElement.scrollTop = containerElement.scrollHeight;
+  const component = messagesContainerRef.value;
+  if (component && component.$el) {
+    component.$el.scrollTop = component.$el.scrollHeight;
   }
 };
 
