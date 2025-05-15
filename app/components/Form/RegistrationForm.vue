@@ -14,7 +14,7 @@
       </UFormField>
 
       <UFormField label="Password" name="password" required>
-        <UInput v-model="state.password" type="password" class="w-full" />
+        <PasswordToggleInput v-model="state.password" class="w-full" />
       </UFormField>
 
       <UFormField label="Confirm Password" name="confirmPassword" required>
@@ -37,73 +37,74 @@
 </template>
 
 <script setup lang="ts">
-  import * as z from 'zod'
-  import type { FormSubmitEvent } from '@nuxt/ui'
-  import { registrationSchema } from '../../../validation/schemas/input/inputUserSchemas'
-  import { getAuthErrorMessage } from '../../../errors/authErrors'
+import * as z from 'zod'
+import type { FormSubmitEvent } from '@nuxt/ui'
+import { registrationSchema } from '../../../validation/schemas/input/inputUserSchemas'
+import { getAuthErrorMessage } from '../../../errors/authErrors'
+import PasswordToggleInput from '../Input/PasswordToggleInput.vue'
 
-  const supabase = useSupabaseClient()
+const supabase = useSupabaseClient()
 
-  const showSuccessModal = ref(false)
+const showSuccessModal = ref(false)
 
-  // Extend the registration schema with a confirmPassword property
-  let schemaPassword = ''
-  const schema = registrationSchema
-    .extend({
-      password: registrationSchema.shape.password.refine(
-      (value) => {
-        schemaPassword = value
-        return true
-      }),
-      confirmPassword: z.string().refine((value) => value === schemaPassword, 'Passwords do not match'),
-    })
-  type Schema = z.output<typeof schema>
-
-  const state = reactive<Partial<Schema>>({
-    email: undefined,
-    username: undefined,
-    password: undefined,
-    confirmPassword: undefined,
+// Extend the registration schema with a confirmPassword property
+let schemaPassword = ''
+const schema = registrationSchema
+  .extend({
+    password: registrationSchema.shape.password.refine(
+    (value) => {
+      schemaPassword = value
+      return true
+    }),
+    confirmPassword: z.string().refine((value) => value === schemaPassword, 'Passwords do not match'),
   })
+type Schema = z.output<typeof schema>
 
-  const toast = useToast()
-  async function onSubmit(event: FormSubmitEvent<Schema>) {
-    // Check if the username already exists
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('user_id')
-      .eq('username', event.data.username)
-      .maybeSingle()
-    if (existingUser) {
-      toast.add({
-        title: 'Error',
-        description: 'Username already taken',
-        color: 'error',
-      })
-      return
-    }
+const state = reactive<Partial<Schema>>({
+  email: undefined,
+  username: undefined,
+  password: undefined,
+  confirmPassword: undefined,
+})
 
-    const { error } = await supabase.auth.signUp({
-      email: event.data.email,
-      password: event.data.password,
-      options: {
-        data: {
-          username: event.data.username,
-        }
-      }
+const toast = useToast()
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  // Check if the username already exists
+  const { data: existingUser } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('username', event.data.username)
+    .maybeSingle()
+  if (existingUser) {
+    toast.add({
+      title: 'Error',
+      description: 'Username already taken',
+      color: 'error',
     })
-    if (!error) {
-      toast.add({ title: 'Success', description: 'We have sent you a confirmation email.', color: 'success' })
-      showSuccessModal.value = true
-    } else {
-      console.error(`An auth error occured during registration: ${ Object.keys(error) } \n ${ Object.values(error) }`)
-      toast.add({
-        title: 'Error',
-        description: getAuthErrorMessage(error.code, 'Unknown error during registration'),
-        color: 'error',
-      })
-    }
+    return
   }
+
+  const { error } = await supabase.auth.signUp({
+    email: event.data.email,
+    password: event.data.password,
+    options: {
+      data: {
+        username: event.data.username,
+      }
+    }
+  })
+  if (!error) {
+    toast.add({ title: 'Success', description: 'We have sent you a confirmation email.', color: 'success' })
+    showSuccessModal.value = true
+  } else {
+    console.error(`An auth error occured during registration: ${ Object.keys(error) } \n ${ Object.values(error) }`)
+    toast.add({
+      title: 'Error',
+      description: getAuthErrorMessage(error.code, 'Unknown error during registration'),
+      color: 'error',
+    })
+  }
+}
 </script>
 
 <style scoped>

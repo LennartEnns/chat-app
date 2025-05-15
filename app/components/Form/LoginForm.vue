@@ -10,25 +10,7 @@
       </UFormField>
 
       <UFormField label="Password" name="password" required >
-        <UInput
-          v-model="agnosticLoginState.password"
-          class="w-full"
-          :type="showPassword ? 'text' : 'password'"
-          :ui="{ trailing: 'pe-1' }"
-        >
-          <template #trailing>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-              :aria-label="showPassword ? 'Hide password' : 'Show password'"
-              :aria-pressed="showPassword"
-              aria-controls="password"
-              @click="showPassword = !showPassword"
-            />
-          </template>
-        </UInput>
+        <PasswordToggleInput v-model="agnosticLoginState.password" class="w-full" />
       </UFormField>
 
       <UButton class="button" type="submit">
@@ -39,78 +21,77 @@
 </template>
 
 <script setup lang="ts">
-  import type * as z from 'zod'
-  import type { FormSubmitEvent } from '@nuxt/ui'
-  import { loginSchema } from '../../../validation/schemas/input/inputUserSchemas'
-  import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
+import type * as z from 'zod'
+import type { FormSubmitEvent } from '@nuxt/ui'
+import { loginSchema } from '../../../validation/schemas/input/inputUserSchemas'
+import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
+import PasswordToggleInput from '../Input/PasswordToggleInput.vue'
 
-  const showPassword = ref(false)
+const supabase = useSupabaseClient()
 
-  const supabase = useSupabaseClient()
+type AgnosticLoginSchema = z.output<typeof loginSchema>
+const agnosticLoginState = reactive<Partial<AgnosticLoginSchema>>({
+  password: undefined,
+  usernameOrEmail: undefined,
+})
 
-  type AgnosticLoginSchema = z.output<typeof loginSchema>
-  const agnosticLoginState = reactive<Partial<AgnosticLoginSchema>>({
-    password: undefined,
-    usernameOrEmail: undefined,
+const usingUsernameLogin = computed(() => !agnosticLoginState.usernameOrEmail?.includes('@'))
+
+const successRedirectPath = '/chat'
+function onLoginSuccess() {
+  navigateTo(successRedirectPath)
+}
+
+const toast = useToast()
+function displayError(description: string) {
+  toast.add({
+    title: 'Error',
+    description,
+    color: 'error',
   })
+}
 
-  const usingUsernameLogin = computed(() => !agnosticLoginState.usernameOrEmail?.includes('@'))
+async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
+  const { usernameOrEmail, password } = event.data
+  const unknownErrorMessage = 'Unknown error during login'
 
-  const successRedirectPath = '/chat'
-  function onLoginSuccess() {
-    navigateTo(successRedirectPath)
-  }
-
-  const toast = useToast()
-  function displayError(description: string) {
-    toast.add({
-      title: 'Error',
-      description,
-      color: 'error',
+  if (!usingUsernameLogin.value) { // Login with email
+    const { error } = await supabase.auth.signInWithPassword({
+      email: usernameOrEmail,
+      password,
     })
-  }
-
-  async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
-    const { usernameOrEmail, password } = event.data
-    const unknownErrorMessage = 'Unknown error during login'
-
-    if (!usingUsernameLogin.value) { // Login with email
-      const { error } = await supabase.auth.signInWithPassword({
-        email: usernameOrEmail,
+    if (!error) {
+      onLoginSuccess()
+    } else {
+      logAuthError(error, 'login')
+      displayError(getAuthErrorMessage(error.code, unknownErrorMessage))
+    }
+  } else { // Login with username => Invoke edge function
+    const { data, error } = await supabase.functions.invoke("login-with-username", {
+      body: {
+        username: usernameOrEmail,
         password,
-      })
-      if (!error) {
+      }
+    })
+    if (!error) {
+      // Set the JWT tokens
+      const { error: setSessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+      });
+      if (!setSessionError) {
         onLoginSuccess()
       } else {
-        logAuthError(error, 'login')
-        displayError(getAuthErrorMessage(error.code, unknownErrorMessage))
+        logAuthError(setSessionError, 'login')
+        displayError(getAuthErrorMessage(setSessionError.code, unknownErrorMessage))
       }
-    } else { // Login with username => Invoke edge function
-      const { data, error } = await supabase.functions.invoke("login-with-username", {
-        body: {
-          username: usernameOrEmail,
-          password,
-        }
-      })
-      if (!error) {
-        // Set the JWT tokens
-        const { error: setSessionError } = await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        });
-        if (!setSessionError) {
-          onLoginSuccess()
-        } else {
-          logAuthError(setSessionError, 'login')
-          displayError(getAuthErrorMessage(setSessionError.code, unknownErrorMessage))
-        }
-      } else {
-        console.log(`Error calling the username login function: ${ error }`);
-        const description = (error.context.status === 400) ? getAuthErrorMessage('invalid_credentials') : unknownErrorMessage
-        displayError(description)
-      }
+    } else {
+      console.log(`Error calling the username login function: ${ error }`);
+      const description = (error.context.status === 400) ? getAuthErrorMessage('invalid_credentials') : unknownErrorMessage
+      displayError(description)
     }
   }
+}
 </script>
 
 <style scoped>
