@@ -30,8 +30,9 @@
 
   const usingUsernameLogin = computed(() => !agnosticLoginState.usernameOrEmail?.includes('@'))
 
+  const successRedirectPath = '/chat'
   function onLoginSuccess() {
-    navigateTo('/')
+    navigateTo(successRedirectPath)
   }
 
   const toast = useToast()
