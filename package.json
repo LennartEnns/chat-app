@@ -7,6 +7,7 @@
     "supabase-gen-types": "supabase gen types typescript --local > database.types.ts",
     "supabase-local": "supabase start && supabase functions serve",
     "reset-db": "supabase db reset",
+    "gen-seeds": "npx tsx --env-file=.env seed/seed.ts",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -25,7 +26,10 @@
     "@nuxt/eslint": "^1.3.0",
     "@nuxt/test-utils": "^3.18.0",
     "@nuxtjs/supabase": "^1.5.0",
+    "@types/pg": "^8.15.1",
     "eslint": "^9.26.0",
+    "pg": "^8.15.6",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

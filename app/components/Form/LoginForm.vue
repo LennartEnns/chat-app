@@ -31,7 +31,7 @@
   const usingUsernameLogin = computed(() => !agnosticLoginState.usernameOrEmail?.includes('@'))
 
   function onLoginSuccess() {
-    console.log("Login Successful!")
+    navigateTo('/')
   }
 
   const toast = useToast()
