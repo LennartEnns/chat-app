@@ -1,17 +1,41 @@
 <template>
-  <UForm :schema="loginSchema" :state="agnosticLoginState" class="space-y-4" @submit="onSubmit">
-    <UFormField label="Username / Email" name="usernameOrEmail">
-      <UInput v-model="agnosticLoginState.usernameOrEmail" />
-    </UFormField>
+  <UCard variant="outline">
+    <template #header>
+      <p class="font-bold">Log into your Account</p>
+    </template>
+    
+    <UForm :schema="loginSchema" :state="agnosticLoginState" class="space-y-4 w-3xs xl:w-2xs" @submit="onSubmit" >
+      <UFormField label="Username / Email" name="usernameOrEmail" required >
+        <UInput v-model="agnosticLoginState.usernameOrEmail" class="w-full" />
+      </UFormField>
 
-    <UFormField label="Password" name="password">
-      <UInput v-model="agnosticLoginState.password" type="password" />
-    </UFormField>
+      <UFormField label="Password" name="password" required >
+        <UInput
+          v-model="agnosticLoginState.password"
+          class="w-full"
+          :type="showPassword ? 'text' : 'password'"
+          :ui="{ trailing: 'pe-1' }"
+        >
+          <template #trailing>
+            <UButton
+              color="neutral"
+              variant="link"
+              size="sm"
+              :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+              :aria-pressed="showPassword"
+              aria-controls="password"
+              @click="showPassword = !showPassword"
+            />
+          </template>
+        </UInput>
+      </UFormField>
 
-    <UButton class="button" type="submit">
-      Sign In
-    </UButton>
-  </UForm>
+      <UButton class="button" type="submit">
+        Sign In
+      </UButton>
+    </UForm>
+  </UCard>
 </template>
 
 <script setup lang="ts">
@@ -19,6 +43,8 @@
   import type { FormSubmitEvent } from '@nuxt/ui'
   import { loginSchema } from '../../../validation/schemas/input/inputUserSchemas'
   import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
+
+  const showPassword = ref(false)
 
   const supabase = useSupabaseClient()
 

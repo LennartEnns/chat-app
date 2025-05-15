@@ -1,33 +1,39 @@
 <template>
-  <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-    <UFormField label="Email" name="email">
-      <UInput v-model="state.email" />
-    </UFormField>
+  <UCard variant="outline">
+    <template #header>
+      <p class="font-bold">Register an Account</p>
+    </template>
 
-    <UFormField label="Username" name="username">
-      <UInput v-model="state.username" />
-    </UFormField>
+    <UForm :schema="schema" :state="state" class="space-y-4 w-3xs xl:w-2xs" @submit="onSubmit">
+      <UFormField label="Email" name="email" required>
+        <UInput v-model="state.email" class="w-full" />
+      </UFormField>
 
-    <UFormField label="Password" name="password">
-      <UInput v-model="state.password" type="password" />
-    </UFormField>
+      <UFormField label="Username" name="username" required>
+        <UInput v-model="state.username" class="w-full" />
+      </UFormField>
 
-    <UFormField label="Confirm Password" name="confirmPassword">
-      <UInput v-model="state.confirmPassword" type="password" />
-    </UFormField>
+      <UFormField label="Password" name="password" required>
+        <UInput v-model="state.password" type="password" class="w-full" />
+      </UFormField>
 
-    <UButton class="button" type="submit">
-      Sign Up
-      <UModal v-model:open="showSuccessModal" title="Registration successful" description="Open the link in your confirmation email." :dismissible="false">
-        <template #body>
-          <ULink to="/login" class="flex align-center">
-            <div>Return to login</div>
-            <UIcon name="i-lucide-arrow-right" class="self-center ml-1"/>
-          </ULink>
-        </template>
-      </UModal>
-    </UButton>
-  </UForm>
+      <UFormField label="Confirm Password" name="confirmPassword" required>
+        <UInput v-model="state.confirmPassword" type="password" class="w-full" />
+      </UFormField>
+
+      <UButton class="button" type="submit">
+        Sign Up
+        <UModal v-model:open="showSuccessModal" title="Registration successful" description="Open the link in your confirmation email." :dismissible="false">
+          <template #body>
+            <ULink to="/login" class="flex align-center">
+              <div>Return to login</div>
+              <UIcon name="i-lucide-arrow-right" class="self-center ml-1"/>
+            </ULink>
+          </template>
+        </UModal>
+      </UButton>
+    </UForm>
+  </UCard>
 </template>
 
 <script setup lang="ts">
