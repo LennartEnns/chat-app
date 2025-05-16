@@ -1,5 +1,5 @@
 <template>
-  <UCard variant="outline">
+  <UCard variant="subtle" class="border-1 border-gray-500">
     <template #header>
       <p class="font-bold">Log into your Account</p>
     </template>
