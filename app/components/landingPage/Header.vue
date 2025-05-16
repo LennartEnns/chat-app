@@ -16,7 +16,7 @@
 </template> -->
 
 <template>
-  <header class="w-full px-4 py-3 bg-transparent text-white relative z-20">
+  <header class="w-full px-4 bg-transparent text-white relative z-20">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
 
       <div class="flex-shrink-0 text-xl font-bold">
