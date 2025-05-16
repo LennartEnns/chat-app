@@ -13,6 +13,7 @@ import Body from '~/components/landingPage/Body.vue'
 import Footer from '~/components/landingPage/Footer.vue'
 
 import { onMounted, onUnmounted } from 'vue';
+import type { RecursivePartial, IOptions } from '@tsparticles/engine'
 
 onMounted(() => {
   const handleWheel = (event: WheelEvent) => {
@@ -39,7 +40,7 @@ onMounted(() => {
   });
 });
 
-const particleOptions = {
+const particleOptions: RecursivePartial<IOptions> = {
   fullScreen: {
     enable: true,
     zIndex: 0,
@@ -60,7 +61,6 @@ const particleOptions = {
           smooth: 10 // Smoothness of the movement
         }
       },
-      resize: true
     },
   },
   particles: {
@@ -68,18 +68,20 @@ const particleOptions = {
       value: "#eee"
     },
     opacity: {
-      value: 0.1
+      value: {
+        min: 0.1,
+        max: 0.3,
+      }
     },
     move: {
       enable: true,
-      direction: "right",
+      direction: "top",
       speed: 2,
     },
     number: {
-      value: 100,
+      value: 125,
       density: {
         enable: true,
-        area: 800
       }
     },
     size: {
@@ -97,6 +99,11 @@ const particleOptions = {
     },
     shape: {
       type: "square"
+    },
+    links: {
+      enable: true,
+      color: "#eee",
+      opacity: 0.5,
     },
   },
   detectRetina: true
