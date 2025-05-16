@@ -1,5 +1,7 @@
 <template>
-  <UCard variant="subtle" class="border-1 border-gray-500">
+  <UCard variant="subtle" class="border-1 border-gray-500" :ui="{
+    header: 'border-none pb-1 text-lg'
+  }">
     <template #header>
       <p class="font-bold">Register an Account</p>
     </template>
@@ -18,7 +20,7 @@
       </UFormField>
 
       <UFormField label="Confirm Password" name="confirmPassword" required>
-        <UInput v-model="state.confirmPassword" type="password" class="w-full" />
+        <PasswordToggleInput v-model="state.confirmPassword" class="w-full" />
       </UFormField>
 
       <UButton class="button" type="submit">

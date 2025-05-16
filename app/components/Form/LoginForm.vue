@@ -1,5 +1,7 @@
 <template>
-  <UCard variant="subtle" class="border-1 border-gray-500">
+  <UCard variant="subtle" class="border-1 border-gray-500" :ui="{
+    header: 'border-none pb-1 text-lg'
+  }">
     <template #header>
       <p class="font-bold">Log into your Account</p>
     </template>
