@@ -3,7 +3,7 @@
     <div class="main-content">
       <h1 class="headline">The modern<br>Chat App</h1>
       <p class="subtext">
-        We've got a super innovate creation, never seen before: <b>YapSpace</b>.
+        Connect to the world! <br> We do not steal your data like the big social media companies.
       </p>
     </div>
   </main>

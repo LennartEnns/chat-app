@@ -79,14 +79,6 @@ const newStatus = ref("")
 const editNameInput = ref<HTMLInputElement | null>(null)
 const editStatusInput = ref<HTMLInputElement | null>(null)
 
-// Focus the inputs as soon as they appear
-watch(editNameInput, (input) => {
-  if (input) input.focus();
-})
-watch(editStatusInput, (input) => {
-  if (input) input.focus();
-})
-
 async function toggleEditName() {
   isEditingName.value = !isEditingName.value;
   if (isEditingName.value) {
@@ -107,6 +99,28 @@ async function saveStatus() {
   userStatus.value = newStatus.value;
   isEditingStatus.value = false;
 }
+
+// Focus the inputs as soon as they appear and do other setup
+watch(editNameInput, (input) => {
+  if (input) {
+    input.focus();
+    input.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        saveName();
+      }
+    });
+  }
+})
+watch(editStatusInput, (input) => {
+  if (input) {
+    input.focus();
+    input.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        saveStatus();
+      }
+    });
+  }
+})
 </script>
 
 <style>

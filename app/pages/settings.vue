@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center border-2 border-solid pageWrap min-h-screen">
+  <div class="flex justify-center pageWrap min-h-screen">
     <div class="mainContainer">
       <div>
         <UButton
@@ -151,7 +151,7 @@
                   />
                 </template>
               </UInput>
-              <br />
+              <br>
               <UInput
                 v-model="passwordNewCheck"
                 placeholder="Re-enter new password"
@@ -207,8 +207,6 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from "vue";
-import type { Ref, ComputedRef } from "vue";
 import type { RadioGroupItem, RadioGroupValue } from "@nuxt/ui";
 
 // --- Color Mode ---
