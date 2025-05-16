@@ -1,71 +1,93 @@
 <template>
-  <UCard class="min-h-screen">
-    <template #header>
-      <p class="font-bold text-xl">Your Profile</p>
-    </template>
-    <div class="avatar">
-      <div class="avatar-container">
-        <UAvatar class="ava" src="/images/profilpic.png" />
-        <div class="avatar-overlay">
-          <UIcon name="i-lucide-camera" size="xx-large" />
-          Edit Picture
-        </div>
-      </div>
-    </div>
-    <div class="profile-container">
-      <div class="section-container">
-        <div class="section-label flex align-center">
-          Display Name
-          <HelpTooltip text="The primary name shown to other users." />
-        </div>
-        <div class="profile-field">
-          <div class="field-content">
-            <div v-if="!isEditingName">
-              {{ userName }}
-            </div>
-            <input v-else ref="editNameInput" v-model="newName" type="text" class="edit-input">
-            <UButton :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pencil'" size="lg" class="edit-button" @click="toggleEditName" />
-            <button
-              v-if="isEditingName"
-              class="save-button"
-              @click="saveName"
-            >
-              Save
-            </button>
+  <NuxtLayout name="logged-in">
+    <UCard
+      class="ring-0"
+      :ui="{
+      header: 'border-none',
+    }">
+      <template #header>
+        <p class="font-bold text-xl text-center">Your Profile</p>
+      </template>
+      <div class="avatar">
+        <div class="avatar-container">
+          <UAvatar class="ava" src="/images/profilpic.png" />
+          <div class="avatar-overlay">
+            <UIcon name="i-lucide-camera" size="xx-large" />
+            Edit Picture
           </div>
         </div>
       </div>
+      <div class="profile-container">
+        <div class="section-container">
+          <div :class="`flex align-center mb-2 text-md ${themedSectionLabelClasses}`">
+            Display Name
+            <HelpTooltip text="The primary name shown to other users." />
+          </div>
+          <div :class="`py-1 border-b-1 ${themedProfileFieldClasses}`">
+            <div class="field-content">
+              <div v-if="!isEditingName" :class="`${isLight ? 'text-black' : 'text-white'}`">
+                {{ userName }}
+              </div>
+              <UInput
+                v-else
+                v-model="newName"
+                size="xl"
+                variant="ghost"
+                class="edit-input"
+                autofocus
+              />
+              <UButton
+                :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pencil'"
+                size="lg" variant="ghost" color="neutral"
+                class="cursor-pointer" @click="toggleEditName"
+              />
+              <button
+                v-if="isEditingName"
+                class="save-button"
+                @click="saveName"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
 
-      <div class="section-container">
-        <div class="section-label flex align-center">
-          Info
-          <HelpTooltip text="Tell other users about you!" />
-        </div>
-        <div class="profile-field">
-          <div class="field-content">
-            <div v-if="!isEditingStatus">
-              {{ userStatus }}
+        <div class="section-container">
+          <div :class="`flex align-center mb-2 text-md ${themedSectionLabelClasses}`">
+            Info
+            <HelpTooltip text="Tell other users about you!" />
+          </div>
+          <div :class="`py-1 border-b-1 ${themedProfileFieldClasses}`">
+            <div class="field-content">
+              <div v-if="!isEditingStatus" :class="`${isLight ? 'text-black' : 'text-white'}`">
+                {{ userStatus }}
+              </div>
+              <UInput
+                v-else
+                v-model="newStatus"
+                size="xl"
+                variant="ghost"
+                class="edit-input"
+                autofocus
+              />
+              <UButton
+                :icon="isEditingStatus ? 'i-lucide-x' : 'i-lucide-pencil'"
+                size="lg" variant="ghost" color="neutral"
+                class="cursor-pointer" @click="toggleEditStatus"
+              />
+              <button
+                v-if="isEditingStatus"
+                class="save-button"
+                @click="saveStatus"
+              >
+                Save
+              </button>
             </div>
-            <input
-              v-else
-              ref="editStatusInput"
-              v-model="newStatus"
-              type="text"
-              class="edit-input"
-            >
-            <UButton :icon="isEditingStatus ? 'i-lucide-x' : 'i-lucide-pencil'" size="lg" class="edit-button" @click="toggleEditStatus" />
-            <button
-              v-if="isEditingStatus"
-              class="save-button"
-              @click="saveStatus"
-            >
-              Save
-            </button>
           </div>
         </div>
       </div>
-    </div>
-  </UCard>
+    </UCard>
+  </NuxtLayout>
 </template>
 
 <script setup lang="ts">
@@ -76,8 +98,14 @@ const isEditingStatus = ref(false)
 const newName = ref("")
 const newStatus = ref("")
 
-const editNameInput = ref<HTMLInputElement | null>(null)
-const editStatusInput = ref<HTMLInputElement | null>(null)
+const isLight = useSSRSafeTheme()
+
+const themedProfileFieldClasses = computed(() => {
+  return (isLight.value ? 'border-b-primary-600' : 'border-b-primary-300');
+});
+const themedSectionLabelClasses = computed(() => {
+  return (isLight.value ? 'text-primary-900' : 'text-primary-400');
+});
 
 async function toggleEditName() {
   isEditingName.value = !isEditingName.value;
@@ -99,28 +127,6 @@ async function saveStatus() {
   userStatus.value = newStatus.value;
   isEditingStatus.value = false;
 }
-
-// Focus the inputs as soon as they appear and do other setup
-watch(editNameInput, (input) => {
-  if (input) {
-    input.focus();
-    input.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (event.key === 'Enter') {
-        saveName();
-      }
-    });
-  }
-})
-watch(editStatusInput, (input) => {
-  if (input) {
-    input.focus();
-    input.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (event.key === 'Enter') {
-        saveStatus();
-      }
-    });
-  }
-})
 </script>
 
 <style>

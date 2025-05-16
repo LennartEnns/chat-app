@@ -70,17 +70,6 @@ footer {
   margin-bottom: 24px;
 }
 
-.section-label {
-  font-size: 1rem;
-  color: var(--color-primary-400);
-  margin-bottom: 8px;
-}
-
-.profile-field {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-primary-300);
-}
-
 .field-content {
   display: flex;
   justify-content: space-between;
@@ -91,7 +80,6 @@ footer {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.6);
   padding: 4px;
   display: flex;
   align-items: center;
@@ -104,13 +92,16 @@ footer {
 
 .edit-input {
   flex-grow: 1;
-  margin-right: 8px;
-  padding: 8px;
   border: none;
-  color: white;
 }
-.edit-input:focus {
-  outline: none;
+.edit-input>input {
+  padding: 0px 0px;
+}
+.edit-input>input:focus {
+  background: transparent;
+}
+.edit-input>input:hover {
+  background: transparent;
 }
 
 .save-button {
