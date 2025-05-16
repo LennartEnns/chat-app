@@ -4,6 +4,8 @@ const messages: { [key: string]: string } = {
     'user_already_exists': 'A user with this email already exists',
     'validation_failed': 'Invalid inputs',
     'invalid_credentials': 'Invalid login credentials',
+    'email_address_invalid': 'Invalid Email address',
+    'email_not_confirmed': 'Confirm your Email address first',
 }
 
 export function getAuthErrorMessage(code: string | undefined, fallback: string = "Unknown authentication error"): string {

@@ -84,19 +84,20 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     return
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: event.data.email,
     password: event.data.password,
     options: {
       data: {
         username: event.data.username,
-      }
+      },
+      emailRedirectTo: 'http://localhost:3000/login',
     }
   })
-  if (!error) {
+  if (data && !error) {
     toast.add({ title: 'Success', description: 'We have sent you a confirmation email.', color: 'success' })
     showSuccessModal.value = true
-  } else {
+  } else if (error) {
     console.error(`An auth error occured during registration: ${ Object.keys(error) } \n ${ Object.values(error) }`)
     toast.add({
       title: 'Error',
