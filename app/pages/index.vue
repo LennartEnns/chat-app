@@ -1,9 +1,10 @@
 <template>
   <div class="min-h-screen flex flex-col text-white font-sans landing-background">
-    <NuxtParticles id="particles" :options="particleOptions" />
+    <NuxtParticles id="particles" :options="particleOptions" @load="onParticlesLoad" />
     <Header z-index="1" />
     <Body class="flex-grow" z-index="1" />
     <Footer z-index="1" />
+    {{ particleOptions?.particles?.color?.value }}
   </div>
 </template>
 
@@ -13,7 +14,7 @@ import Body from '~/components/landingPage/Body.vue'
 import Footer from '~/components/landingPage/Footer.vue'
 
 import { onMounted, onUnmounted } from 'vue';
-import type { RecursivePartial, IOptions } from '@tsparticles/engine'
+import type { RecursivePartial, IOptions, Container } from '@tsparticles/engine'
 import type { Reactive } from 'vue';
 
 const isLight = useSSRSafeTheme();
@@ -43,15 +44,15 @@ onMounted(() => {
   });
 });
 
-const particlesColor = computed(() => isLight.value ? '#222' : '"#eee"')
-const particleOptions: RecursivePartial<IOptions> = {
+const particlesColor: ComputedRef<string> = computed(() => isLight.value ? '#222' : '#eee')
+const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
   fullScreen: {
     enable: true,
     zIndex: 0,
   },
   background: {
     color: {
-      value: 'transparent'
+      value: 'transparent',
     }
   },
   fpsLimit: 60,
@@ -69,7 +70,7 @@ const particleOptions: RecursivePartial<IOptions> = {
   },
   particles: {
     color: {
-      value: particlesColor.value,
+      value: particlesColor,
     },
     opacity: {
       value: {
@@ -106,15 +107,24 @@ const particleOptions: RecursivePartial<IOptions> = {
     },
     links: {
       enable: true,
-      color: particlesColor.value,
+      color: particlesColor,
       opacity: 0.5,
     },
   },
   detectRetina: true
-};
+});
+
+let particlesContainer: Container | null = null
+const onParticlesLoad = (container: Container) => {
+  console.log("load")
+  particlesContainer = container;
+}
+watch((particleOptions), () => {
+  particlesContainer?.init()
+});
 
 const gradientColor1 = computed(() => isLight.value  ? 'var(--color-primary-400)' : 'var(--color-primary-600)');
-const gradientColor2 = computed(() => isLight.value  ? '#d3dbf2' : '#0c1223');
+const gradientColor2 = computed(() => isLight.value  ? 'var(--color-primary-100)' : '#0c1223');
 </script>
 
 <style scoped>

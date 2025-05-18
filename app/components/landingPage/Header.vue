@@ -26,8 +26,7 @@
       <div class="w-full md:w-auto">
         <UNavigationMenu
           :items="navigationItems"
-          class="justify-center"
-          color="neutral"
+          :class="`justify-center ${navMenuColor}`"
         />
       </div>
 
@@ -51,6 +50,7 @@ const navigationItems = ref<NavigationMenuItem[]>([
 const isLight = useSSRSafeTheme();
 const registerButtonColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const loginButtonColor = computed(() => isLight.value ? 'text-primary-600' : 'text-primary-600');
+const navMenuColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const logoColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 </script>
 
