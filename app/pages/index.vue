@@ -14,6 +14,9 @@ import Footer from '~/components/landingPage/Footer.vue'
 
 import { onMounted, onUnmounted } from 'vue';
 import type { RecursivePartial, IOptions } from '@tsparticles/engine'
+import type { Reactive } from 'vue';
+
+const isLight = useSSRSafeTheme();
 
 onMounted(() => {
   const handleWheel = (event: WheelEvent) => {
@@ -40,6 +43,7 @@ onMounted(() => {
   });
 });
 
+const particlesColor = computed(() => isLight.value ? '#222' : '"#eee"')
 const particleOptions: RecursivePartial<IOptions> = {
   fullScreen: {
     enable: true,
@@ -65,7 +69,7 @@ const particleOptions: RecursivePartial<IOptions> = {
   },
   particles: {
     color: {
-      value: "#eee"
+      value: particlesColor.value,
     },
     opacity: {
       value: {
@@ -102,20 +106,23 @@ const particleOptions: RecursivePartial<IOptions> = {
     },
     links: {
       enable: true,
-      color: "#eee",
+      color: particlesColor.value,
       opacity: 0.5,
     },
   },
   detectRetina: true
-}
+};
+
+const gradientColor1 = computed(() => isLight.value  ? 'var(--color-primary-400)' : 'var(--color-primary-600)');
+const gradientColor2 = computed(() => isLight.value  ? '#d3dbf2' : '#0c1223');
 </script>
 
 <style scoped>
 .landing-background {
   position: relative;
   background:
-    radial-gradient(ellipse 150% 50% at 50% 1%, #0C1223 0%, transparent 70%),
-    radial-gradient(circle at 20% 10%, var(--color-primary-700), #0C1223 75%);
+    radial-gradient(ellipse 150% 50% at 50% 1%, v-bind(gradientColor2) 0%, transparent 70%),
+    radial-gradient(circle at 20% 10%, v-bind(gradientColor1), v-bind(gradientColor2) 75%);
   background-color: #0c0c0c;
   overflow: hidden;
   background-attachment: initial

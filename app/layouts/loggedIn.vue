@@ -2,23 +2,23 @@
   <div class="min-h-screen flex flex-col">
     <div 
       :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
-          ${isMobile ? 'justify-between border-1 rounded-2xl mt-2' : ''}`"
+          ${isMobile ? 'justify-between' : ''}`"
     >
       <UButton
         v-if="isMobile" icon="i-lucide-arrow-left" color="neutral" variant="ghost"
-        class="py-1 h-min self-center cursor-pointer" size="xl" @click="navigateTo('/chat')">Back</UButton>
+        class="py-1 h-min self-center cursor-pointer" size="xl" @click="navigateTo('/chat')">
+        Back
+      </UButton>
       <div class="my-auto text-xl text-primary-300">
         YapSpace
       </div>
-      <ClientOnly>
-        <USwitch
-          v-if="!isMobile"
-          v-model="isLight"
-          class="self-center ml-4"
-          unchecked-icon="i-lucide-moon"
-          checked-icon="i-lucide-sun"
-        />
-      </ClientOnly>
+      <USwitch
+        v-if="!isMobile"
+        v-model="isLight"
+        class="self-center ml-4"
+        unchecked-icon="i-lucide-moon"
+        checked-icon="i-lucide-sun"
+      />
       <div v-if="!isMobile" class="w-full" />
       <UNavigationMenu v-if="!isMobile" :items="items" class="w-min justify-self-center" />
       <UDrawer
@@ -27,7 +27,7 @@
           header: 'flex flex-row justify-end',
           container: 'gap-0',
         }">
-        <UButton icon="i-lucide-menu" color="neutral" variant="ghost" size="xl">Menu</UButton>
+        <UButton trailing-icon="i-lucide-menu"  color="neutral" variant="ghost" size="xl">Menu</UButton>
         <template #header>
           <UButton color="neutral" variant="ghost" icon="i-lucide-x" @click="mobileMenuOpen = false" />
         </template>

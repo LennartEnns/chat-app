@@ -1,6 +1,8 @@
 <template>
-  <UCard variant="subtle" class="border-1 border-gray-500" :ui="{
-    header: 'border-none pb-1 text-lg'
+  <UCard
+    variant="subtle" class="border-1 border-gray-500"
+    :ui="{
+      header: 'border-none pb-1 text-lg'
   }">
     <template #header>
       <p class="font-bold">Register an Account</p>

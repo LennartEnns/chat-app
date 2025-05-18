@@ -1,15 +1,17 @@
 <template>
   <main class="body-section">
     <div class="main-content">
-      <h1 class="headline">The modern<br>Chat App</h1>
-      <p class="subtext">
+      <h1 :class="`headline ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">The modern<br>Chat App</h1>
+      <p :class="`subtext ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
         Connect to the world! <br> We do not steal your data like the big social media companies.
       </p>
     </div>
   </main>
 </template>
 
-<script setup></script>
+<script setup>
+const isLight = useSSRSafeTheme();
+</script>
 
 <style scoped>
 .body-section {
@@ -19,7 +21,6 @@
   min-height: 70vh;
   padding: 2rem;
   text-align: center;
-  color: white;
 }
 
 .main-content {

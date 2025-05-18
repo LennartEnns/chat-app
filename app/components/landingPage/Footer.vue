@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer-bar">
+  <footer :class="`footer-bar ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
     <p>
       © 2025 YapSpace · <a href="#" class="footer-link">AGB</a> · <a href="#" class="footer-link">Datenschutz</a>
     </p>
@@ -7,11 +7,11 @@
 </template>
   
 <script setup>
+const isLight = useSSRSafeTheme()
 </script>
   
 <style scoped>
   .footer-bar {
-    color: white;
     padding: 1rem;
     text-align: center;
     font-size: 0.875rem;

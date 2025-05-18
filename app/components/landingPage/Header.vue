@@ -16,11 +16,11 @@
 </template> -->
 
 <template>
-  <header class="w-full px-8 pt-1 bg-transparent text-white relative z-20">
+  <header class="w-full px-8 pt-1 bg-transparent relative z-20">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
 
-      <div class="flex-shrink-0 text-xl font-bold">
-        Yapspace
+      <div :class="`flex-shrink-0 text-xl font-bold ${logoColor}`">
+        YapSpace
       </div>
 
       <div class="w-full md:w-auto">
@@ -32,8 +32,8 @@
       </div>
 
       <div class="flex gap-2 flex-shrink-0">
-        <UButton label="Register" color="neutral" variant="ghost" @click="navigateTo('/register')" />
-        <UButton label="Login" color="primary" variant="ghost" @click="navigateTo('/login')" />
+        <UButton :class="`${registerButtonColor}`" label="Register" color="neutral" variant="ghost" @click="navigateTo('/register')" />
+        <UButton :class="`${loginButtonColor}`" label="Login" color="primary" variant="ghost" @click="navigateTo('/login')" />
       </div>
 
     </div>
@@ -47,6 +47,11 @@ const navigationItems = ref<NavigationMenuItem[]>([
   { label: 'Chat', icon: 'i-lucide-messages-square', to: '/chat' },
   { label: 'GitHub', icon: 'i-simple-icons-github', to: 'https://github.com/LennartEnns/chat-app', target: '_blank' },
 ]);
+
+const isLight = useSSRSafeTheme();
+const registerButtonColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
+const loginButtonColor = computed(() => isLight.value ? 'text-primary-600' : 'text-primary-600');
+const logoColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 </script>
 
 <style scoped>
