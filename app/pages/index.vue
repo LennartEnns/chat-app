@@ -1,19 +1,18 @@
 <template>
   <div class="min-h-screen flex flex-col text-white font-sans landing-background">
-    <NuxtParticles id="particles" :options="particleOptions" />
-    <Header z-index="1" />
-    <Body class="flex-grow" z-index="1" />
-    <Footer z-index="1" />
+    <NuxtParticles id="particles" :options="particleOptions" @load="onParticlesLoad" />
+    <LandingPageHeader z-index="1" />
+    <LandingPageBody class="flex-grow" z-index="1" />
+    <LandingPageFooter z-index="1" />
   </div>
 </template>
 
 <script setup lang="ts">
-import Header from '~/components/landingPage/Header.vue'
-import Body from '~/components/landingPage/Body.vue'
-import Footer from '~/components/landingPage/Footer.vue'
-
 import { onMounted, onUnmounted } from 'vue';
-import type { RecursivePartial, IOptions } from '@tsparticles/engine'
+import type { RecursivePartial, IOptions, Container } from '@tsparticles/engine'
+import type { Reactive } from 'vue';
+
+const isLight = useSSRSafeTheme();
 
 onMounted(() => {
   const handleWheel = (event: WheelEvent) => {
@@ -40,14 +39,15 @@ onMounted(() => {
   });
 });
 
-const particleOptions: RecursivePartial<IOptions> = {
+const particlesColor: ComputedRef<string> = computed(() => isLight.value ? '#222' : '#eee')
+const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
   fullScreen: {
     enable: true,
     zIndex: 0,
   },
   background: {
     color: {
-      value: 'transparent'
+      value: 'transparent',
     }
   },
   fpsLimit: 60,
@@ -65,7 +65,7 @@ const particleOptions: RecursivePartial<IOptions> = {
   },
   particles: {
     color: {
-      value: "#eee"
+      value: particlesColor,
     },
     opacity: {
       value: {
@@ -102,20 +102,32 @@ const particleOptions: RecursivePartial<IOptions> = {
     },
     links: {
       enable: true,
-      color: "#eee",
+      color: particlesColor,
       opacity: 0.5,
     },
   },
   detectRetina: true
+});
+
+let particlesContainer: Container | null = null
+const onParticlesLoad = (container: Container) => {
+  console.log("load")
+  particlesContainer = container;
 }
+watch((particleOptions), () => {
+  particlesContainer?.init()
+});
+
+const gradientColor1 = computed(() => isLight.value  ? 'var(--color-primary-400)' : 'var(--color-primary-600)');
+const gradientColor2 = computed(() => isLight.value  ? 'var(--color-primary-100)' : '#0c1223');
 </script>
 
 <style scoped>
 .landing-background {
   position: relative;
   background:
-    radial-gradient(ellipse 150% 50% at 50% 1%, #0C1223 0%, transparent 70%),
-    radial-gradient(circle at 20% 10%, var(--color-primary-700), #0C1223 75%);
+    radial-gradient(ellipse 150% 50% at 50% 1%, v-bind(gradientColor2) 0%, transparent 70%),
+    radial-gradient(circle at 20% 10%, v-bind(gradientColor1), v-bind(gradientColor2) 75%);
   background-color: #0c0c0c;
   overflow: hidden;
   background-attachment: initial

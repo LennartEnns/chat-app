@@ -1,5 +1,6 @@
 .avatar {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -70,17 +71,6 @@ footer {
   margin-bottom: 24px;
 }
 
-.section-label {
-  font-size: 1rem;
-  color: var(--color-primary-400);
-  margin-bottom: 8px;
-}
-
-.profile-field {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-primary-300);
-}
-
 .field-content {
   display: flex;
   justify-content: space-between;
@@ -91,7 +81,6 @@ footer {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.6);
   padding: 4px;
   display: flex;
   align-items: center;
@@ -104,18 +93,28 @@ footer {
 
 .edit-input {
   flex-grow: 1;
-  margin-right: 8px;
-  padding: 8px;
   border: none;
-  color: white;
+  background: transparent;
 }
 .edit-input:focus {
-  outline: none;
+  background: transparent;
+}
+.edit-input:hover {
+  background: transparent;
+}
+.edit-input>input, .edit-input>textarea {
+  padding: 0px 0px;
+}
+.edit-input>input:focus, .edit-input>textarea:focus {
+  background: transparent;
+}
+.edit-input>input:hover, .edit-input>textarea:hover {
+  background: transparent;
 }
 
 .save-button {
   background-color: var(--color-primary-600);
-  color: white;
+  color: var(--color-neutral-50);
   border: none;
   padding: 8px 12px;
   border-radius: 4px;
