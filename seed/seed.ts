@@ -22,6 +22,7 @@ const seedTestUsers = async() => {
       user_metadata: {
         username: user.username,
         displayname: user.displayname,
+        description: user.description,
       },
     })
     if (error) {

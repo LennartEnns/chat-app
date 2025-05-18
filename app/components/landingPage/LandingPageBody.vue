@@ -5,12 +5,28 @@
       <p :class="`subtext ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
         Connect to the world! <br> We do not steal your data like the big social media companies.
       </p>
+      <UNavigationMenu
+        :items="navigationItems"
+        class="justify-center"
+        :ui="{
+          linkLeadingIcon: navItemColor,
+          linkLabel: navItemColor,
+        }"
+      />
     </div>
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { NavigationMenuItem } from '@nuxt/ui'
+
 const isLight = useSSRSafeTheme();
+
+const navigationItems = ref<NavigationMenuItem[]>([
+  { label: 'Chat', icon: 'i-lucide-messages-square', to: '/chat' },
+  { label: 'GitHub', icon: 'i-simple-icons-github', to: 'https://github.com/LennartEnns/chat-app', target: '_blank' },
+]);
+const navItemColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-300');
 </script>
 
 <style scoped>

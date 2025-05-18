@@ -1,24 +1,21 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <div 
+    <div
       :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
-          ${isMobile ? 'justify-between' : ''}`"
+            ${isMobile ? 'justify-between py-1 border-b-1 border-neutral-500' : ''}`"
     >
       <UButton
         v-if="isMobile" icon="i-lucide-arrow-left" color="neutral" variant="ghost"
         class="py-1 h-min self-center cursor-pointer" size="xl" @click="navigateTo('/chat')">
         Back
       </UButton>
-      <div class="my-auto text-xl text-primary-300">
+      <UButton
+        variant="ghost"
+        :class="`text-xl font-bold p-0 hover:bg-transparent cursor-pointer ${themedLogoColor}`"
+        @click="navigateTo('/')">
         YapSpace
-      </div>
-      <USwitch
-        v-if="!isMobile"
-        v-model="isLight"
-        class="self-center ml-4"
-        unchecked-icon="i-lucide-moon"
-        checked-icon="i-lucide-sun"
-      />
+      </UButton>
+      <ThemeSwitch v-if="!isMobile" class="ml-4" />
       <div v-if="!isMobile" class="w-full" />
       <UNavigationMenu v-if="!isMobile" :items="items" class="w-min justify-self-center" />
       <UDrawer
@@ -59,8 +56,9 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 const isLight = useSSRSafeTheme()
+const themedLogoColor = computed(() => isLight.value ? 'text-primary-600' : 'text-primary-400')
 
-const isMobile = useUseMobileDetector()
+const isMobile = useMobileDetector()
 const mobileMenuOpen = ref(false)
 
 const supabase = useSupabaseClient();

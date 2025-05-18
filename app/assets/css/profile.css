@@ -1,5 +1,6 @@
 .avatar {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -93,20 +94,27 @@ footer {
 .edit-input {
   flex-grow: 1;
   border: none;
-}
-.edit-input>input {
-  padding: 0px 0px;
-}
-.edit-input>input:focus {
   background: transparent;
 }
-.edit-input>input:hover {
+.edit-input:focus {
+  background: transparent;
+}
+.edit-input:hover {
+  background: transparent;
+}
+.edit-input>input, .edit-input>textarea {
+  padding: 0px 0px;
+}
+.edit-input>input:focus, .edit-input>textarea:focus {
+  background: transparent;
+}
+.edit-input>input:hover, .edit-input>textarea:hover {
   background: transparent;
 }
 
 .save-button {
   background-color: var(--color-primary-600);
-  color: white;
+  color: var(--color-neutral-50);
   border: none;
   padding: 8px 12px;
   border-radius: 4px;

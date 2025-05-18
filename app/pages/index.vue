@@ -1,18 +1,13 @@
 <template>
   <div class="min-h-screen flex flex-col text-white font-sans landing-background">
     <NuxtParticles id="particles" :options="particleOptions" @load="onParticlesLoad" />
-    <Header z-index="1" />
-    <Body class="flex-grow" z-index="1" />
-    <Footer z-index="1" />
-    {{ particleOptions?.particles?.color?.value }}
+    <LandingPageHeader z-index="1" />
+    <LandingPageBody class="flex-grow" z-index="1" />
+    <LandingPageFooter z-index="1" />
   </div>
 </template>
 
 <script setup lang="ts">
-import Header from '~/components/landingPage/Header.vue'
-import Body from '~/components/landingPage/Body.vue'
-import Footer from '~/components/landingPage/Footer.vue'
-
 import { onMounted, onUnmounted } from 'vue';
 import type { RecursivePartial, IOptions, Container } from '@tsparticles/engine'
 import type { Reactive } from 'vue';

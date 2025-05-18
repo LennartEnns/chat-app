@@ -1,7 +1,7 @@
 <template>
   <footer :class="`footer-bar ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
     <p>
-      © 2025 YapSpace · <a href="#" class="footer-link">AGB</a> · <a href="#" class="footer-link">Datenschutz</a>
+      © 2025 YapSpace · <a href="#" class="footer-link">Terms & Conditions</a> · <a href="#" class="footer-link">Privacy</a>
     </p>
   </footer>
 </template>

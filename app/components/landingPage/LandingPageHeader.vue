@@ -16,41 +16,33 @@
 </template> -->
 
 <template>
-  <header class="w-full px-8 pt-1 bg-transparent relative z-20">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+  <header class="w-full px-6 lg:px-8 bg-transparent relative pt-3">
+    <div class="flex flex-row items-center justify-between">
 
-      <div :class="`flex-shrink-0 text-xl font-bold ${logoColor}`">
+      <UButton
+        variant="ghost"
+        :class="`flex-shrink-0 text-xl font-bold p-0 hover:bg-transparent cursor-pointer ${logoColor}`"
+        @click="navigateTo('/')">
         YapSpace
-      </div>
+      </UButton>
 
-      <div class="w-full md:w-auto">
-        <UNavigationMenu
-          :items="navigationItems"
-          :class="`justify-center ${navMenuColor}`"
-        />
-      </div>
+      <ThemeSwitch class="ml-4" />
+
+      <div class="w-full" />
 
       <div class="flex gap-2 flex-shrink-0">
-        <UButton :class="`${registerButtonColor}`" label="Register" color="neutral" variant="ghost" @click="navigateTo('/register')" />
-        <UButton :class="`${loginButtonColor}`" label="Login" color="primary" variant="ghost" @click="navigateTo('/login')" />
+        <UButton :class="`${registerButtonColor}`" label="Register" color="neutral" variant="ghost" size="xl" @click="navigateTo('/register')" />
+        <UButton :class="`${loginButtonColor}`" label="Login" color="primary" variant="ghost" size="xl" @click="navigateTo('/login')" />
       </div>
-
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-
-const navigationItems = ref<NavigationMenuItem[]>([
-  { label: 'Chat', icon: 'i-lucide-messages-square', to: '/chat' },
-  { label: 'GitHub', icon: 'i-simple-icons-github', to: 'https://github.com/LennartEnns/chat-app', target: '_blank' },
-]);
-
 const isLight = useSSRSafeTheme();
+
 const registerButtonColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const loginButtonColor = computed(() => isLight.value ? 'text-primary-600' : 'text-primary-600');
-const navMenuColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const logoColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 </script>
 
@@ -83,7 +75,6 @@ const logoColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neut
   align-items: center;
   gap: 1rem;
 }
-
 button {
   cursor: pointer;
 }

@@ -1,5 +1,5 @@
 // Detects screens that are less than 768px wide
-export const useUseMobileDetector = () => {
+export const useMobileDetector = () => {
   const isMobile = ref(false)
   onMounted(() => {
     const check = () => isMobile.value = (window.innerWidth < 768)

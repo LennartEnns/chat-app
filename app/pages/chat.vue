@@ -1,17 +1,6 @@
 <template>
   <NuxtLayout name="logged-in">
-    <UContainer class="main-layout">
-      <UContainer class="align-column quick-settings">
-        <UButton
-          to="/profile"
-          class="profile-picture"
-          :avatar="{
-            src: 'https://avatars.githubusercontent.com/u/182207917?v=4',
-          }"
-          color="neutral"
-          variant="outline"
-        />
-      </UContainer>
+    <UContainer class="main-layout grow">
       <UContainer class="align-column">
         <UModal v-model:open="open" class="search-bar">
           <UButton
