@@ -11,7 +11,7 @@ create policy "Anyone can upload exactly one avatar" on storage.objects
     and not exists(
       select 1 from storage.buckets
       where id = 'avatars'
-      and owner = auth.uid()
+      and owner = (select auth.uid())
     )
   );
 

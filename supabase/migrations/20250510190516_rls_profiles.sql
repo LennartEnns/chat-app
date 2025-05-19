@@ -6,4 +6,4 @@ using (true);
 
 create policy "Users can update their own profile"
 on profiles for update
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
