@@ -133,7 +133,12 @@ const isEditingName = ref(false);
 const newDisplayName = ref('');
 const isEditingDescription = ref(false);
 const newDescription = ref('');
+
 const descriptionRowCount = computed(() => (userDescription.value.match(/\n/g) || '').length + 1)
+const displayNameSanitized = computed(() => isFalsy(newDisplayName.value) ? null : newDisplayName.value?.trim())
+const displayNameParsed = computed(() => displayNameSchema.safeParse(displayNameSanitized.value));
+const displayNameValid = computed(() => displayNameParsed.value.success);
+const displayNameErrorMessage = computed(() => displayNameParsed.value.error?.issues[0]?.message ?? 'Invalid Format');
 
 const isLight = useSSRSafeTheme();
 const toast = useToast();
@@ -207,11 +212,6 @@ async function attachDisplayNameInputEnterHandler() {
     if (e.code === 'Enter') saveDisplayName();
   })
 }
-
-const displayNameSanitized = computed(() => isFalsy(newDisplayName.value) ? null : newDisplayName.value?.trim())
-const displayNameParsed = computed(() => displayNameSchema.safeParse(displayNameSanitized.value));
-const displayNameValid = computed(() => displayNameParsed.value.success);
-const displayNameErrorMessage = computed(() => displayNameParsed.value.error?.issues[0]?.message ?? 'Invalid Format');
 </script>
 
 <style>

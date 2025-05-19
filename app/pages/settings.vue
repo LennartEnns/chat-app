@@ -102,7 +102,7 @@
                     />
                   </template>
                 </UInput>
-                <br />
+                <br>
                 <UInput
                   v-model="passwordNewCheck"
                   placeholder="Re-enter new password"
@@ -241,27 +241,6 @@ const tabItems: TabItem[] = [
     content: "Finally, this is the content for Appearance.",
   },
 ];
-
-// export {
-//   isDark,
-//   editBio,
-//   currentBio,
-//   bioInput,
-//   saveBio,
-//   themeRadioItems,
-//   selectedTheme,
-//   featureEnabled,
-//   showOldPassword,
-//   showNewPassword,
-//   showNewPasswordCheck,
-//   passwordOld,
-//   passwordNew,
-//   passwordNewCheck,
-//   resetPasswordForm,
-//   handleChangePassword,
-//   tabItems,
-//   attemptedPasswordChange,
-// };
 </script>
 
 <style scoped>
@@ -298,11 +277,5 @@ const tabItems: TabItem[] = [
 .changePW div {
   padding-left: 0;
   margin-top: 1%;
-}
-
-.savePW_actions {
-}
-
-.savePWbtn {
 }
 </style>
