@@ -49,12 +49,14 @@
               </div>
               <UInput
                 v-else
+                id="displayNameInput"
                 v-model="newDisplayName"
                 :maxlength = "userLimits.displayname"
                 size="xl"
                 variant="ghost"
                 class="edit-input"
                 autofocus
+                @vue:mounted="attachDisplayNameInputEnterHandler"
               />
             </div>
             <div v-if="isEditingName && !displayNameValid" class="text-sm text-error mt-2">
@@ -145,7 +147,7 @@ const showDescriptionLengthIndicator = computed(() => {
   return (!isEditingDescription.value && (descriptionRowCount.value >= 10));
 });
 
-async function updateProfileData(data: Partial<{displayname: string, description: string}>) {
+async function updateProfileData(data: Partial<{displayname: string | null, description: string}>) {
   const { error } = await supabase.auth.updateUser({
     data
   });
@@ -172,10 +174,10 @@ async function toggleEditDisplayName() {
   }
 }
 async function saveDisplayName() {
-  displayName.value = newDisplayName.value?.trim();
+  displayName.value = displayNameParsed.value.data ?? null;
   isEditingName.value = false;
   updateProfileData({
-    displayname: displayName.value ?? null,
+    displayname: displayName.value,
   });
 }
 async function toggleEditDescription() {
@@ -190,6 +192,12 @@ async function saveDescription() {
   updateProfileData({
     description: userDescription.value,
   });
+}
+
+async function attachDisplayNameInputEnterHandler() {
+  document.getElementById('displayNameInput')?.addEventListener('keyup', (e: KeyboardEvent) => {
+    if (e.code === 'Enter') saveDisplayName();
+  })
 }
 
 const displayNameSanitized = computed(() => isFalsy(newDisplayName.value) ? null : newDisplayName.value?.trim())
