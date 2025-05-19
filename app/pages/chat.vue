@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout name="logged-in">
-    <UContainer class="main-layout grow">
-      <UContainer class="align-column">
+    <div class="main-layout grow">
+      <div class="align-column">
         <UModal v-model:open="open" class="search-bar">
           <UButton
             label="Search users..."
@@ -37,12 +37,12 @@
           size="xl"
           >Johannes Weigel</UButton
         >
-      </UContainer>
-      <UContainer class="align-column">
+      </div>
+      <div class="align-column">
         <UCard class="profile-bar">
           <h1>Florian Steckchen</h1>
         </UCard>
-        <UContainer ref="messagesContainer" class="messages">
+        <div class="messages" ref="messagesContainer">
           <!--example messages-->
           <UTextarea
             :avatar="{
@@ -72,8 +72,8 @@
             autoresize
             :model-value="message"
           />
-        </UContainer>
-        <UContainer class="write">
+        </div>
+        <div class="write">
           <UTextarea
             v-model="newMessage"
             class="full"
@@ -82,10 +82,12 @@
             :rows="4"
             :maxrows="4"
           />
-          <UButton @click="sendMessage"><Icon name="ic:baseline-send" /></UButton>
-        </UContainer>
-      </UContainer>
-    </UContainer>
+          <UButton @click="sendMessage"
+            ><Icon name="ic:baseline-send"
+          /></UButton>
+        </div>
+      </div>
+    </div>
   </NuxtLayout>
 </template>
 
@@ -115,8 +117,8 @@ function handleKeyDown(event: KeyboardEvent): void {
 const scrollToBottom = async (): Promise<void> => {
   await nextTick();
   const component = messagesContainer.value;
-  if (component && component.$el) {
-    component.$el.scrollTop = component.$el.scrollHeight;
+  if (component && component) {
+    component.scrollTop = component.scrollHeight;
   }
 };
 
