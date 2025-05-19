@@ -29,7 +29,13 @@
           <UButton color="neutral" variant="ghost" icon="i-lucide-x" @click="mobileMenuOpen = false" />
         </template>
         <template #body>
-          <UNavigationMenu :items="items" orientation="vertical" />
+          <UNavigationMenu
+            :items="items" orientation="vertical"
+            :ui="{
+              linkLeadingIcon: 'size-6',
+              linkLabel: 'text-lg',
+            }"
+          />
         </template>
       </UDrawer>
     </div>
