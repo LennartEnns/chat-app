@@ -31,6 +31,7 @@
                 height: 100%;
                 position: absolute;
               "
+              accept="image/*"
             />
           </div>
         </div>
