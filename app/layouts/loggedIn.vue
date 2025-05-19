@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col">
+  <div class="min-h-dvh flex flex-col">
     <div
       :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
             ${isMobile ? 'justify-between py-1 border-b-1 border-neutral-500' : ''}`"
