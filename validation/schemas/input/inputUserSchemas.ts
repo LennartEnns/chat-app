@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import baseUserSchema from "../base/baseUserSchema";
-import { validateUsername, usernameFormatMessage } from '~~/validation/commonRules';
+import { validateUsername, usernameFormatMessage, validateDisplayName, displayNameFormatMessage } from '~~/validation/commonRules';
 
 export const registrationSchema = baseUserSchema
   .omit({
@@ -19,3 +19,6 @@ export const loginSchema = registrationSchema
   .extend({
     usernameOrEmail: z.string().nonempty("Required"),
   });
+
+export const displayNameSchema = baseUserSchema.shape.displayname.refine(
+  (name) => !name || validateDisplayName(name), displayNameFormatMessage);

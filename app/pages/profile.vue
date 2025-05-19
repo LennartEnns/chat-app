@@ -35,6 +35,7 @@
             />
             <UButton
               v-if="isEditingName"
+              :disabled="!displayNameValid"
               class="ml-2 self-center"
               @click="saveDisplayName"
             >
@@ -48,14 +49,16 @@
               </div>
               <UInput
                 v-else
-                id="displayNameInput"
-                v-model="newName"
+                v-model="newDisplayName"
                 :maxlength = "userLimits.displayname"
                 size="xl"
                 variant="ghost"
                 class="edit-input"
                 autofocus
               />
+            </div>
+            <div v-if="isEditingName && !displayNameValid" class="text-sm text-error mt-2">
+              {{ displayNameErrorMessage }}
             </div>
           </div>
         </div>
@@ -105,6 +108,7 @@
 
 <script setup lang="ts">
 import { userLimits } from '../../validation/commonLimits';
+import { displayNameSchema } from '../../validation/schemas/input/inputUserSchemas';
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -112,13 +116,13 @@ const profileData = user.value?.user_metadata;
 const avatarUrlData = user.value ? supabase.storage.from('avatars').getPublicUrl(`public/${user.value?.id}.jpg`) : null;
 const avatarUrl = avatarUrlData?.data.publicUrl;
 
-const username = ref(profileData?.username);
-const displayName = ref(profileData?.displayname);
-const userDescription = ref(profileData?.description);
+const username = ref<string>(profileData?.username);
+const displayName = ref<string | null | undefined>(profileData?.displayname);
+const userDescription = ref<string>(profileData?.description);
 const isEditingName = ref(false);
+const newDisplayName = ref('');
 const isEditingDescription = ref(false);
-const newName = ref("");
-const newDescription = ref("");
+const newDescription = ref('');
 const descriptionRowCount = computed(() => (userDescription.value.match(/\n/g) || '').length + 1)
 
 const isLight = useSSRSafeTheme();
@@ -164,14 +168,14 @@ async function updateProfileData(data: Partial<{displayname: string, description
 async function toggleEditDisplayName() {
   isEditingName.value = !isEditingName.value;
   if (isEditingName.value) {
-    newName.value = displayName.value;
+    newDisplayName.value = displayName.value || '';
   }
 }
 async function saveDisplayName() {
-  displayName.value = newName.value.trim();
+  displayName.value = newDisplayName.value?.trim();
   isEditingName.value = false;
   updateProfileData({
-    displayname: displayName.value,
+    displayname: displayName.value ?? null,
   });
 }
 async function toggleEditDescription() {
@@ -188,15 +192,10 @@ async function saveDescription() {
   });
 }
 
-const displayNameInput = ref<HTMLInputElement | null>(null)
-watch(displayNameInput, (input) => {
-  if (!input) return;
-  console.log("Hallo")
-  input.addEventListener('keydown', (event: KeyboardEvent) => {
-    console.log(event);
-  })
-})
-
+const displayNameSanitized = computed(() => isFalsy(newDisplayName.value) ? null : newDisplayName.value?.trim())
+const displayNameParsed = computed(() => displayNameSchema.safeParse(displayNameSanitized.value));
+const displayNameValid = computed(() => displayNameParsed.value.success);
+const displayNameErrorMessage = computed(() => displayNameParsed.value.error?.issues[0]?.message ?? 'Invalid Format');
 </script>
 
 <style>
