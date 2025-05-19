@@ -1,20 +1,3 @@
-<!-- <template>
-  <header class="header-wrapper">
-    <div class="header-buttons">
-      <UButton label="Register" color="neutral" variant="ghost" @click="goToRegister" />
-      <UButton label="Login" color="primary" variant="ghost" @click="goToLogin" />
-    </div>
-
-    <div class="header-center">
-      <UNavigationMenu :items="items" class="w-full justify-center" arrow content-orientation="vertical" color="neutral" v-model="active"/>
-    </div>
-
-    <div class="header-logo">
-      <h1 class="text-xl font-bold">Yapspace</h1>
-    </div>
-  </header>
-</template> -->
-
 <template>
   <header class="w-full px-6 lg:px-8 bg-transparent relative pt-3">
     <div class="flex flex-row items-center justify-between">

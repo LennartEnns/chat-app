@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col text-white font-sans landing-background">
+  <div class="min-h-dvh flex flex-col text-white font-sans landing-background">
     <NuxtParticles id="particles" :options="particleOptions" @load="onParticlesLoad" />
     <LandingPageHeader z-index="1" />
     <LandingPageBody class="flex-grow" z-index="1" />

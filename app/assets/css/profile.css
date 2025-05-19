@@ -10,18 +10,6 @@
   user-select: none;
 }
 
-.ava {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 20vh;
-  height: 20vh;
-  border-radius: 50%;
-  display: block;
-  transition: filter 0.3s ease;
-}
-
 .avatar-overlay {
   position: absolute;
   top: 0;

@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen flex flex-col align-content-center justify-center landing-background">
-    <LandingPageHeader></LandingPageHeader>
+  <div class="min-h-dvh flex flex-col align-content-center justify-center landing-background">
+    <LandingPageHeader />
     <slot />
   </div>
 </template>

@@ -20,7 +20,7 @@
         />
 
         <USeparator label="Change password" class="mt-4" />
-        <UCollapsible class="flex flex-col gap-2 w-48 mt-2">
+        <UCollapsible class="flex flex-col gap-2 mt-2">
           <UButton
             class="group"
             color="neutral"
@@ -116,7 +116,9 @@
                       variant="link"
                       size="sm"
                       :icon="
-                        showNewPasswordCheck ? 'i-lucide-eye-off' : 'i-lucide-eye'
+                        showNewPasswordCheck
+                          ? 'i-lucide-eye-off'
+                          : 'i-lucide-eye'
                       "
                       :aria-label="
                         showNewPasswordCheck ? 'Hide password' : 'Show password'
@@ -239,27 +241,6 @@ const tabItems: TabItem[] = [
     content: "Finally, this is the content for Appearance.",
   },
 ];
-
-// export {
-//   isDark,
-//   editBio,
-//   currentBio,
-//   bioInput,
-//   saveBio,
-//   themeRadioItems,
-//   selectedTheme,
-//   featureEnabled,
-//   showOldPassword,
-//   showNewPassword,
-//   showNewPasswordCheck,
-//   passwordOld,
-//   passwordNew,
-//   passwordNewCheck,
-//   resetPasswordForm,
-//   handleChangePassword,
-//   tabItems,
-//   attemptedPasswordChange,
-// };
 </script>
 
 <style scoped>
@@ -296,11 +277,5 @@ const tabItems: TabItem[] = [
 .changePW div {
   padding-left: 0;
   margin-top: 1%;
-}
-
-.savePW_actions {
-}
-
-.savePWbtn {
 }
 </style>
