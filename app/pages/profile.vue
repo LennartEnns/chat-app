@@ -233,15 +233,16 @@ async function updateProfileData(
   }
 }
 
-// Reactive state for the avatar image URL
-
 // Function to handle file upload and update avatarUrl
-const uploadPic = (event) => {
-  const file = event.target.files[0];
+const uploadPic = (event: Event): void => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      avatarUrl.value = e.target.result; // Set the image data URL
+    reader.onload = (e: ProgressEvent<FileReader>): void => {
+      if (e.target?.result && typeof e.target.result === "string") {
+        avatarUrl.value = e.target.result; // Set the image data URL
+      }
     };
     reader.readAsDataURL(file); // Read the file as a data URL
   }
