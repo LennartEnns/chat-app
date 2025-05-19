@@ -10,7 +10,15 @@
       </template>
       <div class="avatar">
         <div class="avatar-container">
-          <UAvatar class="ava border-2" :src="avatarUrl" />
+          <UAvatar
+            class="border-2"
+            :src="avatarUrl"
+            icon="i-lucide-user"
+            :ui="{
+              root: 'size-35',
+              icon: 'size-30'
+            }"
+          />
           <div class="avatar-overlay">
             <UIcon name="i-lucide-camera" size="xx-large" />
             Edit Picture
@@ -120,7 +128,7 @@ const avatarUrl = avatarUrlData?.data.publicUrl;
 
 const username = ref<string>(profileData?.username);
 const displayName = ref<string | null | undefined>(profileData?.displayname);
-const userDescription = ref<string>(profileData?.description);
+const userDescription = ref<string>(profileData?.description || '');
 const isEditingName = ref(false);
 const newDisplayName = ref('');
 const isEditingDescription = ref(false);
@@ -187,7 +195,7 @@ async function toggleEditDescription() {
   }
 }
 async function saveDescription() {
-  userDescription.value = newDescription.value.trim();
+  userDescription.value = newDescription.value?.trim() || '';
   isEditingDescription.value = false;
   updateProfileData({
     description: userDescription.value,
