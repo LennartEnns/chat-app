@@ -32,7 +32,6 @@ const isLight = useSSRSafeTheme();
 
 const registerButtonColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const loginButtonColor = computed(() => isLight.value ? 'text-primary-600' : 'text-primary-600');
-//const logoColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const logoColor = computed(() => isLight.value ? logo_darkened : logo_lightened);
 </script>
 
