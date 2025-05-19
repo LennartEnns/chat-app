@@ -10,31 +10,34 @@
         <p class="font-bold text-xl text-center">Your Profile</p>
       </template>
       <div class="avatar">
-        <div class="avatar-container">
-          <UAvatar
-            class="border-2"
-            :src="avatarUrl"
-            icon="i-lucide-user"
-            :ui="{
-              root: 'size-35',
-              icon: 'size-30',
-            }"
-          />
-          <div class="avatar-overlay">
-            <UIcon name="i-lucide-camera" size="xx-large" />
-            Edit Picture
-            <input
-              type="file"
-              style="
-                color: transparent;
-                max-width: 100%;
-                height: 100%;
-                position: absolute;
-              "
-              accept="image/*"
+        <template>
+          <div class="avatar-container">
+            <UAvatar
+              class="border-2"
+              :src="avatarUrl"
+              icon="i-lucide-user"
+              :ui="{ root: 'size-35', icon: 'size-30' }"
             />
+            <div class="avatar-overlay">
+              <UIcon name="i-lucide-camera" size="xx-large" />
+              Edit Picture
+              <input
+                type="file"
+                style="
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  opacity: 0;
+                "
+                accept="image/*"
+                @change="uploadPic"
+                ref="upload"
+              />
+            </div>
           </div>
-        </div>
+        </template>
         <div :class="`mt-4 text-neutral-400 ${themedUsernameColor}`">
           {{ username }}
         </div>
@@ -166,7 +169,7 @@ const avatarUrlData = user.value
       .from("avatars")
       .getPublicUrl(`public/${user.value?.id}.jpg`)
   : null;
-const avatarUrl = avatarUrlData?.data.publicUrl;
+const avatarUrl = ref(avatarUrlData?.data.publicUrl);
 
 const username = ref<string>(profileData?.username);
 const displayName = ref<string | null | undefined>(profileData?.displayname);
@@ -231,6 +234,20 @@ async function updateProfileData(
     });
   }
 }
+
+// Reactive state for the avatar image URL
+
+// Function to handle file upload and update avatarUrl
+const uploadPic = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatarUrl.value = e.target.result; // Set the image data URL
+    };
+    reader.readAsDataURL(file); // Read the file as a data URL
+  }
+};
 
 async function toggleEditDisplayName() {
   isEditingName.value = !isEditingName.value;
