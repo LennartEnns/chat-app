@@ -23,7 +23,10 @@
         variant="ghost"
         :class="`flex-shrink-0 text-xl font-bold p-0 hover:bg-transparent cursor-pointer ${logoColor}`"
         @click="navigateTo('/')">
-        YapSpace
+        <img 
+        :src=logoColor
+        alt="YapSpace" 
+        class="h-13 w-auto object-contain" />
       </UButton>
 
       <ThemeSwitch class="ml-4" />
@@ -39,11 +42,15 @@
 </template>
 
 <script setup lang="ts">
+import logo_lightened from '@/assets/images/logo.png'
+import logo_darkened from '@/assets/images/logo_darkened.png'
+
 const isLight = useSSRSafeTheme();
 
 const registerButtonColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const loginButtonColor = computed(() => isLight.value ? 'text-primary-600' : 'text-primary-600');
-const logoColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
+//const logoColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
+const logoColor = computed(() => isLight.value ? logo_darkened : logo_lightened);
 </script>
 
 <style scoped>
