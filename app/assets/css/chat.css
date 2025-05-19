@@ -4,6 +4,9 @@
   overflow: hidden;
   display: grid;
   grid-template-columns: 3fr 10fr;
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .alignment > div {

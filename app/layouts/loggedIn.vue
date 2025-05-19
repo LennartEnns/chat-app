@@ -10,14 +10,14 @@
     >
       <UButton
         v-if="isMobile"
-        icon="i-lucide-arrow-left"
+        :icon="buttonIcon"
         color="neutral"
         variant="ghost"
         class="py-1 h-min self-center cursor-pointer"
         size="xl"
-        @click="navigateTo('/chat')"
+        @click="buttonTarget"
+        :label="buttonText"
       >
-        Back
       </UButton>
       <UButton
         variant="ghost"
@@ -107,6 +107,7 @@
 <script lang="ts" setup>
 import type { NavigationMenuItem } from "@nuxt/ui";
 
+const route = useRoute();
 const isLight = useSSRSafeTheme();
 const themedLogoColor = computed(() =>
   isLight.value ? "text-primary-600" : "text-primary-400"
@@ -117,6 +118,23 @@ const mobileMenuOpen = ref(false);
 
 const supabase = useSupabaseClient();
 const toast = useToast();
+
+const drawerOpen = useOpenDrawer();
+const buttonText = ref<string>("Back");
+const buttonIcon = ref<string>("i-lucide-arrow-left");
+
+async function buttonTarget() {
+  if (route.path === "/chat") {
+    drawerOpen.value = true;
+  } else {
+    navigateTo("/chat");
+  }
+}
+
+if (route.path === "/chat") {
+  buttonText.value = "Chats";
+  buttonIcon.value = "i-lucide-messages-square";
+}
 
 async function logout(scope: "global" | "local" | "others") {
   const { error } = await supabase.auth.signOut({

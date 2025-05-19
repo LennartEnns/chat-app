@@ -1,7 +1,48 @@
 <template>
   <NuxtLayout name="logged-in">
     <div class="main-layout grow">
-      <div class="align-column">
+      <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
+        <template #body>
+          <div class="align-column">
+            <UModal v-model:open="open" class="search-bar">
+              <UButton
+                label="Search users..."
+                color="neutral"
+                variant="subtle"
+                icon="i-lucide-search"
+              />
+              <template #content>
+                <UCommandPalette
+                  close
+                  :groups="[{ id: 'users', items: users }]"
+                  @update:open="open = $event"
+                />
+              </template>
+            </UModal>
+            <UButton
+              class="chat"
+              :avatar="{
+                src: 'https://github.com/nuxt.png',
+              }"
+              color="primary"
+              variant="outline"
+              size="xl"
+              >Florian Steckchen</UButton
+            >
+            <UButton
+              class="chat"
+              :avatar="{
+                src: 'https://github.com/nuxt.png',
+              }"
+              color="primary"
+              variant="outline"
+              size="xl"
+              >Johannes Weigel</UButton
+            >
+          </div>
+        </template>
+      </UDrawer>
+      <div class="align-column" v-if="!isMobile">
         <UModal v-model:open="open" class="search-bar">
           <UButton
             label="Search users..."
@@ -62,7 +103,6 @@
             autoresize
             model-value="Lorem fjdksj kljaskl jdkl jk"
           />
-          <!---->
           <UTextarea
             v-for="(message, index) in userMessages"
             :key="index"
@@ -94,11 +134,14 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 
+const isMobile = useMobileDetector();
 const open = ref<boolean>(false); //placeholder for command pallette (search bar)
 const users = ref<any[]>([]); //placeholder for command pallette (search bar)
 const newMessage = ref<string>("");
 const userMessages = ref<string[]>([]);
 const messagesContainer = ref<any>(null);
+
+const drawerOpen = useOpenDrawer();
 
 function sendMessage(): void {
   if (newMessage.value.trim()) {
