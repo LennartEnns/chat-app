@@ -34,11 +34,16 @@
 }
 
 .message {
+  display: grid;
+  grid-template-columns: 1fr 5fr;
   max-width: 90%;
   width: 300px;
+  padding: 8px 4px 4px 0px;
+  border-radius: 2%;
 }
 
 .messages {
+  /*border: 10px solid rgb(14, 23, 44);*/
   overflow-y: auto;
   scroll-behavior: smooth;
   display: flex;
@@ -51,9 +56,13 @@
 .partner {
   margin-top: 10px;
   align-self: flex-start;
+  background-color: rgb(0 212 146);
+  color: black;
 }
 
 .user {
+  background-color: rgb(0 212 146);
+  color: black;
   margin-top: 10px;
   align-self: flex-end;
 }

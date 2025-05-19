@@ -85,24 +85,36 @@
         </UCard>
         <div class="messages" ref="messagesContainer">
           <!--example messages-->
-          <UTextarea
-            :avatar="{
-              src: 'https://github.com/nuxt.png',
-            }"
-            disabled
-            class="message partner"
-            autoresize
-            model-value="Lorem Ipsum is simply dummy an printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-          />
-          <UTextarea
-            :avatar="{
-              src: 'https://github.com/nuxt.png',
-            }"
-            disabled
-            class="message user"
-            autoresize
-            model-value="Lorem fjdksj kljaskl jdkl jk"
-          />
+          <div class="message partner">
+            <UAvatar
+              class="justify-self-center"
+              src="https://github.com/nuxt.png"
+            />
+            <p>
+              Ipsum is simply dummy an printer took a galley of type and
+              scrambled it to make a type specimen book. It has survived not
+              only five centuries, but also the leap into electronic
+              typesetting, remaining essentially unchanged. It was popularised
+              in the 1960s with the release of Letraset sheets containing Lorem
+              Ipsum passages, and more recently wit fkjsdaklfjklasd jfkjsadkl
+              jfkljsadklfj föajsklfjkladsjfkl
+            </p>
+          </div>
+          <div class="message user">
+            <UAvatar
+              class="justify-self-center"
+              src="https://github.com/nuxt.png"
+            />
+            <p>
+              Ipsum is simply dummy an printer took a galley of type and
+              scrambled it to make a type specimen book. It has survived not
+              only five centuries, but also the leap into electronic
+              typesetting, remaining essentially unchanged. It was popularised
+              in the 1960s with the release of Letraset sheets containing Lorem
+              Ipsum passages, and more recently wit fkjsdaklfjklasd jfkjsadkl
+              jfkljsadklfj föajsklfjkladsjfkl
+            </p>
+          </div>
           <UTextarea
             v-for="(message, index) in userMessages"
             :key="index"
