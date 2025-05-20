@@ -9,20 +9,6 @@
   }
 }
 
-.alignment > div {
-  /* border: solid red 1px; */
-  display: flex;
-}
-
-.alignment > div > div {
-  /*  border: solid red 1px; */
-  display: flex;
-}
-
-.full {
-  width: 100%;
-}
-
 .align-column {
   padding: 1vh 5vh;
   height: 100%;
@@ -38,12 +24,12 @@
   grid-template-columns: 1fr 5fr;
   max-width: 90%;
   width: 300px;
+  max-height: auto;
   padding: 8px 4px 4px 0px;
-  border-radius: 2%;
+  border-radius: 5px;
 }
 
 .messages {
-  /*border: 10px solid rgb(14, 23, 44);*/
   overflow-y: auto;
   scroll-behavior: smooth;
   display: flex;
@@ -54,15 +40,19 @@
 }
 
 .partner {
+  color: white;
   margin-top: 10px;
   align-self: flex-start;
-  background-color: rgb(0 212 146);
-  color: black;
+  background-color: color-mix(
+    in srgb,
+    var(--ui-color-primary-400) 20%,
+    transparent
+  );
 }
 
 .user {
-  background-color: rgb(0 212 146);
   color: black;
+  background-color: var(--ui-color-primary-400);
   margin-top: 10px;
   align-self: flex-end;
 }
@@ -84,14 +74,4 @@
 .profile-bar {
   margin-bottom: auto;
   justify-content: center;
-}
-
-.search-bar {
-  margin-bottom: 10px;
-}
-
-.profile-picture {
-  width: fit-content;
-}
-.quick-settings {
 }

@@ -4,7 +4,7 @@
       <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
         <template #body>
           <div class="align-column">
-            <UModal v-model:open="open" class="search-bar">
+            <UModal v-model:open="open" class="mb-[10px]">
               <UButton
                 label="Search users..."
                 color="neutral"
@@ -43,7 +43,7 @@
         </template>
       </UDrawer>
       <div class="align-column" v-if="!isMobile">
-        <UModal v-model:open="open" class="search-bar">
+        <UModal v-model:open="open" class="mb-[10px]">
           <UButton
             label="Search users..."
             color="neutral"
@@ -115,20 +115,22 @@
               jfkljsadklfj föajsklfjkladsjfkl
             </p>
           </div>
-          <UTextarea
+          <div
             v-for="(message, index) in userMessages"
             :key="index"
-            :avatar="{ src: 'https://github.com/nuxt.png' }"
-            disabled
             class="message user"
-            autoresize
-            :model-value="message"
-          />
+          >
+            <UAvatar
+              class="justify-self-center"
+              src="https://github.com/nuxt.png"
+            />
+            <p>{{ message }}</p>
+          </div>
         </div>
         <div class="write">
           <UTextarea
             v-model="newMessage"
-            class="full"
+            class="w-full"
             placeholder="Write a message..."
             autoresize
             :rows="4"
