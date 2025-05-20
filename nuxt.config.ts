@@ -9,7 +9,6 @@ export default defineNuxtConfig({
     '@nuxtjs/supabase',
     'nuxt-particles',
     '@nuxt/image',
-    '@pinia/nuxt'
   ],
 
   css: ['~/assets/css/main.css'],

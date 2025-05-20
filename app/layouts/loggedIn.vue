@@ -15,10 +15,9 @@
         variant="ghost"
         class="py-1 h-min self-center cursor-pointer"
         size="xl"
-        @click="buttonTarget"
         :label="buttonText"
-      >
-      </UButton>
+        @click="buttonTarget"
+      />
       <UButton
         variant="ghost"
         :class="`text-xl font-bold p-0 hover:bg-transparent cursor-pointer ${themedLogoColor}`"

@@ -3,8 +3,8 @@
     <NuxtParticles id="particles" :options="particleOptions" @load="onParticlesLoad" />
     <LandingPageHeader z-index="1" />
     <LandingPageBody class="flex-grow" z-index="1" />
-    <LandingPageFooter z-index="1" />
-    <FaqSlideover/>
+    <LandingPageFooter z-index="1" @open-faq="slideoverOpen = true" />
+    <FaqSlideover v-model="slideoverOpen"/>
   </div>
 </template>
 
@@ -15,6 +15,7 @@ import type { RecursivePartial, IOptions, Container } from '@tsparticles/engine'
 import type { Reactive } from 'vue';
 
 const isLight = useSSRSafeTheme();
+const slideoverOpen = ref(false);
 
 onMounted(() => {
   const handleWheel = (event: WheelEvent) => {
