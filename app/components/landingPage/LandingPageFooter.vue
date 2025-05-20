@@ -1,18 +1,14 @@
 <template>
   <footer :class="`footer-bar ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
     <p>
-      © 2025 YapSpace · <a href="#" class="footer-link">Terms & Conditions</a> · <a href="#" class="footer-link">Privacy</a> · <a href="#" class="footer-link" @click.prevent="modal.faqOpen=true"> FAQ </a>
+      © 2025 YapSpace · <a href="#" class="footer-link">Terms & Conditions</a> · <a href="#" class="footer-link">Privacy</a> · <a href="#" class="footer-link" @click.prevent="emit('openFaq')"> FAQ </a>
     </p>
   </footer>
 </template>
   
 <script setup lang="ts">
-
-import { useModalStore } from '~/stores/useModalStore'
-const modal = useModalStore()
-
+const emit = defineEmits(['openFaq']);
 const isLight = useSSRSafeTheme()
-
 </script>
   
 <style scoped>
