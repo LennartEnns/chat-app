@@ -4,10 +4,12 @@
     <LandingPageHeader z-index="1" />
     <LandingPageBody class="flex-grow" z-index="1" />
     <LandingPageFooter z-index="1" />
+    <FaqSlideover/>
   </div>
 </template>
 
 <script setup lang="ts">
+import FaqSlideover from '~/components/FaqSlideover.vue';
 import { onMounted, onUnmounted } from 'vue';
 import type { RecursivePartial, IOptions, Container } from '@tsparticles/engine'
 import type { Reactive } from 'vue';
