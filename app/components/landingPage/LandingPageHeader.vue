@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import logo_lightened from '@/assets/images/logo.png'
-import logo_darkened from '@/assets/images/logo_darkened.png'
+import logo_darkened from '@/assets/images/logo_dark.png'
 
 const isLight = useSSRSafeTheme();
 

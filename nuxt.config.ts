@@ -8,7 +8,8 @@ export default defineNuxtConfig({
     '@nuxt/test-utils',
     '@nuxtjs/supabase',
     'nuxt-particles',
-    '@nuxt/image'
+    '@nuxt/image',
+    '@pinia/nuxt'
   ],
 
   css: ['~/assets/css/main.css'],
