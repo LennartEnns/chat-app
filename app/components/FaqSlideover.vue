@@ -1,5 +1,5 @@
 <template>
-  <USlideover v-model:open="modal.faqOpen" title="FAQ">
+  <USlideover v-model:open="open" title="FAQ">
     <template #body>
       <UAccordion :items="items" type="single">
         <template #content="{ item }">
@@ -13,11 +13,11 @@
 </template>
 
 <script setup lang="ts">
-
-import { useModalStore } from '~/stores/useModalStore'
 import type { AccordionItem } from '@nuxt/ui'
 
-const modal = useModalStore()
+const open = defineModel({
+  type: Boolean,
+});
 
 const items: AccordionItem[] = [
   {
