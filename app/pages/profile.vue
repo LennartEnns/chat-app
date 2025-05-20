@@ -177,18 +177,10 @@ const displayNameErrorMessage = computed(
 const isLight = useSSRSafeTheme();
 const toast = useToast();
 
-const themedProfileFieldClasses = computed(() =>
-  isLight.value ? "border-b-primary-600" : "border-b-primary-300"
-);
-const themedSectionLabelClasses = computed(() =>
-  isLight.value ? "text-primary-900" : "text-primary-400"
-);
-const themedUsernameColor = computed(() =>
-  isLight.value ? "text-neutral-500" : "text-neutral-400"
-);
-const themedTextsColor = computed(() =>
-  isLight.value ? "text-neutral-900" : "text-neutral-100"
-);
+const themedProfileFieldClasses = computed(() => "border-b-primary");
+const themedSectionLabelClasses = computed(() => "text-primary");
+const themedUsernameColor = computed(() => "text-neutral");
+const themedTextsColor = computed(() => "text-neutral");
 
 const showDescriptionLengthIndicator = computed(
   () => !isEditingDescription.value && descriptionRowCount.value >= 10
