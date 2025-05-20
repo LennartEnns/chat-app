@@ -15,8 +15,8 @@ const testUsers: TestUser[] = [
     username: 'johnny',
     displayname: 'John Wick',
     description: 'How dare you look at my profile page?\n\
-                  You leave me with no other choice...\n\
-                  Enjoy your final 2 days, 14 hours, 42 minutes and 37 seconds.',
+You leave me with no other choice...\n\
+Enjoy your final 2 days, 14 hours, 42 minutes and 37 seconds.',
   },
   {
     id: 'c45d5012-99c3-4728-bd33-58e88ab0fcb4',
