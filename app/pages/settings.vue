@@ -10,6 +10,17 @@
           class="mt-2"
         />
 
+        <USeparator label="Preferred Primary Color" class="mt-4"/>
+        <UDropdownMenu v-model:open="open" :items="items" :ui="{ content: 'w-48' }">
+          <UButton label="Change color" color="neutral" variant="outline" icon="i-lucide-pipette" />
+          <template #item="{ item }">
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 rounded" :class="item.colorClass"/>
+              {{ item.label }}
+            </div>
+          </template>
+        </UDropdownMenu>
+
         <USeparator label="Customization" class="mt-4" />
         <USwitch
           v-model="featureEnabled"
@@ -161,7 +172,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { RadioGroupItem } from "@nuxt/ui";
+import type { DropdownMenuItem, RadioGroupItem } from "@nuxt/ui";
 
 // --- Theme Selection ---
 const themeRadioItems: Ref<RadioGroupItem[]> = ref([
@@ -171,6 +182,68 @@ const themeRadioItems: Ref<RadioGroupItem[]> = ref([
 ]);
 
 const colorMode = useColorMode();
+
+// --- Primary Color Selection ---
+const open = ref(false)
+
+function changeThemeColor(color: string) {  
+  updateAppConfig({
+    ui: {
+      colors: {
+        primary: color
+      }
+    }
+  })
+}
+
+defineShortcuts({
+  o: () => open.value = !open.value
+})
+
+const items: DropdownMenuItem[] = [
+  {
+    label: 'Red',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-red-500',
+    onSelect() {changeThemeColor('red')}
+  }, {
+    label: 'Yellow',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-yellow-500',
+    onSelect() {changeThemeColor('yellow')}
+  }, {
+    label: 'Emerald',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-emerald-500',
+    onSelect() {changeThemeColor('emerald')}
+  }
+  , {
+    label: 'Sky',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-sky-500',
+    onSelect() {changeThemeColor('sky')}
+  }, {
+    label: 'Blue',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-blue-500',
+    onSelect() {changeThemeColor('blue')}
+  }, {
+    label: 'Violet',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-violet-500',
+    onSelect() {changeThemeColor('violet')}
+  }, {
+    label: 'Fuchsia',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-fuchsia-500',
+    onSelect() {changeThemeColor('fuchsia')}
+  }, {
+    label: 'Slate',
+    icon: 'i-custom-color-block',
+    colorClass: 'bg-slate-500',
+    onSelect() {changeThemeColor('slate')}
+  }
+]
 
 // --- Custom Feature Switch ---
 const featureEnabled: Ref<boolean> = ref(true);
