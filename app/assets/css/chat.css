@@ -25,7 +25,7 @@
   max-width: 90%;
   width: 300px;
   max-height: auto;
-  padding: 8px 4px 4px 0px;
+  padding: 8px 4px 8px 0px;
   border-radius: 5px;
 }
 
@@ -40,21 +40,33 @@
 }
 
 .partner {
-  color: white;
   margin-top: 10px;
   align-self: flex-start;
-  background-color: color-mix(
-    in srgb,
-    var(--ui-color-primary-400) 20%,
-    transparent
-  );
 }
 
 .user {
-  color: black;
-  background-color: var(--ui-color-primary-400);
   margin-top: 10px;
   align-self: flex-end;
+}
+
+.user-dark {
+  background-color: color-mix(in srgb, var(--ui-primary) 55%, transparent);
+  color: white;
+}
+
+.user-light {
+  background-color: color-mix(in srgb, var(--ui-primary) 65%, transparent);
+  color: black;
+}
+
+.partner-dark {
+  background-color: color-mix(in srgb, var(--ui-primary) 20%, transparent);
+  color: white;
+}
+
+.partner-light {
+  background-color: color-mix(in srgb, var(--ui-primary) 30%, transparent);
+  color: black;
 }
 
 .write {

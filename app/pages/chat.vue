@@ -1,6 +1,7 @@
 <template>
   <NuxtLayout name="logged-in">
     <div class="main-layout grow">
+      <!--Mobile UI drawer for choosing chats-->
       <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
         <template #body>
           <div class="align-column">
@@ -42,6 +43,7 @@
           </div>
         </template>
       </UDrawer>
+      <!--Desktop column for choosing chats-->
       <div class="align-column" v-if="!isMobile">
         <UModal v-model:open="open" class="mb-[10px]">
           <UButton
@@ -79,13 +81,14 @@
           >Johannes Weigel</UButton
         >
       </div>
+      <!--Messaging column-->
       <div class="align-column">
         <UCard class="profile-bar">
           <h1>Florian Steckchen</h1>
         </UCard>
         <div class="messages" ref="messagesContainer">
           <!--example messages-->
-          <div class="message partner">
+          <div :class="`message partner ${themedPartnerMessageColor}`">
             <UAvatar
               class="justify-self-center"
               src="https://github.com/nuxt.png"
@@ -100,7 +103,7 @@
               jfkljsadklfj föajsklfjkladsjfkl
             </p>
           </div>
-          <div class="message user">
+          <div :class="`message user ${themedUserMessageColor}`">
             <UAvatar
               class="justify-self-center"
               src="https://github.com/nuxt.png"
@@ -118,7 +121,7 @@
           <div
             v-for="(message, index) in userMessages"
             :key="index"
-            class="message user"
+            :class="`message user ${themedUserMessageColor}`"
           >
             <UAvatar
               class="justify-self-center"
@@ -127,6 +130,7 @@
             <p>{{ message }}</p>
           </div>
         </div>
+        <!--Text Input for new messages-->
         <div class="write">
           <UTextarea
             v-model="newMessage"
@@ -136,7 +140,7 @@
             :rows="4"
             :maxrows="4"
           />
-          <UButton @click="sendMessage"
+          <UButton @click="sendMessage" :class="`${themedUserMessageColor}`"
             ><Icon name="ic:baseline-send"
           /></UButton>
         </div>
@@ -156,6 +160,15 @@ const userMessages = ref<string[]>([]);
 const messagesContainer = ref<any>(null);
 
 const drawerOpen = useOpenDrawer();
+const isLight = useSSRSafeTheme();
+
+const themedUserMessageColor = computed(() =>
+  isLight.value ? "user-light" : "user-dark"
+);
+
+const themedPartnerMessageColor = computed(() =>
+  isLight.value ? "partner-light" : "partner-dark"
+);
 
 function sendMessage(): void {
   if (newMessage.value.trim()) {
