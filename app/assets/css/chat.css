@@ -103,6 +103,8 @@
 .profile-bar {
   margin-bottom: auto;
   justify-content: center;
+  border-radius: 2px;
+  z-index: 10;
 }
 
 .message-content {
