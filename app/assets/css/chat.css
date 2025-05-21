@@ -87,3 +87,12 @@
   margin-bottom: auto;
   justify-content: center;
 }
+
+.chat > span {
+  height: 100%;
+  background-color: transparent;
+  align-items: start;
+}
+.chat span img {
+  height: max-content;
+}
