@@ -14,11 +14,11 @@
             color="primary"
             variant="soft"
             size="md"
-            class="w-auto text-ui-neutral hover:bg-ui-primary-light/30"
+            class="w-auto text-ui-neutral hover:bg-ui-primaryMain-light/30"
           >
             <UIcon
               name="i-heroicons-clipboard-document-list"
-              class="mr-2 text-ui-primary-light"
+              class="mr-2 text-ui-primaryMain-light"
             />
             Tasks
           </UButton>
@@ -39,7 +39,7 @@
     <div class="flex flex-col">
       <!-- Header -->
       <header
-        class="bg-gradient-to-r from-ui-bg to-ui-primary/10 border-b border-ui-secondary/30"
+        class="bg-gradient-to-r from-ui-bg to-ui-primaryMain/10 border-b border-ui-secondary/30"
       >
         <UContainer class="py-6 flex justify-between items-center">
           <div class="flex items-center gap-6">
@@ -69,7 +69,9 @@
         <!-- Form Section -->
         <UCard class="my-10 bg-ui-bg border-ui-info/30 shadow-lg">
           <template #header>
-            <h2 class="text-xl font-semibold text-ui-primary">Add New Task</h2>
+            <h2 class="text-xl font-semibold text-ui-primaryMain">
+              Add New Task
+            </h2>
           </template>
           <div class="space-y-6">
             <UInput
@@ -95,7 +97,7 @@
               color="primary"
               variant="solid"
               size="md"
-              class="w-auto hover:bg-ui-primary-dark"
+              class="w-auto hover:bg-ui-primaryMain-dark"
               @click="addTask"
             >
               Add Task
@@ -124,7 +126,7 @@
             :class="{
               'border-ui-success': task.status === 'Done',
               'border-ui-warning': task.status === 'In Progress',
-              'border-ui-primary': task.status === 'To Do',
+              'border-ui-primaryMain': task.status === 'To Do',
             }"
           >
             <template #header>
@@ -227,8 +229,8 @@ const addTask = () => {
 .text-ui-neutral {
   color: var(--ui-neutral);
 }
-.border-ui-primary {
-  border-color: var(--ui-primary);
+.border-ui-primaryMain {
+  border-color: var(--color-primaryMain);
 }
 .border-ui-secondary {
   border-color: var(--ui-secondary);
@@ -266,8 +268,11 @@ const addTask = () => {
 .border-error {
   border-color: var(--ui-error);
 }
-.bg-ui-primary-light\/30 {
-  background-color: rgba(var(--ui-primary-light-rgb, 232, 164, 176), 0.3);
+.bg-ui-primaryMain-light\/30 {
+  background-color: rgba(
+    var(--color-primaryMain-light-rgb, 232, 164, 176),
+    0.3
+  );
 }
 .bg-ui-neutral\/20 {
   background-color: rgba(var(--ui-neutral-rgb, 51, 51, 51), 0.2);

@@ -50,22 +50,38 @@
 }
 
 .user-dark {
-  background-color: color-mix(in srgb, var(--ui-primary) 55%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-primaryMain) 55%,
+    transparent
+  );
   color: white;
 }
 
 .user-light {
-  background-color: color-mix(in srgb, var(--ui-primary) 65%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-primaryMain) 65%,
+    transparent
+  );
   color: black;
 }
 
 .partner-dark {
-  background-color: color-mix(in srgb, var(--ui-primary) 20%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-primaryMain) 20%,
+    transparent
+  );
   color: white;
 }
 
 .partner-light {
-  background-color: color-mix(in srgb, var(--ui-primary) 30%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-primaryMain) 30%,
+    transparent
+  );
   color: black;
 }
 
