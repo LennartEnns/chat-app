@@ -168,8 +168,8 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 
 const isMobile = useMobileDetector();
-const open = ref<boolean>(false); //placeholder for command pallette (search bar)
-const users = ref<any[]>([]); //placeholder for command pallette (search bar)
+const open = ref<boolean>(false);
+const users = ref<any[]>([]);
 const newMessage = ref<string>("");
 const userMessages = ref<any[]>([]);
 const messagesContainer = ref<any>(null);
@@ -210,7 +210,7 @@ function handleKeyDown(event: KeyboardEvent): void {
 const scrollToBottom = async (): Promise<void> => {
   await nextTick();
   const component = messagesContainer.value;
-  if (component && component) {
+  if (component) {
     component.scrollTop = component.scrollHeight;
   }
 };
@@ -225,6 +225,7 @@ watch(
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
+  scrollToBottom();
 });
 
 onUnmounted(() => {
@@ -234,25 +235,4 @@ onUnmounted(() => {
 
 <style>
 @import url("~/assets/css/chat.css");
-
-.message-content {
-  position: relative;
-  width: 100%;
-}
-
-.message-time {
-  display: block;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-  text-align: right;
-  margin-top: 4px;
-}
-
-.partner-light .message-time {
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.user-light .message-time {
-  color: rgba(0, 0, 0, 0.5);
-}
 </style>

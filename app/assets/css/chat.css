@@ -104,3 +104,24 @@
   margin-bottom: auto;
   justify-content: center;
 }
+
+.message-content {
+  position: relative;
+  width: 100%;
+}
+
+.message-time {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.partner-light .message-time {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.user-light .message-time {
+  color: rgba(0, 0, 0, 0.5);
+}
