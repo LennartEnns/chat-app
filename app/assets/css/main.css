@@ -4,7 +4,7 @@
 @theme static {
   --font-sans: "Public Sans", sans-serif;
 
-  --color-primaryMain: #b198eb;
+  /* --color-primaryMain: #b198eb; */
   /* primary color variations */
   --color-primaryMain-50: #f0edfd;
   --color-primaryMain-100: #e2d9fb;
@@ -17,7 +17,7 @@
   --color-primaryMain-800: #6a50a7;
   --color-primaryMain-900: #5b448c;
   --color-primaryMain-950: #3c2e5e;
-  --color-neutralMain: #ebebf2;
+  /* --color-neutralMain: #ebebf2; */
   /* neutral color variations */
   --color-neutralMain-50: #f4f4f7;
   --color-neutralMain-100: #ebebee;

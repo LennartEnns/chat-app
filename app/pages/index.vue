@@ -130,10 +130,10 @@ watch(particleOptions, () => {
 });
 
 const gradientColor1 = computed(() =>
-  isLight.value ? "var(--ui-primary-400)" : "var(--ui-primary-600)"
+  isLight.value ? "var(--ui-color-primary-400)" : "var(--ui-color-primary-600)"
 );
 const gradientColor2 = computed(() =>
-  isLight.value ? "var(--ui-primary-100)" : "#0c1223"
+  isLight.value ? "var(--ui-color-primary-100)" : "#0c1223"
 );
 </script>
 
