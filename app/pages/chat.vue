@@ -84,7 +84,10 @@
       <!--Messaging column-->
       <div class="align-column">
         <UCard class="profile-bar">
-          <h1>Florian Steckchen</h1>
+          <div class="flex items-center gap-2">
+            <UAvatar src="https://github.com/nuxt.png" />
+            <h1>Florian Steckchen</h1>
+          </div>
         </UCard>
         <div class="messages" ref="messagesContainer">
           <!--example messages-->
