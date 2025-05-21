@@ -9,10 +9,8 @@
 </template>
 
 <script lang="ts" setup>
-const isLight = useSSRSafeTheme()
-const switchOutlineColor = computed(() => isLight.value ? 'outline-neutral-800' : 'outline-neutral-100')
+const isLight = useSSRSafeTheme();
+const switchOutlineColor = computed(() => "outline-neutral");
 </script>
 
-<style>
-
-</style>
+<style></style>
