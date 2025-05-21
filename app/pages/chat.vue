@@ -4,7 +4,7 @@
       <!--Mobile UI drawer for choosing chats-->
       <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
         <template #body>
-          <div class="align-column">
+          <div class="align-column contactList">
             <UModal v-model:open="open" class="mb-[10px]">
               <UButton
                 label="Search users..."
