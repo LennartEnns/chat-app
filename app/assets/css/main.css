@@ -16,13 +16,28 @@
   --color-green-900: #0a5331;
   --color-green-950: #052e16;
 }
+
 .dark {
   --ui-primary: #b198eb;
   --ui-neutral: #d8d8e0;
 
+  --ui-bg: #131214;
+  --ui-secondary: #a68bd9;
+  --ui-success: #4caf50;
+  --ui-info: #42a5f5;
+  --ui-warning: #ffca28;
+  --ui-error: #ef5350;
 }
 
 .light {
   --ui-primary: #9e97e8;
   --ui-neutral: #2e2e2e;
+
+  --ui-bg: #f8f8fc;
+  --ui-secondary: #8c7cc3;
+  --ui-success: #388e3c;
+  --ui-info: #1e88e5;
+  --ui-warning: #ffb300;
+  --ui-error: #d32f2f;
+
 }
