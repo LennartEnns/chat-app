@@ -11,10 +11,10 @@
 const isLight = useSSRSafeTheme();
 
 const gradientColor1 = computed(() =>
-  isLight.value ? "#d3dbf2" : "var(--color-primaryMain-700)"
+  isLight.value ? "#d3dbf2" : "var(--ui-primary-700)"
 );
 const gradientColor2 = computed(() =>
-  isLight.value ? "var(--color-primaryMain-300)" : "#0c1223"
+  isLight.value ? "var(--ui-primary-300)" : "#0c1223"
 );
 </script>
 

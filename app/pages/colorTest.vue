@@ -230,7 +230,7 @@ const addTask = () => {
   color: var(--ui-neutral);
 }
 .border-ui-primaryMain {
-  border-color: var(--color-primaryMain);
+  border-color: var(--ui-primary);
 }
 .border-ui-secondary {
   border-color: var(--ui-secondary);
@@ -269,10 +269,7 @@ const addTask = () => {
   border-color: var(--ui-error);
 }
 .bg-ui-primaryMain-light\/30 {
-  background-color: rgba(
-    var(--color-primaryMain-light-rgb, 232, 164, 176),
-    0.3
-  );
+  background-color: rgba(var(--ui-primary-light-rgb, 232, 164, 176), 0.3);
 }
 .bg-ui-neutral\/20 {
   background-color: rgba(var(--ui-neutral-rgb, 51, 51, 51), 0.2);
