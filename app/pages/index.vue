@@ -20,14 +20,6 @@ import type {
   Container,
 } from "@tsparticles/engine";
 import type { Reactive } from "vue";
-import FaqSlideover from "~/components/FaqSlideover.vue";
-import { onMounted, onUnmounted } from "vue";
-import type {
-  RecursivePartial,
-  IOptions,
-  Container,
-} from "@tsparticles/engine";
-import type { Reactive } from "vue";
 
 const isLight = useSSRSafeTheme();
 const slideoverOpen = ref(false);
