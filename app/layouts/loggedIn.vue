@@ -173,7 +173,7 @@ const items = ref<NavigationMenuItem[]>([
   {
     label: "Settings",
     icon: "i-lucide-settings",
-    to: "/settings",
+    to: "/settings/account",
   },
   {
     label: "Account",

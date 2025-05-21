@@ -114,7 +114,6 @@ const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
 
 let particlesContainer: Container | null = null
 const onParticlesLoad = (container: Container) => {
-  console.log("load")
   particlesContainer = container;
 }
 watch((particleOptions), () => {
