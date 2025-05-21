@@ -14,7 +14,7 @@
           <template #item="{ item }">
             <div class="flex items-center gap-2 relative overflow-hidden" :class="{ 'shine-effect': item.isCurrent }">
               <div class="w-4 h-4 rounded" :class="item.colorClass"/>
-              {{ item.label }}
+              <span :class="item.label === 'Default' ? 'opacity-70' : ''">{{ item.label }}</span>
             </div>
           </template>
         </UDropdownMenu>
@@ -36,7 +36,7 @@ const themeRadioItems: Ref<RadioGroupItem[]> = ref([
 
 // --- Eigenes Color Interface ---
 interface ColorItem extends DropdownMenuItem {
-  colorClass: string;
+  colorClass: string | '';
   isCurrent?: boolean;
 }
 
@@ -69,6 +69,11 @@ defineShortcuts({
 
 const colorItems: ColorItem[] = [
   {
+    label: 'Default',
+    icon: 'i-custom-color-block',
+    colorClass: 'color-switch-default',
+    onSelect() {changeThemeColor('default')}
+  }, {
     label: 'Red',
     icon: 'i-custom-color-block',
     colorClass: 'bg-red-500',
@@ -135,6 +140,10 @@ const colorItems: ColorItem[] = [
 .changePW div {
   padding-left: 0;
   margin-top: 1%;
+}
+
+.color-switch-default {
+  background-color: var(--color-default-500);
 }
 
 .shine-effect {

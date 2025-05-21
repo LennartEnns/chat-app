@@ -4,6 +4,33 @@
 @theme static {
   --font-sans: "Public Sans", sans-serif;
 
+  /* --color-default: #b198eb; */
+  /* primary color variations */
+  --color-default-50: #f0edfd;
+  --color-default-100: #e2d9fb;
+  --color-default-200: #c9bbf7;
+  --color-default-300: #b19cf2;
+  --color-default-400: #a288ef;
+  --color-default-500: #b198eb;
+  --color-default-600: #8c6ed6;
+  --color-default-700: #7a5fc1;
+  --color-default-800: #6a50a7;
+  --color-default-900: #5b448c;
+  --color-default-950: #3c2e5e;
+  /* --color-neutralMain: #ebebf2; */
+  /* neutral color variations */
+  --color-neutralMain-50: #f4f4f7;
+  --color-neutralMain-100: #ebebee;
+  --color-neutralMain-200: #d8d8e0;
+  --color-neutralMain-300: #c8c8d3;
+  --color-neutralMain-400: #b8b8c6;
+  --color-neutralMain-500: #a8a8b9;
+  --color-neutralMain-600: #9090a3;
+  --color-neutralMain-700: #78788c;
+  --color-neutralMain-800: #606074;
+  --color-neutralMain-900: #48485c;
+  --color-neutralMain-950: #30303e;
+
   --color-green-50: #effdf5;
   --color-green-100: #d9fbe8;
   --color-green-200: #b3f5d1;

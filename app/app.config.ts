@@ -7,7 +7,7 @@ export default defineAppConfig({
       }
     },
     colors: {
-      primary: 'sky',
+      primary: 'default',
       neutral: 'slate',
     },
     button: {
