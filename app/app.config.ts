@@ -8,7 +8,14 @@ export default defineAppConfig({
     },
     colors: {
       primary: 'default',
-      neutral: 'slate',
+      neutral: 'neutral',
+      /* 
+      secondary: 'secondaryMain',
+      tertiary: 'bgMain',
+      success: 'successMain',
+      info: 'infoMain',
+      warning: 'warningMain',
+      error: 'errorMain', */
     },
     button: {
       defaultVariants: {

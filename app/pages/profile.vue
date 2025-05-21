@@ -1,11 +1,6 @@
 <template>
   <NuxtLayout name="logged-in">
-    <UCard
-      class="ring-0"
-      :ui="{
-        header: 'border-none',
-      }"
-    >
+    <UCard class="ring-0" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">Your Profile</p>
       </template>
@@ -15,23 +10,17 @@
             class="border-2"
             :src="avatarUrl"
             icon="i-lucide-user"
-            :ui="{
-              root: 'size-35',
-              icon: 'size-30',
-            }"
+            :ui="{ root: 'size-35', icon: 'size-30' }"
           />
           <div class="avatar-overlay">
             <UIcon name="i-lucide-camera" size="xx-large" />
             Edit Picture
             <input
               type="file"
-              style="
-                color: transparent;
-                max-width: 100%;
-                height: 100%;
-                position: absolute;
-              "
+              style="position: absolute; width: 100%; height: 100%; opacity: 0"
               accept="image/*"
+              @change="uploadPic"
+              ref="upload"
             />
           </div>
         </div>
@@ -95,7 +84,6 @@
             </div>
           </div>
         </div>
-
         <div class="section-container">
           <div
             :class="`flex align-center mb-2 text-md ${themedSectionLabelClasses}`"
@@ -157,18 +145,14 @@
 <script setup lang="ts">
 import { userLimits } from "../../validation/commonLimits";
 import { displayNameSchema } from "../../validation/schemas/input/inputUserSchemas";
+import { onMounted, watch } from "vue";
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const profileData = user.value?.user_metadata;
-const avatarUrlData = user.value
-  ? supabase.storage
-      .from("avatars")
-      .getPublicUrl(`public/${user.value?.id}.jpg`)
-  : null;
-const avatarUrl = avatarUrlData?.data.publicUrl;
 
-const username = ref<string>(profileData?.username);
+const avatarUrl = ref<string | null>(null);
+const username = ref<string>(profileData?.username || "");
 const displayName = ref<string | null | undefined>(profileData?.displayname);
 const userDescription = ref<string>(profileData?.description || "");
 const isEditingName = ref(false);
@@ -193,29 +177,68 @@ const displayNameErrorMessage = computed(
 const isLight = useSSRSafeTheme();
 const toast = useToast();
 
-const themedProfileFieldClasses = computed(() => {
-  return isLight.value ? "border-b-primary-600" : "border-b-primary-300";
-});
-const themedSectionLabelClasses = computed(() => {
-  return isLight.value ? "text-primary-900" : "text-primary-400";
-});
-const themedUsernameColor = computed(() => {
-  return isLight.value ? "text-neutral-500" : "text-neutral-400";
-});
-const themedTextsColor = computed(() => {
-  return isLight.value ? "text-neutral-900" : "text-neutral-100";
+const themedProfileFieldClasses = computed(() =>
+  isLight.value ? "border-b-primary-600" : "border-b-primary-300"
+);
+const themedSectionLabelClasses = computed(() =>
+  isLight.value ? "text-primary-900" : "text-primary-400"
+);
+const themedUsernameColor = computed(() =>
+  isLight.value ? "text-neutral-500" : "text-neutral-400"
+);
+const themedTextsColor = computed(() =>
+  isLight.value ? "text-neutral-900" : "text-neutral-100"
+);
+
+const showDescriptionLengthIndicator = computed(
+  () => !isEditingDescription.value && descriptionRowCount.value >= 10
+);
+
+async function checkAvatarExists(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+onMounted(async () => {
+  if (user.value) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${user.value.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = null;
+    }
+  } else {
+    avatarUrl.value = null;
+  }
 });
 
-const showDescriptionLengthIndicator = computed(() => {
-  return !isEditingDescription.value && descriptionRowCount.value >= 10;
+watch(user, async (newUser) => {
+  if (newUser) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${newUser.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = null;
+    }
+  } else {
+    avatarUrl.value = null;
+  }
 });
 
 async function updateProfileData(
   data: Partial<{ displayname: string | null; description: string }>
 ) {
-  const { error } = await supabase.auth.updateUser({
-    data,
-  });
+  const { error } = await supabase.auth.updateUser({ data });
   if (error) {
     console.log(`Error updating profile: ${error}`);
     toast.add({
@@ -232,31 +255,49 @@ async function updateProfileData(
   }
 }
 
+async function uploadPic(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (file && user.value) {
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(`public/${user.value.id}.jpg`, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+    if (error) {
+      console.log(`Error uploading avatar: ${error}`);
+      toast.add({
+        title: "Error",
+        description: "Could not upload avatar.",
+        color: "error",
+      });
+      return;
+    }
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${user.value.id}.jpg`);
+    avatarUrl.value = avatarUrlData.data.publicUrl;
+  }
+}
+
 async function toggleEditDisplayName() {
   isEditingName.value = !isEditingName.value;
-  if (isEditingName.value) {
-    newDisplayName.value = displayName.value || "";
-  }
+  if (isEditingName.value) newDisplayName.value = displayName.value || "";
 }
 async function saveDisplayName() {
   displayName.value = displayNameParsed.value.data ?? null;
   isEditingName.value = false;
-  updateProfileData({
-    displayname: displayName.value,
-  });
+  updateProfileData({ displayname: displayName.value });
 }
 async function toggleEditDescription() {
   isEditingDescription.value = !isEditingDescription.value;
-  if (isEditingDescription.value) {
-    newDescription.value = userDescription.value;
-  }
+  if (isEditingDescription.value) newDescription.value = userDescription.value;
 }
 async function saveDescription() {
   userDescription.value = newDescription.value?.trim() || "";
   isEditingDescription.value = false;
-  updateProfileData({
-    description: userDescription.value,
-  });
+  updateProfileData({ description: userDescription.value });
 }
 
 async function attachDisplayNameInputEnterHandler() {

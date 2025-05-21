@@ -108,9 +108,7 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 
 const route = useRoute();
 const isLight = useSSRSafeTheme();
-const themedLogoColor = computed(() =>
-  isLight.value ? "text-primary-600" : "text-primary-400"
-);
+const themedLogoColor = computed(() => "text-primary");
 
 const isMobile = useMobileDetector();
 const mobileMenuOpen = ref(false);
