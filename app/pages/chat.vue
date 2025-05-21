@@ -4,7 +4,7 @@
       <!--Mobile UI drawer for choosing chats-->
       <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
         <template #body>
-          <div class="align-column contactList">
+          <div class="align-colum">
             <UModal v-model:open="open" class="mb-[10px]">
               <UButton
                 label="Search users..."
@@ -12,6 +12,9 @@
                 variant="subtle"
                 icon="i-lucide-search"
               />
+              <template>
+                <UAvatar src="https://github.com/benjamincanac.png" />
+              </template>
               <template #content>
                 <UCommandPalette
                   close
@@ -96,30 +99,36 @@
               class="justify-self-center"
               src="https://github.com/nuxt.png"
             />
-            <p>
-              Ipsum is simply dummy an printer took a galley of type and
-              scrambled it to make a type specimen book. It has survived not
-              only five centuries, but also the leap into electronic
-              typesetting, remaining essentially unchanged. It was popularised
-              in the 1960s with the release of Letraset sheets containing Lorem
-              Ipsum passages, and more recently wit fkjsdaklfjklasd jfkjsadkl
-              jfkljsadklfj föajsklfjkladsjfkl
-            </p>
+            <div class="message-content">
+              <p>
+                Ipsum is simply dummy an printer took a galley of type and
+                scrambled it to make a type specimen book. It has survived not
+                only five centuries, but also the leap into electronic
+                typesetting, remaining essentially unchanged. It was popularised
+                in the 1960s with the release of Letraset sheets containing
+                Lorem Ipsum passages, and more recently wit fkjsdaklfjklasd
+                jfkjsadkl jfkljsadklfj föajsklfjkladsjfkl
+              </p>
+              <span class="message-time">12:45</span>
+            </div>
           </div>
           <div :class="`message user ${themedUserMessageColor}`">
             <UAvatar
               class="justify-self-center"
               src="https://github.com/nuxt.png"
             />
-            <p>
-              Ipsum is simply dummy an printer took a galley of type and
-              scrambled it to make a type specimen book. It has survived not
-              only five centuries, but also the leap into electronic
-              typesetting, remaining essentially unchanged. It was popularised
-              in the 1960s with the release of Letraset sheets containing Lorem
-              Ipsum passages, and more recently wit fkjsdaklfjklasd jfkjsadkl
-              jfkljsadklfj föajsklfjkladsjfkl
-            </p>
+            <div class="message-content">
+              <p>
+                Ipsum is simply dummy an printer took a galley of type and
+                scrambled it to make a type specimen book. It has survived not
+                only five centuries, but also the leap into electronic
+                typesetting, remaining essentially unchanged. It was popularised
+                in the 1960s with the release of Letraset sheets containing
+                Lorem Ipsum passages, and more recently wit fkjsdaklfjklasd
+                jfkjsadkl jfkljsadklfj föajsklfjkladsjfkl
+              </p>
+              <span class="message-time">12:48</span>
+            </div>
           </div>
           <div
             v-for="(message, index) in userMessages"
@@ -130,7 +139,10 @@
               class="justify-self-center"
               src="https://github.com/nuxt.png"
             />
-            <p>{{ message }}</p>
+            <div class="message-content">
+              <p>{{ message.text }}</p>
+              <span class="message-time">{{ message.timestamp }}</span>
+            </div>
           </div>
         </div>
         <!--Text Input for new messages-->
@@ -159,7 +171,7 @@ const isMobile = useMobileDetector();
 const open = ref<boolean>(false); //placeholder for command pallette (search bar)
 const users = ref<any[]>([]); //placeholder for command pallette (search bar)
 const newMessage = ref<string>("");
-const userMessages = ref<string[]>([]);
+const userMessages = ref<any[]>([]);
 const messagesContainer = ref<any>(null);
 
 const drawerOpen = useOpenDrawer();
@@ -175,7 +187,15 @@ const themedPartnerMessageColor = computed(() =>
 
 function sendMessage(): void {
   if (newMessage.value.trim()) {
-    userMessages.value.push(newMessage.value.trim());
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const timestamp = `${hours}:${minutes}`;
+
+    userMessages.value.push({
+      text: newMessage.value.trim(),
+      timestamp: timestamp,
+    });
     newMessage.value = "";
   }
 }
@@ -214,4 +234,25 @@ onUnmounted(() => {
 
 <style>
 @import url("~/assets/css/chat.css");
+
+.message-content {
+  position: relative;
+  width: 100%;
+}
+
+.message-time {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.partner-light .message-time {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.user-light .message-time {
+  color: rgba(0, 0, 0, 0.5);
+}
 </style>

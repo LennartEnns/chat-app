@@ -17,7 +17,7 @@
   flex-direction: column;
   justify-content: flex-start;
   min-width: fit-content;
-  border-right: solid 1px var(--ui-neutral-300);
+  border-right: solid 1px var(--color-neutralMain-300);
 }
 
 .message {
