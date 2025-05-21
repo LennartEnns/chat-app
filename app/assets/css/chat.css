@@ -76,6 +76,13 @@
   margin-top: auto;
   min-width: fit-content;
 }
+.write div textarea {
+  border-radius: 5px 0px 0px 5px;
+}
+
+.write button {
+  border-radius: 0px 5px 5px 0px;
+}
 
 .chat {
   margin-top: 10px;
