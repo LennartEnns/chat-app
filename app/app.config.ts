@@ -7,8 +7,8 @@ export default defineAppConfig({
       }
     },
     colors: {
-      primary: 'emerald',
-      neutral: 'slate',
+      primary: 'primaryMain',
+      neutral: 'neutralMain',
     },
     button: {
       defaultVariants: {
