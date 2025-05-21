@@ -16,3 +16,13 @@
   --color-green-900: #0a5331;
   --color-green-950: #052e16;
 }
+.dark {
+  --ui-primary: #b198eb;
+  --ui-neutral: #d8d8e0;
+
+}
+
+.light {
+  --ui-primary: #9e97e8;
+  --ui-neutral: #2e2e2e;
+}
