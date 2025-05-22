@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
 import type {
   RecursivePartial,
   IOptions,

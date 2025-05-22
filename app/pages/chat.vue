@@ -150,8 +150,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-
 const isMobile = useMobileDetector();
 const open = ref<boolean>(false); //placeholder for command pallette (search bar)
 const users = ref<any[]>([]); //placeholder for command pallette (search bar)

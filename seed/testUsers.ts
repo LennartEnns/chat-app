@@ -6,7 +6,7 @@ type TestUserFull = {
   description: string,
 }
 type TestUserOptional = 'displayname' | 'description'
-type TestUser = Omit<TestUserFull,TestUserOptional > & Partial<Pick<TestUserFull, TestUserOptional>>
+type TestUser = Omit<TestUserFull, TestUserOptional> & Partial<Pick<TestUserFull, TestUserOptional>>
 
 const testUsers: TestUser[] = [
   {

@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="settings">
-    <USeparator label="Preferred Theme" class="mt-4" />
+    <USeparator label="Preferred Theme" class="mt-4" color="primary" />
     <URadioGroup
       v-model="colorMode.preference"
       :items="themeRadioItems"
@@ -8,7 +8,7 @@
       class="mt-2"
     />
 
-    <USeparator label="Main Color" class="mt-4" />
+    <USeparator label="Main Color" class="mt-4" color="primary" />
     
 
   </NuxtLayout>

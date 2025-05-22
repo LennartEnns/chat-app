@@ -2,6 +2,7 @@ import type { AuthError } from '@supabase/auth-js/dist/module/lib/errors'
 
 const messages: { [key: string]: string } = {
     'user_already_exists': 'A user with this email already exists',
+    'email_exists': 'This email is already taken',
     'validation_failed': 'Invalid inputs',
     'invalid_credentials': 'Invalid login credentials',
     'email_address_invalid': 'Invalid Email address',

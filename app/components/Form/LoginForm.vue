@@ -30,6 +30,7 @@ import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
 import PasswordToggleInput from '../Input/PasswordToggleInput.vue'
 
 const supabase = useSupabaseClient()
+const operationFeedbackHandler = useOperationFeedbackHandler();
 
 type AgnosticLoginSchema = z.output<typeof loginSchema>
 const agnosticLoginState = reactive<Partial<AgnosticLoginSchema>>({
@@ -42,15 +43,6 @@ const usingUsernameLogin = computed(() => !agnosticLoginState.usernameOrEmail?.i
 const successRedirectPath = '/chat'
 function onLoginSuccess() {
   navigateTo(successRedirectPath)
-}
-
-const toast = useToast()
-function displayError(description: string) {
-  toast.add({
-    title: 'Error',
-    description,
-    color: 'error',
-  })
 }
 
 async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
@@ -66,7 +58,7 @@ async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
       onLoginSuccess()
     } else {
       logAuthError(error, 'login')
-      displayError(getAuthErrorMessage(error.code, unknownErrorMessage))
+      operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, unknownErrorMessage))
     }
   } else { // Login with username => Invoke edge function
     const { data, error } = await supabase.functions.invoke("login-with-username", {
@@ -85,12 +77,12 @@ async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
         onLoginSuccess()
       } else {
         logAuthError(setSessionError, 'login')
-        displayError(getAuthErrorMessage(setSessionError.code, unknownErrorMessage))
+        operationFeedbackHandler.displayError(getAuthErrorMessage(setSessionError.code, unknownErrorMessage))
       }
     } else {
       console.log(`Error calling the username login function: ${ error }`);
       const description = (error.context.status === 400) ? getAuthErrorMessage('invalid_credentials') : unknownErrorMessage
-      displayError(description)
+      operationFeedbackHandler.displayError(description)
     }
   }
 }

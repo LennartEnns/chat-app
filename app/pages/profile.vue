@@ -8,7 +8,7 @@
         <div class="avatar-container">
           <UAvatar
             class="border-2"
-            :src="avatarUrl"
+            :src="userData.existsAvatarAtUrl ? userData.avatarUrl : undefined"
             icon="i-lucide-user"
             :ui="{ root: 'size-35', icon: 'size-30' }"
           />
@@ -19,14 +19,14 @@
               type="file"
               style="position: absolute; width: 100%; height: 100%; opacity: 0"
               accept="image/*"
-              @change="uploadPic"
-              ref="upload"
-            />
+              @change="uploadAvatar"
+            >
           </div>
         </div>
-        <div :class="`mt-4 text-neutral-400 ${themedUsernameColor}`">
-          {{ username }}
+        <div :class="`mt-4 ${themedWeakColor}`">
+          {{ userData.username }}
         </div>
+        <UButton v-if="userData.existsAvatarAtUrl" label="Clear Avatar" variant="ghost" class="cursor-pointer mt-1" color="error" @click="clearAvatar" />
       </div>
       <div class="profile-container">
         <div class="section-container">
@@ -58,11 +58,9 @@
             <div class="field-content">
               <div
                 v-if="!isEditingName"
-                :class="`${themedTextsColor} ${
-                  isFalsy(displayName) ? themedUsernameColor : themedTextsColor
-                }`"
+                :class="`${isFalsy(userData.displayname) ? themedWeakColor : themedTextsColor}`"
               >
-                {{ isFalsy(displayName) ? username : displayName }}
+                {{ isFalsy(userData.displayname) ? userData.username : userData.displayname }}
               </div>
               <UInput
                 v-else
@@ -120,9 +118,9 @@
             >
               <div
                 v-if="!isEditingDescription"
-                :class="`whitespace-pre-line break-all ${themedTextsColor}`"
+                :class="`whitespace-pre-line break-all ${isFalsy(userData.description) ? themedWeakColor : themedTextsColor}`"
               >
-                {{ userDescription }}
+                {{ isFalsy(userData.description) ? 'Empty' : userData.description }}
               </div>
               <UTextarea
                 v-else
@@ -137,6 +135,10 @@
             </div>
           </div>
         </div>
+        <ULink to="/settings/account" class="flex items-center mt-4">
+        <div>Go To Account Settings</div>
+        <UIcon name="i-lucide-arrow-right" class="ml-1"/>
+      </ULink>
       </div>
     </UCard>
   </NuxtLayout>
@@ -145,26 +147,22 @@
 <script setup lang="ts">
 import { userLimits } from "../../validation/commonLimits";
 import { displayNameSchema } from "../../validation/schemas/input/inputUserSchemas";
-import { onMounted, watch } from "vue";
 
 const supabase = useSupabaseClient();
-const user = useSupabaseUser();
-const profileData = user.value?.user_metadata;
+const userData = useUserData();
+const operationFeedbackHandler = useOperationFeedbackHandler();
+const isLight = useSSRSafeTheme();
 
-const avatarUrl = ref<string | null>(null);
-const username = ref<string>(profileData?.username || "");
-const displayName = ref<string | null | undefined>(profileData?.displayname);
-const userDescription = ref<string>(profileData?.description || "");
 const isEditingName = ref(false);
 const newDisplayName = ref("");
 const isEditingDescription = ref(false);
 const newDescription = ref("");
 
 const descriptionRowCount = computed(
-  () => (userDescription.value.match(/\n/g) || "").length + 1
+  () => (userData.description ? ((userData.description.match(/\n/g) || '').length + 1) : 0)
 );
 const displayNameSanitized = computed(() =>
-  isFalsy(newDisplayName.value) ? null : newDisplayName.value?.trim()
+  isFalsy(newDisplayName.value) ? null : newDisplayName.value.trim()
 );
 const displayNameParsed = computed(() =>
   displayNameSchema.safeParse(displayNameSanitized.value)
@@ -174,122 +172,85 @@ const displayNameErrorMessage = computed(
   () => displayNameParsed.value.error?.issues[0]?.message ?? "Invalid Format"
 );
 
-const isLight = useSSRSafeTheme();
-const toast = useToast();
+const descriptionSanitized = computed(() =>
+  isFalsy(newDescription.value) ? null : newDescription.value.trim()
+);
 
-const themedProfileFieldClasses = computed(() => "border-b-primary");
-const themedSectionLabelClasses = computed(() => "text-primary");
-const themedUsernameColor = computed(() => "text-neutral");
-const themedTextsColor = computed(() => "text-neutral");
+const themedProfileFieldClasses = computed(() =>
+  isLight.value ? "border-b-primary-600" : "border-b-primary-300"
+);
+const themedSectionLabelClasses = computed(() =>
+  isLight.value ? "text-primary-900" : "text-primary-400"
+);
+const themedWeakColor = computed(() =>
+  isLight.value ? "text-neutral-500" : "text-neutral-400"
+);
+const themedTextsColor = computed(() =>
+  isLight.value ? "text-neutral-900" : "text-neutral-100"
+);
 
 const showDescriptionLengthIndicator = computed(
   () => !isEditingDescription.value && descriptionRowCount.value >= 10
 );
 
-async function checkAvatarExists(url: string): Promise<boolean> {
-  try {
-    const response = await fetch(url, { method: "HEAD" });
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-onMounted(async () => {
-  if (user.value) {
-    const avatarUrlData = supabase.storage
-      .from("avatars")
-      .getPublicUrl(`public/${user.value.id}.jpg`);
-    const url = avatarUrlData.data.publicUrl;
-    if (url && (await checkAvatarExists(url))) {
-      avatarUrl.value = url;
-    } else {
-      avatarUrl.value = null;
-    }
-  } else {
-    avatarUrl.value = null;
-  }
-});
-
-watch(user, async (newUser) => {
-  if (newUser) {
-    const avatarUrlData = supabase.storage
-      .from("avatars")
-      .getPublicUrl(`public/${newUser.id}.jpg`);
-    const url = avatarUrlData.data.publicUrl;
-    if (url && (await checkAvatarExists(url))) {
-      avatarUrl.value = url;
-    } else {
-      avatarUrl.value = null;
-    }
-  } else {
-    avatarUrl.value = null;
-  }
-});
-
 async function updateProfileData(
-  data: Partial<{ displayname: string | null; description: string }>
+  data: Partial<{ displayname: string | null; description: string | null }>
 ) {
   const { error } = await supabase.auth.updateUser({ data });
   if (error) {
     console.log(`Error updating profile: ${error}`);
-    toast.add({
-      title: "Error",
-      description: "Could not update profile data.",
-      color: "error",
-    });
+    operationFeedbackHandler.displayError('Could not update profile data.');
   } else {
-    toast.add({
-      title: "Success",
-      description: "Updated profile.",
-      color: "success",
-    });
+    operationFeedbackHandler.displaySuccess('Updated profile.');
   }
 }
 
-async function uploadPic(event: Event): Promise<void> {
+async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
-  if (file && user.value) {
+  if (file) {
     const { error } = await supabase.storage
       .from("avatars")
-      .upload(`public/${user.value.id}.jpg`, file, {
-        cacheControl: "3600",
+      .upload(userData.avatarUrl, file, {
         upsert: true,
       });
     if (error) {
       console.log(`Error uploading avatar: ${error}`);
-      toast.add({
-        title: "Error",
-        description: "Could not upload avatar.",
-        color: "error",
-      });
+      operationFeedbackHandler.displayError('Could not upload avatar.');
       return;
+    } else {
+      userData.existsAvatarAtUrl = true;
     }
-    const avatarUrlData = supabase.storage
-      .from("avatars")
-      .getPublicUrl(`public/${user.value.id}.jpg`);
-    avatarUrl.value = avatarUrlData.data.publicUrl;
+  }
+}
+async function clearAvatar() {
+  const { error } = await supabase.storage
+    .from("avatars")
+    .remove([userData.avatarPath]);
+  if (error) {
+    operationFeedbackHandler.displayError('Could not clear your avatar.');
+  } else {
+    userData.existsAvatarAtUrl = false;
   }
 }
 
 async function toggleEditDisplayName() {
   isEditingName.value = !isEditingName.value;
-  if (isEditingName.value) newDisplayName.value = displayName.value || "";
+  if (isEditingName.value) newDisplayName.value = userData.displayname || '';
 }
 async function saveDisplayName() {
-  displayName.value = displayNameParsed.value.data ?? null;
+  userData.displayname = displayNameParsed.value.data ?? null;
   isEditingName.value = false;
-  updateProfileData({ displayname: displayName.value });
+  updateProfileData({ displayname: userData.displayname });
 }
 async function toggleEditDescription() {
   isEditingDescription.value = !isEditingDescription.value;
-  if (isEditingDescription.value) newDescription.value = userDescription.value;
+  if (isEditingDescription.value) newDescription.value = userData.description || '';
 }
 async function saveDescription() {
-  userDescription.value = newDescription.value?.trim() || "";
+  userData.description = descriptionSanitized.value ?? null;
   isEditingDescription.value = false;
-  updateProfileData({ description: userDescription.value });
+  updateProfileData({ description: userData.description });
 }
 
 async function attachDisplayNameInputEnterHandler() {
