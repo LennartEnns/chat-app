@@ -29,7 +29,7 @@
         Sign Up
         <UModal v-model:open="showSuccessModal" title="Registration successful" description="Open the link in your confirmation email." :dismissible="false">
           <template #body>
-            <ULink to="/login" class="flex align-center">
+            <ULink to="/login" class="flex align-center" color="primary">
               <div>Return to login</div>
               <UIcon name="i-lucide-arrow-right" class="self-center ml-1"/>
             </ULink>
@@ -44,10 +44,11 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { registrationSchema } from '../../../validation/schemas/input/inputUserSchemas'
-import { getAuthErrorMessage } from '../../../errors/authErrors'
+import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
 import PasswordToggleInput from '../Input/PasswordToggleInput.vue'
 
 const supabase = useSupabaseClient()
+const operationFeedbackHandler = useOperationFeedbackHandler();
 
 const showSuccessModal = ref(false)
 
@@ -69,45 +70,36 @@ const state = reactive<Partial<Schema>>({
   username: undefined,
   password: undefined,
   confirmPassword: undefined,
-})
+});
 
-const toast = useToast()
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Check if the username already exists
   const { data: existingUser } = await supabase
     .from('profiles')
     .select('user_id')
     .eq('username', event.data.username)
-    .maybeSingle()
+    .maybeSingle();
   if (existingUser) {
-    toast.add({
-      title: 'Error',
-      description: 'Username already taken',
-      color: 'error',
-    })
-    return
+    operationFeedbackHandler.displayError('Username already taken');
+    return;
   }
 
   const { data, error } = await supabase.auth.signUp({
     email: event.data.email,
     password: event.data.password,
     options: {
+      emailRedirectTo: toFullUrl('/flow/confirm-email'),
       data: {
         username: event.data.username,
       },
-      emailRedirectTo: 'http://localhost:3000/login',
-    }
-  })
+    },
+  });
   if (data && !error) {
-    toast.add({ title: 'Success', description: 'We have sent you a confirmation email.', color: 'success' })
+    operationFeedbackHandler.displaySuccess('We have sent you a confirmation email.');
     showSuccessModal.value = true
   } else if (error) {
-    console.error(`An auth error occured during registration: ${ Object.keys(error) } \n ${ Object.values(error) }`)
-    toast.add({
-      title: 'Error',
-      description: getAuthErrorMessage(error.code, 'Unknown error during registration'),
-      color: 'error',
-    })
+    logAuthError(error, 'registration');
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, 'Unknown error during registration'));
   }
 }
 </script>

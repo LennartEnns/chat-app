@@ -22,3 +22,7 @@ export const loginSchema = registrationSchema
 
 export const displayNameSchema = baseUserSchema.shape.displayname.refine(
   (name) => !name || validateDisplayName(name), displayNameFormatMessage);
+
+export const usernameSchema = registrationSchema.shape.username;
+
+export const emailSchema = baseUserSchema.shape.email;
