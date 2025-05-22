@@ -15,6 +15,7 @@
             <div class="flex items-center gap-2 relative overflow-hidden" :class="{ 'shine-effect': item.isCurrent }">
               <div class="w-4 h-4 rounded" :class="item.colorClass"/>
               <span :class="item.label === 'Default' ? 'opacity-70' : ''">{{ item.label }}</span>
+              <UIcon v-if="item.isCurrent" name="i-lucide-check" size="xs" />
             </div>
           </template>
         </UDropdownMenu>
