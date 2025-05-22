@@ -15,7 +15,7 @@
               <template #content>
                 <UCommandPalette
                   close
-                  :groups="[{ id: 'users', items: users }]"
+                  :groups="groups"
                   @update:open="open = $event"
                 />
               </template>
@@ -55,7 +55,7 @@
           <template #content>
             <UCommandPalette
               close
-              :groups="[{ id: 'users', items: users }]"
+              :groups="groups"
               @update:open="open = $event"
             />
           </template>
@@ -151,10 +151,105 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { usernameFormatMessage } from "~~/validation/commonRules";
+
+const toast = useToast()
+const supabase = useSupabaseClient()
+
+function getAvatarUrl(userId: string): string {
+  const { data } = supabase
+    .storage
+    .from('avatars')
+    .getPublicUrl('public/' + userId + '.jpg')
+    if (!data.publicUrl || data.publicUrl.includes('error') || data.publicUrl === '') {
+      return 'https://eunokvzfqixyoauwvqlt.supabase.co/storage/v1/object/public/avatars/public/default.png';
+    }
+  return data.publicUrl
+}
+
+interface Users {
+  user_id: string;
+  username: string;
+  displayname: string;
+  description: string;
+}
+
+interface CommandItem {
+  id: string;
+  label: string;
+  suffix: string;
+  to: string;
+  target: string;
+  avatar: {src: string};
+  raw: Users;
+}
+
+interface CommandGroup {
+  id: string;
+  label: string;
+  items: CommandItem[];
+}
+
+const users = ref<CommandItem[]>([]);
+
+const groups = ref<CommandGroup[]>([
+  {
+    id: "users",
+    label: "Users",
+    items: [],
+  },
+]);
+
+// --- fetch the data from supabase and transform it ---
+onMounted(async () => {
+  const { data, error } = await supabase.from("profiles").select();
+
+  if (error) {
+    toast.add({
+      title: "Error loading users",
+      description: error.message,
+      color: 'error',
+    });
+    return;
+  }
+
+
+  users.value = (data || [])
+    .filter((user: Users) => {
+      return user && 
+            user.user_id && 
+            user.user_id.trim() !== '' && 
+            user.displayname && 
+            user.displayname.trim() !== '';
+      })
+    .map((user: Users) => ({
+      id: user.user_id,
+      label: user.displayname,
+      suffix: user.username,
+      to: '/profile',
+      target: 'blank',
+      avatar: {src: getAvatarUrl(user.user_id)},
+      raw: user,
+  }));
+
+  users.value.forEach(index =>{
+    if(index.id == ''){
+
+    }
+  })
+
+
+  groups.value = [
+    {
+      id: "users",
+      label: "Users",
+      items: users.value,
+    },
+  ];
+});
 
 const isMobile = useMobileDetector();
 const open = ref<boolean>(false); //placeholder for command pallette (search bar)
-const users = ref<any[]>([]); //placeholder for command pallette (search bar)
 const newMessage = ref<string>("");
 const userMessages = ref<string[]>([]);
 const messagesContainer = ref<any>(null);
