@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="settings">
-    <USeparator label="Preferred Theme" class="mt-4" />
+    <USeparator label="Preferred Theme" class="mt-4" color="primary" />
     <URadioGroup
       v-model="colorMode.preference"
       :items="themeRadioItems"
@@ -10,15 +10,15 @@
 
     <USeparator label="Main Color" class="mt-4" />
     <UDropdownMenu v-model:open="open" :items="computedItems as DropdownMenuItem[]" :ui="{ content: 'w-48' }">
-          <UButton label="Change color" color="neutral" variant="outline" icon="i-lucide-pipette" />
-          <template #item="{ item }">
-            <div class="flex items-center gap-2 relative overflow-hidden" :class="{ 'shine-effect': item.isCurrent }">
-              <div class="w-4 h-4 rounded" :class="item.colorClass"/>
-              <span :class="item.label === 'Default' ? 'opacity-70' : ''">{{ item.label }}</span>
-              <UIcon v-if="item.isCurrent" name="i-lucide-check" size="xs" />
-            </div>
-          </template>
-        </UDropdownMenu>
+        <UButton label="Change color" color="neutral" variant="outline" icon="i-lucide-pipette" />
+        <template #item="{ item }">
+          <div class="flex items-center gap-2 relative overflow-hidden" :class="{ 'shine-effect': item.isCurrent }">
+            <div class="w-4 h-4 rounded" :class="item.colorClass"/>
+            <span :class="item.label === 'Default' ? 'opacity-70' : ''">{{ item.label }}</span>
+            <UIcon v-if="item.isCurrent" name="i-lucide-check" size="xs" />
+          </div>
+        </template>
+      </UDropdownMenu>
   </NuxtLayout>
 </template>
 

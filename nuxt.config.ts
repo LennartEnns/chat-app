@@ -10,6 +10,11 @@ export default defineNuxtConfig({
     'nuxt-particles',
     '@nuxt/image',
   ],
+  runtimeConfig: {
+    public: {
+      baseUrl: process.env.NUXT_BASE_URL,
+    },
+  },
 
   css: ['~/assets/css/main.css'],
 
@@ -23,7 +28,7 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
-      exclude: ['/', '/register'],
+      exclude: ['/', '/register', '/flow/**'],
     }
   },
 

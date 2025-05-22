@@ -1,10 +1,33 @@
 <template>
   <NuxtLayout name="settings">
-    <USeparator label="Change Username" class="mt-4" />
+    <div class="w-full flex align-center justify-center mt-2">
+      <UAvatar
+        class="border-2"
+        :src="userData.existsAvatarAtUrl ? userData.avatarUrl : undefined"
+        icon="i-lucide-user"
+        :ui="{ root: 'size-10', icon: 'size-8' }"
+      />
+      <ULink to="/profile" class="flex align-center ml-5">
+        <div class="self-center">Edit Profile</div>
+        <UIcon name="i-lucide-arrow-right" class="self-center ml-1"/>
+      </ULink>
+    </div>
 
-    <USeparator label="Change Email/Password" class="mt-4" />
+    <USeparator label="Username" class="mt-4" color="primary" />
+    <div class="text-muted text-center">
+      {{ userData.username }}
+    </div>
+    <ChangeUsernameForm />
 
-    <UButton class="mt-6 flex flex-col cursor-pointer" variant="outline" color="error">
+    <USeparator label="Email/Password" class="mt-4" color="primary" />
+    <div class="text-muted text-center">
+      {{ userData.email }}
+    </div>
+    <ChangeEmailForm />
+    <UButton label="Reset Password" class="cursor-pointer justify-center" @click="flowActions.requestPasswordReset()" />
+
+    <USeparator label="Danger Zone" class="mt-4" color="error" />
+    <UButton class="flex flex-col cursor-pointer" variant="outline" color="error">
       <div class="w-full text-xl text-bold">
         Delete this account
       </div>
@@ -16,7 +39,11 @@
 </template>
 
 <script lang="ts" setup>
+import ChangeUsernameForm from '../../components/Form/ChangeUsernameForm.vue';
+import ChangeEmailForm from '../../components/Form/ChangeEmailForm.vue';
 
+const userData = useUserData();
+const flowActions = useFlowActions();
 </script>
 
 <style scoped>
