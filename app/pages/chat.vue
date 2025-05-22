@@ -232,13 +232,6 @@ onMounted(async () => {
       raw: user,
   }));
 
-  users.value.forEach(index =>{
-    if(index.id == ''){
-
-    }
-  })
-
-
   groups.value = [
     {
       id: "users",
