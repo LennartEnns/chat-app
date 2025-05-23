@@ -151,10 +151,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-import { usernameFormatMessage } from "~~/validation/commonRules";
 
 const toast = useToast()
 const supabase = useSupabaseClient()
+
+const user = useSupabaseUser();
+const profileData = user.value?.user_metadata;
+const username = profileData?.username || "";
 
 function getAvatarUrl(userId: string): string {
   const { data } = supabase
@@ -219,6 +222,7 @@ onMounted(async () => {
       return user && 
             user.user_id && 
             user.user_id.trim() !== '' && 
+            user.username !== username &&
             user.displayname && 
             user.displayname.trim() !== '';
       })
@@ -226,7 +230,7 @@ onMounted(async () => {
       id: user.user_id,
       label: user.displayname,
       suffix: user.username,
-      to: '/profile',
+      to: `/profil/${user.user_id}`,
       target: 'blank',
       avatar: {src: getAvatarUrl(user.user_id)},
       raw: user,
