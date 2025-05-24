@@ -91,6 +91,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       emailRedirectTo: toFullUrl('/flow/confirm-email'),
       data: {
         username: event.data.username,
+        first_login: true, // Used to recognize first login, e.g. to show welcome messages
       },
     },
   });

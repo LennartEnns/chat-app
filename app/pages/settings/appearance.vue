@@ -2,7 +2,7 @@
   <NuxtLayout name="settings">
     <USeparator label="Preferred Theme" class="mt-4" color="primary" />
     <URadioGroup
-      v-model="colorMode.preference"
+      v-model="preference"
       :items="themeRadioItems"
       variant="card"
       class="mt-2"
@@ -10,23 +10,24 @@
 
     <USeparator label="Main Color" class="mt-4" />
     <UDropdownMenu v-model:open="open" :items="computedItems as DropdownMenuItem[]" :ui="{ content: 'w-48' }">
-        <UButton label="Change color" color="neutral" variant="outline" icon="i-lucide-pipette" />
-        <template #item="{ item }">
-          <div class="flex items-center gap-2 relative overflow-hidden" :class="{ 'shine-effect': item.isCurrent }">
-            <div class="w-4 h-4 rounded" :class="item.colorClass"/>
-            <span :class="item.label === 'Default' ? 'opacity-70' : ''">{{ item.label }}</span>
-            <UIcon v-if="item.isCurrent" name="i-lucide-check" size="xs" />
-          </div>
-        </template>
-      </UDropdownMenu>
+      <UButton label="Change color" color="neutral" variant="outline" icon="i-lucide-pipette" />
+      <template #item="{ item }">
+        <div class="flex items-center gap-2 relative overflow-hidden" :class="{ 'shine-effect': item.isCurrent }">
+          <div class="w-4 h-4 rounded" :class="item.colorClass"/>
+          <span :class="`${isMobile ? 'text-lg' : 'text-md'} ${item.label === 'Default' ? 'opacity-70' : ''}`">{{ item.label }}</span>
+          <UIcon v-if="item.isCurrent" name="i-lucide-check" size="sm" />
+        </div>
+      </template>
+    </UDropdownMenu>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
 import type { DropdownMenuItem, RadioGroupItem } from "@nuxt/ui";
-import appConfig from "~/app.config";
 
-const colorMode = useColorMode();
+const { preference } = useSSRSafeTheme();
+const preferredPrimary = useCookie('uiPrimary');
+const isMobile = useMobileDetector();
 
 // --- Theme Selection ---
 const themeRadioItems: Ref<RadioGroupItem[]> = ref([
@@ -42,18 +43,16 @@ interface ColorItem extends DropdownMenuItem {
 }
 
 // --- Primary Color Selection ---
-
-const currentColor = ref(appConfig.ui.colors.primary);
 const open = ref(false)
 
 const computedItems = computed(() => {
   return colorItems.map(item => ({
     ...item,
-    isCurrent: item.label?.toLowerCase() === currentColor.value
+    isCurrent: item.label?.toLowerCase() === preferredPrimary.value
   }));
 });
 
-function changeThemeColor(color: string) {  
+function changeThemeColor(color: string) {
   updateAppConfig({
     ui: {
       colors: {
@@ -61,7 +60,7 @@ function changeThemeColor(color: string) {
       }
     }
   });
-  currentColor.value = color;
+  preferredPrimary.value = color;
 }
 
 defineShortcuts({

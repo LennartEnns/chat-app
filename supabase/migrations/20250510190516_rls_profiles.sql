@@ -1,7 +1,7 @@
 alter table profiles enable row level security;
 
 create policy "Anyone can read any profiles"
-on profiles for select to authenticated
+on profiles for select
 using (true);
 
 create policy "Users can update their own profile"

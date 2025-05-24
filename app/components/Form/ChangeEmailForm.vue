@@ -51,7 +51,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     email: event.data.email,
   },
   {
-    emailRedirectTo: toFullUrl('flow/confirm-email-change'),
+    emailRedirectTo: toFullUrl('/flow/confirm-email-change'),
   });
   if (data && !error) {
     showSuccessModal.value = true;

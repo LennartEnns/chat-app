@@ -23,7 +23,7 @@
             >
           </div>
         </div>
-        <div :class="`mt-4 ${themedWeakColor}`">
+        <div :class="`mt-4 ${themedTextsColor}`">
           {{ userData.username }}
         </div>
         <UButton v-if="userData.existsAvatarAtUrl" label="Clear Avatar" variant="ghost" class="cursor-pointer mt-1" color="error" @click="clearAvatar" />
@@ -130,6 +130,7 @@
                 variant="ghost"
                 class="edit-input"
                 autofocus
+                autoresize
                 :rows="descriptionRowCount"
               />
             </div>
@@ -151,7 +152,7 @@ import { displayNameSchema } from "../../validation/schemas/input/inputUserSchem
 const supabase = useSupabaseClient();
 const userData = useUserData();
 const operationFeedbackHandler = useOperationFeedbackHandler();
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 
 const isEditingName = ref(false);
 const newDisplayName = ref("");

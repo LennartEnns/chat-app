@@ -1,5 +1,6 @@
 <template>
-  <NuxtLayout name="login-and-register">
+  <NuxtLayout name="gradient-background">
+    <LandingPageHeader />
     <RegistrationForm class="m-auto" />
   </NuxtLayout>
 </template>

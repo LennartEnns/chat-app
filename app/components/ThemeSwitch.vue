@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 </script>
 
 <style></style>

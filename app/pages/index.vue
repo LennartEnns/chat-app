@@ -20,7 +20,7 @@ import type {
 } from "@tsparticles/engine";
 import type { Reactive } from "vue";
 
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 const slideoverOpen = ref(false);
 
 onMounted(() => {
