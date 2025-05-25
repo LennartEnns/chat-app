@@ -68,7 +68,7 @@
                 color="primary"
                 class="cursor-pointer self-center"
                 @click="openChat(profileUserId)"
-              />
+              >Chat</UButton>
               <!-- Only show edit button for own profile -->
               <UButton
                 v-if="isOwnProfile"

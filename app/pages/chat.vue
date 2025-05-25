@@ -231,7 +231,7 @@ onMounted(async () => {
       label: user.displayname,
       suffix: user.username,
       to: `/profil/${user.user_id}`,
-      target: 'blank',
+      target: '_self',
       avatar: {src: getAvatarUrl(user.user_id)},
       raw: user,
   }));
