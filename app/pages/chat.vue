@@ -94,28 +94,8 @@
               src="https://github.com/nuxt.png"
             />
             <p>
-              Ipsum is simply dummy an printer took a galley of type and
-              scrambled it to make a type specimen book. It has survived not
-              only five centuries, but also the leap into electronic
-              typesetting, remaining essentially unchanged. It was popularised
-              in the 1960s with the release of Letraset sheets containing Lorem
-              Ipsum passages, and more recently wit fkjsdaklfjklasd jfkjsadkl
-              jfkljsadklfj föajsklfjkladsjfkl
-            </p>
-          </div>
-          <div :class="`message user ${themedUserMessageColor}`">
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
-            <p>
-              Ipsum is simply dummy an printer took a galley of type and
-              scrambled it to make a type specimen book. It has survived not
-              only five centuries, but also the leap into electronic
-              typesetting, remaining essentially unchanged. It was popularised
-              in the 1960s with the release of Letraset sheets containing Lorem
-              Ipsum passages, and more recently wit fkjsdaklfjklasd jfkjsadkl
-              jfkljsadklfj föajsklfjkladsjfkl
+              User messages are now saved to the database and loaded on
+              page-reload. Start messaging today!
             </p>
           </div>
           <div
@@ -123,10 +103,7 @@
             :key="index"
             :class="`message user ${themedUserMessageColor}`"
           >
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
+            <UAvatar class="justify-self-center" :src="avatarUrl" />
             <p>{{ message }}</p>
           </div>
         </div>
@@ -213,7 +190,6 @@ async function loadFromDatabase() {
   data.forEach((element: any) => {
     userMessages.value.push(element["content"]);
   });
-  console.log(data);
   return null;
 }
 
@@ -247,6 +223,52 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
+});
+
+// place actual user-avatar in message copied from profile page [composable needed] | changed null -> undefinied to fix error
+
+const user = useSupabaseUser();
+const avatarUrl = ref<string | undefined>(undefined);
+
+async function checkAvatarExists(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+onMounted(async () => {
+  if (user.value) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${user.value.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = undefined;
+    }
+  } else {
+    avatarUrl.value = undefined;
+  }
+});
+
+watch(user, async (newUser) => {
+  if (newUser) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${newUser.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = undefined;
+    }
+  } else {
+    avatarUrl.value = undefined;
+  }
 });
 </script>
 
