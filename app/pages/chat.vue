@@ -172,9 +172,34 @@ const themedPartnerMessageColor = computed(() =>
 
 function sendMessage(): void {
   if (newMessage.value.trim()) {
+    saveToDatabase(newMessage.value.trim());
     userMessages.value.push(newMessage.value.trim());
     newMessage.value = "";
   }
+}
+
+import type { Database } from "../../database.types";
+
+async function saveToDatabase(message: string) {
+  const supabase = useSupabaseClient<Database>();
+
+  const { data, error } = await supabase
+    .from("messages")
+    .insert([
+      {
+        user_id: "bd988169-4773-44b2-94a9-1819d8052992",
+        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8",
+        content: message,
+      } as any,
+    ])
+    .select();
+
+  if (error) {
+    console.error("Error inserting message:", error);
+    return null;
+  }
+
+  return data ? data[0] : null;
 }
 
 function handleKeyDown(event: KeyboardEvent): void {
