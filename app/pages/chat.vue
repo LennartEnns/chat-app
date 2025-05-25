@@ -165,6 +165,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import type { Database } from "@@/database.types";
+
 const isMobile = useMobileDetector();
 useFirstLoginDetector();
 
@@ -176,6 +179,8 @@ const messagesContainer = ref<any>(null);
 
 const drawerOpen = useOpenDrawer();
 const { isLight } = useSSRSafeTheme();
+
+const supabase = useSupabaseClient<Database>();
 
 const themedUserMessageColor = computed(() =>
   isLight.value ? "user-light" : "user-dark"
@@ -201,19 +206,17 @@ function sendMessage(): void {
   }
 }
 
-import type { Database } from "../../database.types";
+const user_id = "bd988169-4773-44b2-94a9-1819d8052992";
 
 async function saveToDatabase(message: string) {
-  const supabase = useSupabaseClient<Database>();
-
   const { data, error } = await supabase
     .from("messages")
     .insert([
       {
-        user_id: "bd988169-4773-44b2-94a9-1819d8052992",
+        user_id: user_id,
         chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8",
         content: message,
-      } as any,
+      },
     ])
     .select();
 
@@ -222,7 +225,21 @@ async function saveToDatabase(message: string) {
     return null;
   }
 
-  return data ? data[0] : null;
+  return null;
+}
+
+async function loadFromDatabase() {
+  const { data, error } = (await supabase.from("messages").select("*")) as any;
+
+  if (error) {
+    console.error("Error loading messages:", error);
+    return null;
+  }
+  data.forEach((element: any) => {
+    userMessages.value.push(element["content"]);
+  });
+  console.log(data);
+  return null;
 }
 
 function handleKeyDown(event: KeyboardEvent): void {
@@ -249,6 +266,7 @@ watch(
 );
 
 onMounted(() => {
+  loadFromDatabase();
   window.addEventListener("keydown", handleKeyDown);
   scrollToBottom();
 });
