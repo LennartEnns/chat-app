@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     return jsonResponse(data, 200);
   } catch (error) {
     console.log(error);
-    return jsonResponse({ error: error.message, code: error.code }, error.status ?? 400);
+    return jsonResponse({ message: error.message, code: error.code }, error.status ?? 400);
   }
 });
 
