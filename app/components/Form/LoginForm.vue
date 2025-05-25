@@ -34,6 +34,7 @@ import { loginSchema } from '../../../validation/schemas/input/inputUserSchemas'
 import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
 import PasswordToggleInput from '../Input/PasswordToggleInput.vue'
 import ForgotPassword from '~/components/Modal/ForgotPassword.vue'
+import { FunctionsHttpError } from '@supabase/supabase-js'
 
 const supabase = useSupabaseClient()
 const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -89,9 +90,13 @@ async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
         operationFeedbackHandler.displayError(getAuthErrorMessage(setSessionError.code, unknownErrorMessage))
       }
     } else {
-      console.log(`Error calling the username login function: ${ error }`);
-      const description = (error.context.status === 400) ? getAuthErrorMessage('invalid_credentials') : unknownErrorMessage
-      operationFeedbackHandler.displayError(description)
+      console.log(`Error calling the username login function: ${ JSON.stringify(error) }`);
+      let description = unknownErrorMessage;
+      if (error instanceof FunctionsHttpError) {
+        const errorBody = await error.context.json();
+        description = errorBody.code ? getAuthErrorMessage(errorBody.code) : (errorBody.message ?? unknownErrorMessage);
+      }
+      operationFeedbackHandler.displayError(description);
     }
   }
 }

@@ -2,11 +2,11 @@
   <UModal
     :close="{ onClick: () => emit('close', false) }"
     title="Welcome to YapSpace!"
-    class="opacity-85 border-1"
+    class="border-1"
   >
     <template #title>
       <div class="text-lg">
-        Welcome to YapSpace!
+        Welcome to YapSpace{{ isFalsy(userData.username) ? '' : `, ${userData.username}` }}!
       </div>
     </template>
     <template #description>
@@ -26,4 +26,5 @@
 
 <script setup lang="ts">
 const emit = defineEmits<{ close: [boolean] }>()
+const userData = useUserData();
 </script>

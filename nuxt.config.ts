@@ -5,7 +5,6 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
     '@nuxt/eslint',
-    '@nuxt/test-utils',
     '@nuxtjs/supabase',
     'nuxt-particles',
     '@nuxt/image',

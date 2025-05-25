@@ -14,7 +14,7 @@ const supabase = getAdminClient(clientOptions);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -35,8 +35,8 @@ Deno.serve(async (req) => {
 
     return jsonResponse(data, 200);
   } catch (error) {
-    console.log(error)
-    return jsonResponse({ error: error.message }, error.status ?? 400);
+    console.log(error);
+    return jsonResponse({ error: error.message, code: error.code }, error.status ?? 400);
   }
 });
 

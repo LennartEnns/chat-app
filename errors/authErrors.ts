@@ -7,14 +7,15 @@ const messages: { [key: string]: string } = {
     'invalid_credentials': 'Invalid login credentials',
     'email_address_invalid': 'Invalid Email address',
     'email_not_confirmed': 'Confirm your Email address first',
+    'same_password': 'This already is your password!',
 }
 
 export function getAuthErrorMessage(code: string | undefined, fallback: string = "Unknown authentication error"): string {
-    if (!code) return fallback
-    const msg = messages[code]
-    return msg ?? fallback
+    if (!code) return fallback;
+    const msg = messages[code];
+    return msg ?? fallback;
 }
 
 export function logAuthError(error: AuthError, process: string) {
-    console.error(`An auth error occured during ${ process }: ${ Object.keys(error) } \n ${ Object.values(error) }`)
+    console.error(`An auth error occured during ${ process }: ${ Object.keys(error) } \n ${ Object.values(error) }`);
 }

@@ -74,7 +74,7 @@
       description="Choose which sessions to terminate."
     >
       <template #body>
-        <div class="flex flex-col md:flex-row">
+        <div class="flex flex-col gap-1 md:flex-row md:gap-0">
           <UButton
             variant="ghost"
             icon="i-lucide-log-out"

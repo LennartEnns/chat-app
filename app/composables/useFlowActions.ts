@@ -12,8 +12,24 @@ export const useFlowActions = () => {
         operationFeedbackHandler.displayError('Could not send a password reset link.');
       } else {
         operationFeedbackHandler.displaySuccess('We sent a password reset link to your email address.');
+        return true;
       }
-      return res;
+      return false;
+    },
+    requestUserDeletion: async () => {
+      const errorMessage = 'Account deletion failed';
+      try {
+        const res = await supabase.functions.invoke('delete-me');
+        if (res.error) {
+          operationFeedbackHandler.displayError(errorMessage);
+        } else {
+          operationFeedbackHandler.displaySuccess(res.data.message ?? 'You have been deleted');
+          return true;
+        }
+      } catch {
+        operationFeedbackHandler.displayError(errorMessage);
+      }
+      return false;
     }
   };
 }

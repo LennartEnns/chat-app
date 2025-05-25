@@ -27,7 +27,7 @@
     <UButton label="Reset Password" class="cursor-pointer justify-center" @click="flowActions.requestPasswordReset(userData.email)" />
 
     <USeparator label="Danger Zone" class="mt-4" color="error" />
-    <UButton class="flex flex-col cursor-pointer" variant="outline" color="error">
+    <UButton class="flex flex-col cursor-pointer" variant="outline" color="error" @click="onDeleteUser">
       <div class="w-full text-xl text-bold">
         Delete this account
       </div>
@@ -41,9 +41,23 @@
 <script lang="ts" setup>
 import ChangeUsernameForm from '../../components/Form/ChangeUsernameForm.vue';
 import ChangeEmailForm from '../../components/Form/ChangeEmailForm.vue';
+import { ModalDeleteUser } from '#components';
 
 const userData = useUserData();
 const flowActions = useFlowActions();
+const overlay = useOverlay();
+const deleteUserModal = overlay.create(ModalDeleteUser);
+
+async function onDeleteUser() {
+  const instance = deleteUserModal.open();
+  const res = await instance.result;
+  if (res) {
+    const deletionSuccessful = await flowActions.requestUserDeletion();
+    if (deletionSuccessful) {
+      navigateTo("/");
+    }
+  }
+}
 </script>
 
 <style scoped>
