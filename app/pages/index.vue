@@ -114,7 +114,7 @@ const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
     links: {
       enable: true,
       color: particlesColor,
-      opacity: 0.5,
+      opacity: 0.7,
     },
   },
   detectRetina: true,

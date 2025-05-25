@@ -1,4 +1,4 @@
-import { WelcomeModal } from '#components'
+import { ModalWelcome } from '#components'
 
 /**
  * Detects whether the user is logged in for the first time.
@@ -9,7 +9,7 @@ export const useFirstLoginDetector = () => {
   if (!user.value?.user_metadata.first_login) return;
 
   const overlay = useOverlay();
-  const modal = overlay.create(WelcomeModal);
+  const modal = overlay.create(ModalWelcome);
   const instance = modal.open();
   instance.result.then((res) => {
     if (res) {

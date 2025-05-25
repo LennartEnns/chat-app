@@ -1,27 +1,27 @@
 <template>
   <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-  <UFormField label="New Email Address" name="email" required>
-    <UInput v-model="state.email" class="w-full" />
-  </UFormField>
-  <UButton label="Change" class="cursor-pointer" type="submit" />
-  <UModal
-    v-model:open="showSuccessModal"
-    :dismissible="false">
-    <template #title>
-      <div class="text-success">
-        Links sent successfully
-      </div>
-    </template>
-    <template #description>
-      We have sent confirmation links to both your <b>old</b> and your <b>new</b> email address.
-      <br>
-      Click on <b>both links</b> and reload this page for the change to take effect.
-    </template>
-    <template #body>
-      <UButton label="Ok, got it!" variant="link" class="text-md p-0 cursor-pointer" @click="showSuccessModal = false" />
-    </template>
-  </UModal>
-</UForm>
+    <UFormField label="New Email Address" name="email" required>
+      <UInput v-model="state.email" class="w-full" />
+    </UFormField>
+    <UButton label="Change" class="cursor-pointer" type="submit" />
+    <UModal
+      v-model:open="showSuccessModal"
+      :dismissible="false">
+      <template #title>
+        <div class="text-success">
+          Links sent successfully
+        </div>
+      </template>
+      <template #description>
+        We have sent confirmation links to both your <b>old</b> and your <b>new</b> email address.
+        <br>
+        Click on <b>both links</b> for the change to take effect.
+      </template>
+      <template #body>
+        <UButton label="Ok, got it!" variant="link" class="text-md p-0 cursor-pointer" @click="showSuccessModal = false" />
+      </template>
+    </UModal>
+  </UForm>
 </template>
 
 <script lang="ts" setup>

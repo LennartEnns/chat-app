@@ -1,7 +1,10 @@
 <template>
-  <UCard variant="subtle" class="border-1 border-gray-500" :ui="{
-    header: 'border-none pb-1 text-lg'
-  }">
+  <UCard
+    variant="subtle"
+    class="border-1 border-gray-500"
+    :ui="{
+      header: 'border-none pb-1 text-lg'
+    }">
     <template #header>
       <p class="font-bold">Log into your Account</p>
     </template>
@@ -19,6 +22,8 @@
         Sign In
       </UButton>
     </UForm>
+
+    <UButton label="I forgot my password" variant="link" class="mt-5 p-0" color="neutral" @click="onResetPassword" />
   </UCard>
 </template>
 
@@ -28,9 +33,13 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { loginSchema } from '../../../validation/schemas/input/inputUserSchemas'
 import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
 import PasswordToggleInput from '../Input/PasswordToggleInput.vue'
+import ForgotPassword from '~/components/Modal/ForgotPassword.vue'
 
 const supabase = useSupabaseClient()
 const operationFeedbackHandler = useOperationFeedbackHandler();
+const { requestPasswordReset } = useFlowActions();
+const overlay = useOverlay();
+const forgotPasswordModal = overlay.create(ForgotPassword);
 
 type AgnosticLoginSchema = z.output<typeof loginSchema>
 const agnosticLoginState = reactive<Partial<AgnosticLoginSchema>>({
@@ -84,6 +93,14 @@ async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
       const description = (error.context.status === 400) ? getAuthErrorMessage('invalid_credentials') : unknownErrorMessage
       operationFeedbackHandler.displayError(description)
     }
+  }
+}
+
+async function onResetPassword() {
+  const instance = forgotPasswordModal.open();
+  const res = await instance.result;
+  if (res) {
+    requestPasswordReset(res);
   }
 }
 </script>

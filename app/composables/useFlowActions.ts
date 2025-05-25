@@ -1,19 +1,19 @@
 export const useFlowActions = () => {
   const supabase = useSupabaseClient();
-  const userData = useUserData();
   const operationFeedbackHandler = useOperationFeedbackHandler();
 
   return {
-    requestPasswordReset: async () => {
-      const { error } = await supabase.auth
-        .resetPasswordForEmail(userData.email, {
+    requestPasswordReset: async (email: string) => {
+      const res = await supabase.auth
+        .resetPasswordForEmail(email, {
           redirectTo: toFullUrl('/flow/reset-password'),
         });
-      if (error) {
+      if (res.error) {
         operationFeedbackHandler.displayError('Could not send a password reset link.');
       } else {
         operationFeedbackHandler.displaySuccess('We sent a password reset link to your email address.');
       }
+      return res;
     }
   };
 }

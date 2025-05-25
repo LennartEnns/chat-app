@@ -3,9 +3,6 @@
     :close="{ onClick: () => emit('close', false) }"
     title="Welcome to YapSpace!"
     class="opacity-85 border-1"
-    :ui="{
-      body: 'border-none',
-    }"
   >
     <template #title>
       <div class="text-lg">

@@ -24,7 +24,7 @@
       {{ userData.email }}
     </div>
     <ChangeEmailForm />
-    <UButton label="Reset Password" class="cursor-pointer justify-center" @click="flowActions.requestPasswordReset()" />
+    <UButton label="Reset Password" class="cursor-pointer justify-center" @click="flowActions.requestPasswordReset(userData.email)" />
 
     <USeparator label="Danger Zone" class="mt-4" color="error" />
     <UButton class="flex flex-col cursor-pointer" variant="outline" color="error">
