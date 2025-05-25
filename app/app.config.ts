@@ -6,6 +6,15 @@ export default defineAppConfig({
         base: ['w-full rounded-md border-0 placeholder:text-dimmed focus:outline-none disabled:cursor-default disabled:opacity-75','transition-colors']
       }
     },
+    button: {
+      slots: {
+        base: ['cursor-pointer'],
+      },
+      defaultVariants: {
+        // Set default button color to neutral
+        // color: 'neutral'
+      }
+    },
     colors: {
       primary: 'defaultPrimary',
       neutral: 'neutral',
@@ -17,11 +26,5 @@ export default defineAppConfig({
       warning: 'warningMain',
       error: 'errorMain', */
     },
-    button: {
-      defaultVariants: {
-        // Set default button color to neutral
-        // color: 'neutral'
-      }
-    }
   }
 })

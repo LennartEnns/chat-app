@@ -150,9 +150,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-
 const isMobile = useMobileDetector();
+useFirstLoginDetector();
+
 const open = ref<boolean>(false); //placeholder for command pallette (search bar)
 const users = ref<any[]>([]); //placeholder for command pallette (search bar)
 const newMessage = ref<string>("");
@@ -160,7 +160,7 @@ const userMessages = ref<string[]>([]);
 const messagesContainer = ref<any>(null);
 
 const drawerOpen = useOpenDrawer();
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 
 const themedUserMessageColor = computed(() =>
   isLight.value ? "user-light" : "user-dark"

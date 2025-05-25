@@ -28,7 +28,7 @@
 import logo_lightened from '@/assets/images/logo.png'
 import logo_darkened from '@/assets/images/logo_dark.png'
 
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 
 const registerButtonColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-100');
 const loginButtonColor = computed(() => isLight.value ? 'text-primary-600' : 'text-primary-600');
