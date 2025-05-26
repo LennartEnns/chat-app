@@ -69,7 +69,6 @@
                 class="cursor-pointer self-center"
                 @click="openChat(profileUserId)"
               >Chat</UButton>
-              <!-- Only show edit button for own profile -->
               <UButton
                 v-if="isOwnProfile"
                 :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pencil'"
@@ -186,8 +185,9 @@ import { userLimits } from "../../../validation/commonLimits";
 import { displayNameSchema } from "../../../validation/schemas/input/inputUserSchemas";
 import { onMounted, watch } from "vue";
 
+const userData = useUserData();
 const supabase = useSupabaseClient();
-const user = useSupabaseUser();
+// const user = useSupabaseUser();
 const route = useRoute();
 const toast = useToast();
 
@@ -196,7 +196,7 @@ const profileUserId = computed(() => {
   const params = route.params;
   return params.userId as string;
 });
-const isOwnProfile = computed(() => user.value?.id === profileUserId.value);
+const isOwnProfile = computed(() => userData.id === profileUserId.value);
 
 // Profile data
 const profileUser = ref<any>(null);
@@ -255,12 +255,13 @@ async function loadUserProfile(userId: string) {
   try {
     loading.value = true;
     error.value = null;
+    profileUser.value
 
-    // If it's the current user, get data from user metadata
-    if (isOwnProfile.value && user.value) {
-      const profileData = user.value.user_metadata;
+    // If it's the current user, get data from users metadata
+    if (isOwnProfile.value && userData) {
+      const profileData = userData;
       profileUser.value = {
-        user_id: user.value.id,
+        user_id: userData.id,
         username: profileData?.username || "",
         displayname: profileData?.displayname,
         description: profileData?.description || ""
@@ -281,8 +282,6 @@ async function loadUserProfile(userId: string) {
       console.log(profileUser.value)
       profileUser.value = data;
     }
-
-    // Load avatar
     await loadAvatar(userId);
     
   } catch (err) {
@@ -306,39 +305,22 @@ async function loadAvatar(userId: string) {
   }
 }
 
-// Watch for route changes - be more flexible with parameter names
-watch(() => route.params, (newParams) => {
-  console.log('Route params changed:', newParams);
-  const newId = (newParams.id || newParams.userId || newParams.user_id || newParams.profileId) as string;
-  if (newId) {
-    loadUserProfile(newId);
-  }
-}, { immediate: true, deep: true });
-
-// Watch for user changes (login/logout)
-watch(user, (newUser) => {
-  if (profileUserId.value) {
-    loadUserProfile(profileUserId.value);
-  }
-});
-
 onMounted(() => {
   console.log('Route params:', route.params);
   console.log('Profile User ID:', profileUserId.value);
-  console.log('Current user ID:', user.value?.id);
+  console.log('Current user ID:', userData.id);
   
   if (profileUserId.value) {
     loadUserProfile(profileUserId.value);
-  } else if (user.value?.id) {
+  } else if (userData.id) {
     // Fallback: If no ID in route, show current user's profile
-    loadUserProfile(user.value.id);
+    loadUserProfile(userData.id);
   } else {
     error.value = 'No user ID provided and no user logged in.';
     loading.value = false;
   }
 });
 
-// Functions only available for own profile
 async function updateProfileData(
   data: Partial<{ displayname: string | null; description: string }>
 ) {
@@ -370,10 +352,10 @@ async function uploadPic(event: Event): Promise<void> {
   
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
-  if (file && user.value) {
+  if (file && userData) {
     const { error } = await supabase.storage
       .from("avatars")
-      .upload(`public/${user.value.id}.jpg`, file, {
+      .upload(`public/${userData.id}.jpg`, file, {
         cacheControl: "3600",
         upsert: true,
       });
@@ -388,13 +370,13 @@ async function uploadPic(event: Event): Promise<void> {
     }
     const avatarUrlData = supabase.storage
       .from("avatars")
-      .getPublicUrl(`public/${user.value.id}.jpg`);
+      .getPublicUrl(`public/${userData.id}.jpg`);
     avatarUrl.value = avatarUrlData.data.publicUrl;
   }
 }
 
 async function openChat(userId: string) {
-  //Hier das routing fürs chat implementieren und chat in datenbank hinzufügen, wenn noch nicht verfügbar
+  //routing fürs chatten yippie
 }
 
 async function toggleEditDisplayName() {

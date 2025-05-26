@@ -107,6 +107,8 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const route = useRoute();
+const userData = useUserData();
+let userId = userData.id;
 const isLight = useSSRSafeTheme();
 const themedLogoColor = computed(() => "text-primary");
 
@@ -180,7 +182,7 @@ const items = ref<NavigationMenuItem[]>([
       {
         label: "Profile",
         icon: "i-lucide-circle-user-round",
-        to: "/profile",
+        to: `/profil/${userId}`,
       },
       {
         label: "Logout",
