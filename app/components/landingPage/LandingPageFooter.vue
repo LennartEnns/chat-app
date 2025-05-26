@@ -8,7 +8,7 @@
   
 <script setup lang="ts">
 const emit = defineEmits(['openFaq']);
-const isLight = useSSRSafeTheme()
+const { isLight } = useSSRSafeTheme()
 </script>
   
 <style scoped>

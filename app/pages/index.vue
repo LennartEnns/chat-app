@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
 import type {
   RecursivePartial,
   IOptions,
@@ -21,7 +20,7 @@ import type {
 } from "@tsparticles/engine";
 import type { Reactive } from "vue";
 
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 const slideoverOpen = ref(false);
 
 onMounted(() => {
@@ -115,7 +114,7 @@ const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
     links: {
       enable: true,
       color: particlesColor,
-      opacity: 0.5,
+      opacity: 0.7,
     },
   },
   detectRetina: true,

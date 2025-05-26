@@ -74,7 +74,7 @@
       description="Choose which sessions to terminate."
     >
       <template #body>
-        <div class="flex flex-col md:flex-row">
+        <div class="flex flex-col gap-1 md:flex-row md:gap-0">
           <UButton
             variant="ghost"
             icon="i-lucide-log-out"
@@ -106,17 +106,19 @@
 <script lang="ts" setup>
 import type { NavigationMenuItem } from "@nuxt/ui";
 
+const supabase = useSupabaseClient();
+const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
+
 const userData = useUserData();
 let userId = userData.id;
 const isLight = useSSRSafeTheme();
 const themedLogoColor = computed(() => "text-primary");
 
 const isMobile = useMobileDetector();
-const mobileMenuOpen = ref(false);
 
-const supabase = useSupabaseClient();
-const toast = useToast();
+const themedLogoColor = computed(() => "text-primary");
+const mobileMenuOpen = ref(false);
 
 const drawerOpen = useOpenDrawer();
 const buttonText = ref<string>("Back");
@@ -141,19 +143,11 @@ async function logout(scope: "global" | "local" | "others") {
   });
   if (error) {
     console.log(`Logout error: ${error}`);
-    toast.add({
-      title: "Error",
-      description: "An unexpected error occured during logout.",
-      color: "error",
-    });
+    operationFeedbackHandler.displayError('An unexpected error occured during logout.');
   } else if (scope !== "others") {
     navigateTo("/");
   } else {
-    toast.add({
-      title: "Success",
-      description: "All other sessions have been terminated.",
-      color: "success",
-    });
+    operationFeedbackHandler.displaySuccess('All other sessions have been terminated.');
     showLogoutModal.value = false;
   }
 }
@@ -174,10 +168,23 @@ const items = ref<NavigationMenuItem[]>([
     label: "Settings",
     icon: "i-lucide-settings",
     to: "/settings/account",
+    children: [
+      {
+        label: "Account",
+        icon: "i-lucide-user",
+        to: "/settings/account",
+      },
+      {
+        label: "Appearance",
+        icon: "i-lucide-wand-sparkles",
+        to: "/settings/appearance",
+      },
+    ],
   },
   {
     label: "Account",
     icon: "i-lucide-user",
+    to: "/profile",
     children: [
       {
         label: "Profile",
