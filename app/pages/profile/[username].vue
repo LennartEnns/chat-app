@@ -250,7 +250,7 @@ async function loadUserProfile(username: string) {
       // Fetch other user's profile from database
       const { data, error: dbError } = await supabase
         .from('profiles')
-        .select('displayname, description')
+        .select('user_id, displayname, description')
         .eq('username', username)
         .single();
 
@@ -258,14 +258,15 @@ async function loadUserProfile(username: string) {
         console.error('Error fetching profile:', dbError);
         return;
       }
-      const avatarPath = `public/${username}.jpg`;
+
+      const dbProfile: Omit<Tables<'profiles'>, 'username'> = data;
+      const avatarPath = `public/${dbProfile.user_id}.jpg`;
       const avatarUrlData = supabase.storage
         .from("avatars")
         .getPublicUrl(avatarPath);
       const avatarUrl = avatarUrlData.data.publicUrl;
       const { data: existsAvatarAtUrl } = await supabase.storage.from('avatars').exists(avatarPath);
 
-      const dbProfile: Omit<Tables<'profiles'>, 'user_id'> = data;
       profileData.value = {
         ...dbProfile,
         username,
