@@ -101,31 +101,8 @@
             />
             <div class="message-content">
               <p>
-                Ipsum is simply dummy an printer took a galley of type and
-                scrambled it to make a type specimen book. It has survived not
-                only five centuries, but also the leap into electronic
-                typesetting, remaining essentially unchanged. It was popularised
-                in the 1960s with the release of Letraset sheets containing
-                Lorem Ipsum passages, and more recently wit fkjsdaklfjklasd
-                jfkjsadkl jfkljsadklfj föajsklfjkladsjfkl
-              </p>
-              <span class="message-time">12:45</span>
-            </div>
-          </div>
-          <div :class="`message user ${themedUserMessageColor}`">
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
-            <div class="message-content">
-              <p>
-                Ipsum is simply dummy an printer took a galley of type and
-                scrambled it to make a type specimen book. It has survived not
-                only five centuries, but also the leap into electronic
-                typesetting, remaining essentially unchanged. It was popularised
-                in the 1960s with the release of Letraset sheets containing
-                Lorem Ipsum passages, and more recently wit fkjsdaklfjklasd
-                jfkjsadkl jfkljsadklfj föajsklfjkladsjfkl
+                User messages are now saved to the database and loaded on
+                page-reload. Start messaging today!
               </p>
               <span class="message-time">12:48</span>
             </div>
@@ -135,10 +112,7 @@
             :key="index"
             :class="`message user ${themedUserMessageColor}`"
           >
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
+            <UAvatar class="justify-self-center" :src="avatarUrl" />
             <div class="message-content">
               <p>{{ message.text }}</p>
               <span class="message-time">{{ message.timestamp }}</span>
@@ -167,22 +141,26 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 
-const toast = useToast()
-const supabase = useSupabaseClient()
+const toast = useToast();
+
+const supabase = useSupabaseClient();
 
 const user = useSupabaseUser();
 const profileData = user.value?.user_metadata;
 const username = profileData?.username || "";
 
 function getAvatarUrl(userId: string): string {
-  const { data } = supabase
-    .storage
-    .from('avatars')
-    .getPublicUrl('public/' + userId + '.jpg')
-    if (!data.publicUrl || data.publicUrl.includes('error') || data.publicUrl === '') {
-      return 'https://eunokvzfqixyoauwvqlt.supabase.co/storage/v1/object/public/avatars/public/default.png';
-    }
-  return data.publicUrl
+  const { data } = supabase.storage
+    .from("avatars")
+    .getPublicUrl("public/" + userId + ".jpg");
+  if (
+    !data.publicUrl ||
+    data.publicUrl.includes("error") ||
+    data.publicUrl === ""
+  ) {
+    return "https://eunokvzfqixyoauwvqlt.supabase.co/storage/v1/object/public/avatars/public/default.png";
+  }
+  return data.publicUrl;
 }
 
 interface Users {
@@ -198,7 +176,7 @@ interface CommandItem {
   suffix: string;
   to: string;
   target: string;
-  avatar: {src: string};
+  avatar: { src: string };
   raw: Users;
 }
 
@@ -226,30 +204,31 @@ onMounted(async () => {
     toast.add({
       title: "Error loading users",
       description: error.message,
-      color: 'error',
+      color: "error",
     });
     return;
   }
 
-
   users.value = (data || [])
     .filter((user: Users) => {
-      return user && 
-            user.user_id && 
-            user.user_id.trim() !== '' && 
-            user.username !== username &&
-            user.displayname && 
-            user.displayname.trim() !== '';
-      })
+      return (
+        user &&
+        user.user_id &&
+        user.user_id.trim() !== "" &&
+        user.username !== username &&
+        user.displayname &&
+        user.displayname.trim() !== ""
+      );
+    })
     .map((user: Users) => ({
       id: user.user_id,
       label: user.displayname,
       suffix: user.username,
       to: `/profile/${user.user_id}`,
-      target: '_self',
-      avatar: {src: getAvatarUrl(user.user_id)},
+      target: "_self",
+      avatar: { src: getAvatarUrl(user.user_id) },
       raw: user,
-  }));
+    }));
 
   groups.value = [
     {
@@ -259,6 +238,8 @@ onMounted(async () => {
     },
   ];
 });
+
+import type { Database } from "@@/database.types";
 
 const isMobile = useMobileDetector();
 useFirstLoginDetector();
@@ -285,13 +266,62 @@ function sendMessage(): void {
     const hours = now.getHours().toString().padStart(2, "0");
     const minutes = now.getMinutes().toString().padStart(2, "0");
     const timestamp = `${hours}:${minutes}`;
-
+    saveToDatabase(newMessage.value.trim());
     userMessages.value.push({
       text: newMessage.value.trim(),
       timestamp: timestamp,
     });
     newMessage.value = "";
   }
+}
+
+const supabaseRead = useSupabaseClient<Database>();
+
+const account = useUserData();
+
+async function saveToDatabase(message: string) {
+  const { data, error } = await supabaseRead
+    .from("messages")
+    .insert([
+      {
+        user_id: account.id,
+        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8",
+        content: message,
+      },
+    ])
+    .select();
+
+  if (error) {
+    console.error("Error inserting message:", error);
+    return null;
+  }
+
+  return null;
+}
+
+async function loadFromDatabase() {
+  const { data, error } = (await supabase.from("messages").select("*")) as any;
+
+  if (error) {
+    console.error("Error loading messages:", error);
+    return null;
+  }
+  data.forEach((element: any) => {
+    userMessages.value.push({
+      text: element["content"],
+      timestamp: parseTimeStamp(element["created_at"]),
+    });
+  });
+  console.log(data);
+  return null;
+}
+
+function parseTimeStamp(timestamp: string) {
+  const date = new Date(timestamp);
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const timestampDB = `${hours}:${minutes}`;
+  return timestampDB;
 }
 
 function handleKeyDown(event: KeyboardEvent): void {
@@ -319,11 +349,57 @@ watch(
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
+  loadFromDatabase();
   scrollToBottom();
 });
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
+});
+
+// place actual user-avatar in message copied from profile page [composable needed] | changed null -> undefinied to fix error
+
+const avatarUrl = ref<string | undefined>(undefined);
+
+async function checkAvatarExists(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+onMounted(async () => {
+  if (user.value) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${user.value.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = undefined;
+    }
+  } else {
+    avatarUrl.value = undefined;
+  }
+});
+
+watch(user, async (newUser) => {
+  if (newUser) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${newUser.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = undefined;
+    }
+  } else {
+    avatarUrl.value = undefined;
+  }
 });
 </script>
 
