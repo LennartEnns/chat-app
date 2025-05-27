@@ -16,7 +16,7 @@ export function useUserData(): Reactive<UserData> {
   const user = useSupabaseUser();
 
   const profileData = user.value?.user_metadata;
-  const avatarPath = `public/${profileData?.username || ''}.jpg`;
+  const avatarPath = `public/${user.value?.id || ''}.jpg`;
   const avatarUrlData = supabase.storage
     .from("avatars")
     .getPublicUrl(avatarPath);
