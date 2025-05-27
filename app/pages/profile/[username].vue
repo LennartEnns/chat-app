@@ -174,7 +174,7 @@ const userData = useUserData();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const { isLight } = useSSRSafeTheme();
 
-// get userId from url
+// get username from url
 const routeUsername = computed(() => {
   const params = route.params;
   return params.username as string;
