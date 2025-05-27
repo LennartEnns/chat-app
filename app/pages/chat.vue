@@ -18,6 +18,7 @@
               <template #content>
                 <UCommandPalette
                   close
+                  v-model:search-term="searchTerm"
                   :groups="groups"
                   @update:open="open = $event"
                 />
@@ -58,6 +59,7 @@
           <template #content>
             <UCommandPalette
               close
+              v-model:search-term="searchTerm"
               :groups="groups"
               @update:open="open = $event"
             />
@@ -143,107 +145,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, watch, nextTick} from "vue";
+import { useUserSearch } from '~/composables/useUserSearch'
+import type { Database } from "@@/database.types";
+
+const { searchTerm, groups } = useUserSearch()
 
 const toast = useToast();
-
 const supabase = useSupabaseClient();
-
 const user = useSupabaseUser();
 const profileData = user.value?.user_metadata;
 const username = profileData?.username || "";
-
-function getAvatarUrl(userId: string): string {
-  const { data } = supabase.storage
-    .from("avatars")
-    .getPublicUrl("public/" + userId + ".jpg");
-  if (
-    !data.publicUrl ||
-    data.publicUrl.includes("error") ||
-    data.publicUrl === ""
-  ){
-    return null;
-  }
-  return data.publicUrl;
-}
-
-interface Users {
-  user_id: string;
-  username: string;
-  displayname: string;
-  description: string;
-}
-
-interface CommandItem {
-  id: string;
-  label: string;
-  suffix: string;
-  to: string;
-  target: string;
-  avatar: { src: string };
-  raw: Users;
-}
-
-interface CommandGroup {
-  id: string;
-  label: string;
-  items: CommandItem[];
-}
-
-const users = ref<CommandItem[]>([]);
-
-const groups = ref<CommandGroup[]>([
-  {
-    id: "users",
-    label: "Users",
-    items: [],
-  },
-]);
-
-// --- fetch the data from supabase and transform it ---
-onMounted(async () => {
-  const { data, error } = await supabase.from("profiles").select();
-
-  if (error) {
-    toast.add({
-      title: "Error loading users",
-      description: error.message,
-      color: "error",
-    });
-    return;
-  }
-
-  users.value = (data || [])
-    .filter((user: Users) => {
-      return (
-        user &&
-        user.user_id &&
-        user.user_id.trim() !== "" &&
-        user.username !== username &&
-        user.displayname &&
-        user.displayname.trim() !== ""
-      );
-    })
-    .map((user: Users) => ({
-      id: user.user_id,
-      label: user.displayname,
-      suffix: user.username,
-      to: `/profile/${user.username}`,
-      target: "_self",
-      avatar: { src: getAvatarUrl(user.user_id) },
-      raw: user,
-    }));
-
-  groups.value = [
-    {
-      id: "users",
-      label: "Users",
-      items: users.value,
-    },
-  ];
-});
-
-import type { Database } from "@@/database.types";
 
 const isMobile = useMobileDetector();
 useFirstLoginDetector();
