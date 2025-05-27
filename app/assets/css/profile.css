@@ -37,9 +37,6 @@
   filter: grayscale(40%);
 }
 
-.overlay-icon {
-  margin-bottom: 8px;
-}
 
 footer {
   height: 100%;
@@ -90,19 +87,20 @@ footer {
 .edit-input:hover {
   background: transparent;
 }
-.edit-input>input, .edit-input>textarea {
+.edit-input > input,
+.edit-input > textarea {
   padding: 0px 0px;
 }
-.edit-input>input:focus, .edit-input>textarea:focus {
+.edit-input > input:focus,
+.edit-input > textarea:focus {
   background: transparent;
 }
-.edit-input>input:hover, .edit-input>textarea:hover {
+.edit-input > input:hover,
+.edit-input > textarea:hover {
   background: transparent;
 }
 
 .save-button {
-  background-color: var(--color-primary-600);
-  color: var(--color-neutral-50);
   border: none;
   padding: 8px 12px;
   border-radius: 4px;
@@ -110,8 +108,4 @@ footer {
   font-size: 14px;
   transition: background-color 0.3s ease;
   margin-left: 8px;
-}
-
-.save-button:hover {
-  background-color: var(--color-primary-700);
 }

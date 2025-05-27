@@ -1,11 +1,6 @@
 <template>
   <NuxtLayout name="logged-in">
-    <UCard
-      class="ring-0"
-      :ui="{
-        header: 'border-none',
-      }"
-    >
+    <UCard class="ring-0" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">Your Profile</p>
       </template>
@@ -13,31 +8,25 @@
         <div class="avatar-container">
           <UAvatar
             class="border-2"
-            :src="avatarUrl"
+            :src="userData.existsAvatarAtUrl ? userData.avatarUrl : undefined"
             icon="i-lucide-user"
-            :ui="{
-              root: 'size-35',
-              icon: 'size-30',
-            }"
+            :ui="{ root: 'size-35', icon: 'size-30' }"
           />
           <div class="avatar-overlay">
             <UIcon name="i-lucide-camera" size="xx-large" />
             Edit Picture
             <input
               type="file"
-              style="
-                color: transparent;
-                max-width: 100%;
-                height: 100%;
-                position: absolute;
-              "
+              style="position: absolute; width: 100%; height: 100%; opacity: 0"
               accept="image/*"
-            />
+              @change="uploadAvatar"
+            >
           </div>
         </div>
-        <div :class="`mt-4 text-neutral-400 ${themedUsernameColor}`">
-          {{ username }}
+        <div :class="`mt-4 ${themedTextsColor}`">
+          {{ userData.username }}
         </div>
+        <UButton v-if="userData.existsAvatarAtUrl" label="Clear Avatar" variant="ghost" class="cursor-pointer mt-1" color="error" @click="clearAvatar" />
       </div>
       <div class="profile-container">
         <div class="section-container">
@@ -69,11 +58,9 @@
             <div class="field-content">
               <div
                 v-if="!isEditingName"
-                :class="`${themedTextsColor} ${
-                  isFalsy(displayName) ? themedUsernameColor : themedTextsColor
-                }`"
+                :class="`${isFalsy(userData.displayname) ? themedWeakColor : themedTextsColor}`"
               >
-                {{ isFalsy(displayName) ? username : displayName }}
+                {{ isFalsy(userData.displayname) ? userData.username : userData.displayname }}
               </div>
               <UInput
                 v-else
@@ -95,7 +82,6 @@
             </div>
           </div>
         </div>
-
         <div class="section-container">
           <div
             :class="`flex align-center mb-2 text-md ${themedSectionLabelClasses}`"
@@ -132,9 +118,9 @@
             >
               <div
                 v-if="!isEditingDescription"
-                :class="`whitespace-pre-line break-all ${themedTextsColor}`"
+                :class="`whitespace-pre-line break-all ${isFalsy(userData.description) ? themedWeakColor : themedTextsColor}`"
               >
-                {{ userDescription }}
+                {{ isFalsy(userData.description) ? 'Empty' : userData.description }}
               </div>
               <UTextarea
                 v-else
@@ -144,11 +130,16 @@
                 variant="ghost"
                 class="edit-input"
                 autofocus
+                autoresize
                 :rows="descriptionRowCount"
               />
             </div>
           </div>
         </div>
+        <ULink to="/settings/account" class="flex items-center mt-4">
+        <div>Go To Account Settings</div>
+        <UIcon name="i-lucide-arrow-right" class="ml-1"/>
+      </ULink>
       </div>
     </UCard>
   </NuxtLayout>
@@ -159,28 +150,20 @@ import { userLimits } from "../../validation/commonLimits";
 import { displayNameSchema } from "../../validation/schemas/input/inputUserSchemas";
 
 const supabase = useSupabaseClient();
-const user = useSupabaseUser();
-const profileData = user.value?.user_metadata;
-const avatarUrlData = user.value
-  ? supabase.storage
-      .from("avatars")
-      .getPublicUrl(`public/${user.value?.id}.jpg`)
-  : null;
-const avatarUrl = avatarUrlData?.data.publicUrl;
+const userData = useUserData();
+const operationFeedbackHandler = useOperationFeedbackHandler();
+const { isLight } = useSSRSafeTheme();
 
-const username = ref<string>(profileData?.username);
-const displayName = ref<string | null | undefined>(profileData?.displayname);
-const userDescription = ref<string>(profileData?.description || "");
 const isEditingName = ref(false);
 const newDisplayName = ref("");
 const isEditingDescription = ref(false);
 const newDescription = ref("");
 
 const descriptionRowCount = computed(
-  () => (userDescription.value.match(/\n/g) || "").length + 1
+  () => (userData.description ? ((userData.description.match(/\n/g) || '').length + 1) : 0)
 );
 const displayNameSanitized = computed(() =>
-  isFalsy(newDisplayName.value) ? null : newDisplayName.value?.trim()
+  isFalsy(newDisplayName.value) ? null : newDisplayName.value.trim()
 );
 const displayNameParsed = computed(() =>
   displayNameSchema.safeParse(displayNameSanitized.value)
@@ -190,73 +173,85 @@ const displayNameErrorMessage = computed(
   () => displayNameParsed.value.error?.issues[0]?.message ?? "Invalid Format"
 );
 
-const isLight = useSSRSafeTheme();
-const toast = useToast();
+const descriptionSanitized = computed(() =>
+  isFalsy(newDescription.value) ? null : newDescription.value.trim()
+);
 
-const themedProfileFieldClasses = computed(() => {
-  return isLight.value ? "border-b-primary-600" : "border-b-primary-300";
-});
-const themedSectionLabelClasses = computed(() => {
-  return isLight.value ? "text-primary-900" : "text-primary-400";
-});
-const themedUsernameColor = computed(() => {
-  return isLight.value ? "text-neutral-500" : "text-neutral-400";
-});
-const themedTextsColor = computed(() => {
-  return isLight.value ? "text-neutral-900" : "text-neutral-100";
-});
+const themedProfileFieldClasses = computed(() =>
+  isLight.value ? "border-b-primary-600" : "border-b-primary-300"
+);
+const themedSectionLabelClasses = computed(() =>
+  isLight.value ? "text-primary-900" : "text-primary-400"
+);
+const themedWeakColor = computed(() =>
+  isLight.value ? "text-neutral-500" : "text-neutral-400"
+);
+const themedTextsColor = computed(() =>
+  isLight.value ? "text-neutral-900" : "text-neutral-100"
+);
 
-const showDescriptionLengthIndicator = computed(() => {
-  return !isEditingDescription.value && descriptionRowCount.value >= 10;
-});
+const showDescriptionLengthIndicator = computed(
+  () => !isEditingDescription.value && descriptionRowCount.value >= 10
+);
 
 async function updateProfileData(
-  data: Partial<{ displayname: string | null; description: string }>
+  data: Partial<{ displayname: string | null; description: string | null }>
 ) {
-  const { error } = await supabase.auth.updateUser({
-    data,
-  });
+  const { error } = await supabase.auth.updateUser({ data });
   if (error) {
     console.log(`Error updating profile: ${error}`);
-    toast.add({
-      title: "Error",
-      description: "Could not update profile data.",
-      color: "error",
-    });
+    operationFeedbackHandler.displayError('Could not update profile data.');
   } else {
-    toast.add({
-      title: "Success",
-      description: "Updated profile.",
-      color: "success",
-    });
+    operationFeedbackHandler.displaySuccess('Updated profile.');
+  }
+}
+
+async function uploadAvatar(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (file) {
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(userData.avatarUrl, file, {
+        upsert: true,
+      });
+    if (error) {
+      console.log(`Error uploading avatar: ${error}`);
+      operationFeedbackHandler.displayError('Could not upload avatar.');
+      return;
+    } else {
+      userData.existsAvatarAtUrl = true;
+    }
+  }
+}
+async function clearAvatar() {
+  const { error } = await supabase.storage
+    .from("avatars")
+    .remove([userData.avatarPath]);
+  if (error) {
+    operationFeedbackHandler.displayError('Could not clear your avatar.');
+  } else {
+    userData.existsAvatarAtUrl = false;
   }
 }
 
 async function toggleEditDisplayName() {
   isEditingName.value = !isEditingName.value;
-  if (isEditingName.value) {
-    newDisplayName.value = displayName.value || "";
-  }
+  if (isEditingName.value) newDisplayName.value = userData.displayname || '';
 }
 async function saveDisplayName() {
-  displayName.value = displayNameParsed.value.data ?? null;
+  userData.displayname = displayNameParsed.value.data ?? null;
   isEditingName.value = false;
-  updateProfileData({
-    displayname: displayName.value,
-  });
+  updateProfileData({ displayname: userData.displayname });
 }
 async function toggleEditDescription() {
   isEditingDescription.value = !isEditingDescription.value;
-  if (isEditingDescription.value) {
-    newDescription.value = userDescription.value;
-  }
+  if (isEditingDescription.value) newDescription.value = userData.description || '';
 }
 async function saveDescription() {
-  userDescription.value = newDescription.value?.trim() || "";
+  userData.description = descriptionSanitized.value ?? null;
   isEditingDescription.value = false;
-  updateProfileData({
-    description: userDescription.value,
-  });
+  updateProfileData({ description: userData.description });
 }
 
 async function attachDisplayNameInputEnterHandler() {

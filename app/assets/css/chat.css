@@ -76,6 +76,15 @@
   margin-top: auto;
   min-width: fit-content;
 }
+.write div textarea {
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.write button {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
 
 .chat {
   margin-top: 10px;
@@ -86,4 +95,13 @@
 .profile-bar {
   margin-bottom: auto;
   justify-content: center;
+}
+
+.chat > span {
+  height: 100%;
+  background-color: transparent;
+  align-items: start;
+}
+.chat span img {
+  height: max-content;
 }
