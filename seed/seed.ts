@@ -47,10 +47,9 @@ const uploadAvatars = async () => {
       .storage
       .from('avatars')
       .upload(avatarUrl, avatarBuffer, {
-        
-        cacheControl: '3600',
         upsert: false,
         contentType: 'image/jpg',
+        cacheControl: 'no-cache',
       })
     if (uploadError) {
       console.log(uploadError);

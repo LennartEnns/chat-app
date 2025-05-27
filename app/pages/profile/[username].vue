@@ -241,6 +241,8 @@ async function loadUserProfile(username: string) {
           displayname: newUserData.displayname,
           description: newUserData.description,
         };
+      }, {
+        immediate: true,
       })
     } else {
       // Fetch other user's profile from database
@@ -294,9 +296,10 @@ async function uploadAvatar(event: Event) {
   const file = input.files?.[0];
   if (file) {
     const { error } = await supabase.storage
-      .from("avatars")
-      .upload(userData.avatarUrl, file, {
+      .from('avatars')
+      .upload(userData.avatarPath, file, {
         upsert: true,
+        cacheControl: 'no-cache',
       });
     if (error) {
       console.log(`Error uploading avatar: ${error}`);
@@ -304,6 +307,7 @@ async function uploadAvatar(event: Event) {
       return;
     } else {
       userData.existsAvatarAtUrl = true;
+      operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
     }
   }
 }
