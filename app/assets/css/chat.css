@@ -127,14 +127,3 @@
 .user-light .message-time {
   color: rgba(0, 0, 0, 0.5);
 }
-
-@media (max-width: 1250px) {
-  .chat {
-    text-align: left;
-  }
-}
-
-@media (max-width: 676px) {
-  .align-column {
-  }
-}
