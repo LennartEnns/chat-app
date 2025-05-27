@@ -1,5 +1,15 @@
 <template>
   <NuxtLayout name="logged-in">
+    <UModal
+    v-model:open="showAvatarCroppingModal"
+    title="Crop Avatar"
+    :ui="{
+      header: 'justify-center',
+    }">
+      <template #body>
+        <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" @upload="onAvatarUploaded" />
+      </template>
+    </UModal>
     <UCard class="ring-0" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">
@@ -180,6 +190,8 @@ const routeUsername = computed(() => {
   return params.username as string;
 });
 const isOwnProfile = computed(() => userData.username === routeUsername.value);
+const newAvatarObjectUrl = ref<string | null>(null);
+const showAvatarCroppingModal = ref(false);
 
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
@@ -296,21 +308,13 @@ async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (file) {
-    const { error } = await supabase.storage
-      .from('avatars')
-      .upload(userData.avatarPath, file, {
-        upsert: true,
-        cacheControl: 'no-cache',
-      });
-    if (error) {
-      console.log(`Error uploading avatar: ${JSON.stringify(error)}`);
-      operationFeedbackHandler.displayError('Could not upload avatar.');
-      return;
-    } else {
-      userData.existsAvatarAtUrl = true;
-      operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
-    }
+    newAvatarObjectUrl.value = URL.createObjectURL(file);
+    showAvatarCroppingModal.value = true;
   }
+}
+async function onAvatarUploaded() {
+  showAvatarCroppingModal.value = false;
+  newAvatarObjectUrl.value = null;
 }
 async function clearAvatar() {
   const { error } = await supabase.storage

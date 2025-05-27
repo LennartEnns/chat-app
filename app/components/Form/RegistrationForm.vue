@@ -100,7 +100,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     showSuccessModal.value = true
   } else if (error) {
     logAuthError(error, 'registration');
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, 'Unknown error during registration'));
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error, 'Unknown error during registration'));
   }
 }
 </script>

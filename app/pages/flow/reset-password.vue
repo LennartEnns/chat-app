@@ -67,7 +67,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     password: event.data.password,
   });
   if (error) {
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error.code));
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error));
     logAuthError(error, 'Password Reset');
   } else {
     timer.value = 3;
