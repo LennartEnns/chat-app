@@ -1,5 +1,6 @@
 <template>
   <NuxtLayout name="logged-in">
+    <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" />
     <UCard class="ring-0" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">
@@ -180,6 +181,7 @@ const routeUsername = computed(() => {
   return params.username as string;
 });
 const isOwnProfile = computed(() => userData.username === routeUsername.value);
+const newAvatarObjectUrl = ref<string | null>(null);
 
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
@@ -295,20 +297,7 @@ async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (file) {
-    const { error } = await supabase.storage
-      .from('avatars')
-      .upload(userData.avatarPath, file, {
-        upsert: true,
-        cacheControl: 'no-cache',
-      });
-    if (error) {
-      console.log(`Error uploading avatar: ${error}`);
-      operationFeedbackHandler.displayError('Could not upload avatar.');
-      return;
-    } else {
-      userData.existsAvatarAtUrl = true;
-      operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
-    }
+    newAvatarObjectUrl.value = URL.createObjectURL(file);
   }
 }
 async function clearAvatar() {
