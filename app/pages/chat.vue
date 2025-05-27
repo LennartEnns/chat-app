@@ -101,7 +101,8 @@
             />
             <p>
               User messages are now saved to the database and loaded on
-              page-reload. Start messaging today!
+              page-reload. Start messaging today! User messages are now saved to
+              the database and loaded on page-reload. Start messaging today!
             </p>
           </div>
           <div
@@ -140,6 +141,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import type { Database } from "@@/database.types";
 import type { Database } from "@@/database.types";
 
 const isMobile = useMobileDetector();
@@ -215,6 +217,41 @@ async function loadFromDatabase() {
   return null;
 }
 
+const user_id = "bd988169-4773-44b2-94a9-1819d8052992";
+
+async function saveToDatabase(message: string) {
+  const { data, error } = await supabase
+    .from("messages")
+    .insert([
+      {
+        user_id: user_id,
+        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8",
+        content: message,
+      },
+    ])
+    .select();
+
+  if (error) {
+    console.error("Error inserting message:", error);
+    return null;
+  }
+
+  return null;
+}
+
+async function loadFromDatabase() {
+  const { data, error } = (await supabase.from("messages").select("*")) as any;
+
+  if (error) {
+    console.error("Error loading messages:", error);
+    return null;
+  }
+  data.forEach((element: any) => {
+    userMessages.value.push(element["content"]);
+  });
+  return null;
+}
+
 function handleKeyDown(event: KeyboardEvent): void {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
@@ -240,12 +277,59 @@ watch(
 
 onMounted(() => {
   loadFromDatabase();
+  loadFromDatabase();
   window.addEventListener("keydown", handleKeyDown);
   scrollToBottom();
 });
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
+});
+
+// place actual user-avatar in message copied from profile page [composable needed] | changed null -> undefinied to fix error
+
+const user = useSupabaseUser();
+const avatarUrl = ref<string | undefined>(undefined);
+
+async function checkAvatarExists(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+onMounted(async () => {
+  if (user.value) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${user.value.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = undefined;
+    }
+  } else {
+    avatarUrl.value = undefined;
+  }
+});
+
+watch(user, async (newUser) => {
+  if (newUser) {
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(`public/${newUser.id}.jpg`);
+    const url = avatarUrlData.data.publicUrl;
+    if (url && (await checkAvatarExists(url))) {
+      avatarUrl.value = url;
+    } else {
+      avatarUrl.value = undefined;
+    }
+  } else {
+    avatarUrl.value = undefined;
+  }
 });
 
 // place actual user-avatar in message copied from profile page [composable needed] | changed null -> undefinied to fix error
