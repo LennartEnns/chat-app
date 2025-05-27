@@ -8,7 +8,8 @@ begin
   update public.profiles
   set
     username = coalesce(new.raw_user_meta_data ->> 'username', username),
-    displayname = coalesce(new.raw_user_meta_data ->> 'displayname', displayname)
+    displayname = coalesce(new.raw_user_meta_data ->> 'displayname', displayname),
+    description = coalesce(new.raw_user_meta_data ->> 'description', description)
   where user_id = new.id;
 
   return new;

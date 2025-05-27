@@ -230,7 +230,7 @@ onMounted(async () => {
       id: user.user_id,
       label: user.displayname,
       suffix: user.username,
-      to: `/profil/${user.user_id}`,
+      to: `/profile/${user.user_id}`,
       target: '_self',
       avatar: {src: getAvatarUrl(user.user_id)},
       raw: user,

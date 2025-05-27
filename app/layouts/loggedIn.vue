@@ -20,7 +20,7 @@
       />
       <UButton
         variant="ghost"
-        :class="`text-xl font-bold p-0 hover:bg-transparent cursor-pointer ${themedLogoColor}`"
+        class="text-xl font-bold p-0 hover:bg-transparent cursor-pointer text-primary"
         @click="navigateTo('/')"
       >
         YapSpace
@@ -110,14 +110,7 @@ const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
 
-const userData = useUserData();
-let userId = userData.id;
-const isLight = useSSRSafeTheme();
-const themedLogoColor = computed(() => "text-primary");
-
 const isMobile = useMobileDetector();
-
-const themedLogoColor = computed(() => "text-primary");
 const mobileMenuOpen = ref(false);
 
 const drawerOpen = useOpenDrawer();
@@ -189,7 +182,7 @@ const items = ref<NavigationMenuItem[]>([
       {
         label: "Profile",
         icon: "i-lucide-circle-user-round",
-        to: `/profil/${userId}`,
+        to: `/profile`,
       },
       {
         label: "Logout",
