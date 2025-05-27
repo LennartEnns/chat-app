@@ -20,7 +20,7 @@
       />
       <UButton
         variant="ghost"
-        :class="`text-xl font-bold p-0 hover:bg-transparent cursor-pointer ${themedLogoColor}`"
+        class="text-xl font-bold p-0 hover:bg-transparent cursor-pointer text-primary"
         @click="navigateTo('/')"
       >
         YapSpace
@@ -109,9 +109,8 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
-const isMobile = useMobileDetector();
 
-const themedLogoColor = computed(() => "text-primary");
+const isMobile = useMobileDetector();
 const mobileMenuOpen = ref(false);
 
 const drawerOpen = useOpenDrawer();
@@ -183,7 +182,7 @@ const items = ref<NavigationMenuItem[]>([
       {
         label: "Profile",
         icon: "i-lucide-circle-user-round",
-        to: "/profile",
+        to: `/profile`,
       },
       {
         label: "Logout",

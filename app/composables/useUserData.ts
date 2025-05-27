@@ -3,7 +3,7 @@ import type { Reactive } from "vue";
 export interface UserData {
   id: string,
   email: string,
-  username: ComputedRef<string>,
+  username: string,
   displayname: string | null,
   description: string | null,
   avatarPath: string,
@@ -15,8 +15,8 @@ export function useUserData(): Reactive<UserData> {
   const supabase = useSupabaseClient();
   const user = useSupabaseUser();
 
-  const avatarPath = `public/${user.value?.id}.jpg`;
   const profileData = user.value?.user_metadata;
+  const avatarPath = `public/${profileData?.username || ''}.jpg`;
   const avatarUrlData = supabase.storage
     .from("avatars")
     .getPublicUrl(avatarPath);

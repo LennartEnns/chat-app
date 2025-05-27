@@ -4,7 +4,9 @@ create policy "Avatar images are publicly accessible" on storage.objects
 create policy "Anyone can upload exactly one avatar" on storage.objects
   for insert to authenticated with check (
     bucket_id = 'avatars'
-    and storage.filename(name) = (select auth.uid()::text) || '.jpg'
+    and storage.filename(name) = (
+      select username from public.profiles where profiles.user_id = auth.uid()
+    ) || '.jpg'
     and not exists(
       select 1 from storage.buckets
       where id = 'avatars'

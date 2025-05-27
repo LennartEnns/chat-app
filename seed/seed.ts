@@ -42,15 +42,14 @@ const uploadAvatars = async () => {
     if (user.username === 'jakobyte00') continue // jakobyte user has no avatar
 
     const avatarBuffer = readFileSync(path.join(avatarsDir, user.username + '.jpg'))
-    const avatarUrl = `public/${ user.id }.jpg`
+    const avatarUrl = `public/${ user.username }.jpg`
     const { data: uploadResult, error: uploadError } = await supabase
       .storage
       .from('avatars')
       .upload(avatarUrl, avatarBuffer, {
-        
-        cacheControl: '3600',
         upsert: false,
         contentType: 'image/jpg',
+        cacheControl: 'no-cache',
       })
     if (uploadError) {
       console.log(uploadError);
