@@ -7,7 +7,7 @@
       header: 'justify-center',
     }">
       <template #body>
-        <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" @upload="onAvatarUploaded" />
+        <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" @upload="onUploadCroppedAvatar" />
       </template>
     </UModal>
     <UCard class="ring-0" :ui="{ header: 'border-none' }">
@@ -174,6 +174,7 @@
 import { userLimits } from "~~/validation/commonLimits";
 import { displayNameSchema } from "~~/validation/schemas/input/inputUserSchemas";
 import type { UserData } from "~/composables/useUserData";
+import { getStorageErrorMessage, logStorageError } from '~~/errors/storageErrors';
 import type { Tables } from '~~/database.types';
 
 type ProfileUserData = Pick<UserData, 'avatarUrl' | 'avatarPath' | 'existsAvatarAtUrl' | 'username' | 'displayname' | 'description'>;
@@ -312,9 +313,24 @@ async function uploadAvatar(event: Event) {
     showAvatarCroppingModal.value = true;
   }
 }
-async function onAvatarUploaded() {
+async function onUploadCroppedAvatar(blob: Blob) {
   showAvatarCroppingModal.value = false;
   newAvatarObjectUrl.value = null;
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(userData.avatarPath, blob, {
+      upsert: true,
+      contentType: 'image/jpeg',
+      cacheControl: 'no-cache',
+    });
+  if (error) {
+    logStorageError(error, 'avatar upload');
+    operationFeedbackHandler.displayError(getStorageErrorMessage(error, 'Unknown error uploading avatar'));
+    return;
+  } else {
+    userData.existsAvatarAtUrl = true;
+    operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
+  }
 }
 async function clearAvatar() {
   const { error } = await supabase.storage
