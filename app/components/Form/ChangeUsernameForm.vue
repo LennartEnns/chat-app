@@ -50,7 +50,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     state.username = "";
   } else if (error) {
     logAuthError(error, 'username change');
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, 'Unknown error during username change'));
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error, 'Unknown error during username change'));
   }
 }
 </script>

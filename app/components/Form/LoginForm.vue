@@ -68,7 +68,7 @@ async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
       onLoginSuccess()
     } else {
       logAuthError(error, 'login')
-      operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, unknownErrorMessage))
+      operationFeedbackHandler.displayError(getAuthErrorMessage(error, unknownErrorMessage))
     }
   } else { // Login with username => Invoke edge function
     const { data, error } = await supabase.functions.invoke("login-with-username", {
@@ -87,14 +87,14 @@ async function onSubmit(event: FormSubmitEvent<AgnosticLoginSchema>) {
         onLoginSuccess()
       } else {
         logAuthError(setSessionError, 'login')
-        operationFeedbackHandler.displayError(getAuthErrorMessage(setSessionError.code, unknownErrorMessage))
+        operationFeedbackHandler.displayError(getAuthErrorMessage(setSessionError, unknownErrorMessage))
       }
     } else {
       console.log(`Error calling the username login function: ${ JSON.stringify(error) }`);
       let description = unknownErrorMessage;
       if (error instanceof FunctionsHttpError) {
         const errorBody = await error.context.json();
-        description = errorBody.code ? getAuthErrorMessage(errorBody.code) : (errorBody.message ?? unknownErrorMessage);
+        description = errorBody.code ? getAuthErrorMessage(errorBody) : (errorBody.message ?? unknownErrorMessage);
       }
       operationFeedbackHandler.displayError(description);
     }

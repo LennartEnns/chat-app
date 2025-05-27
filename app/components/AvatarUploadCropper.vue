@@ -1,24 +1,35 @@
 <template>
-    <div>
+    <div class="space-y-4">
       <cropper
         :src="imageUrl"
+        :canvas="{
+          minWidth: 0,
+          minHeight: 0,
+          maxWidth: 600,
+          maxHeight: 600,
+        }"
         :stencil-component="CircleStencil"
         :auto-zoom="true"
-        class="max-w-xs border rounded"
         @change="onCrop"
       />
-      <UButton class="" @click="uploadCroppedImage">
-        Upload Avatar
-      </UButton>
+      <div class="flex justify-center">
+        <UButton variant="ghost" @click="uploadCroppedImage">
+          Upload Avatar
+        </UButton>  
+      </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { CircleStencil, Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
+import { getStorageErrorMessage, logStorageError } from '~~/errors/storageErrors';
 
 defineProps<{
   imageUrl: string,
+}>();
+const emit = defineEmits<{
+  upload: [],
 }>();
 
 const supabase = useSupabaseClient();
@@ -46,9 +57,10 @@ async function uploadCroppedImage() {
         upsert: true,
         cacheControl: 'no-cache',
       });
+    emit('upload');
     if (error) {
-      console.log(`Error uploading avatar: ${error}`);
-      operationFeedbackHandler.displayError('Could not upload avatar.');
+      logStorageError(error, 'avatar upload');
+      operationFeedbackHandler.displayError(getStorageErrorMessage(error, 'Unknown error uploading avatar'));
       return;
     } else {
       userData.existsAvatarAtUrl = true;

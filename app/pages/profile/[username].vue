@@ -1,6 +1,15 @@
 <template>
   <NuxtLayout name="logged-in">
-    <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" />
+    <UModal
+    v-model:open="showAvatarCroppingModal"
+    title="Crop Avatar"
+    :ui="{
+      header: 'justify-center',
+    }">
+      <template #body>
+        <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" @upload="onAvatarUploaded" />
+      </template>
+    </UModal>
     <UCard class="ring-0" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">
@@ -182,6 +191,7 @@ const routeUsername = computed(() => {
 });
 const isOwnProfile = computed(() => userData.username === routeUsername.value);
 const newAvatarObjectUrl = ref<string | null>(null);
+const showAvatarCroppingModal = ref(false);
 
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
@@ -299,7 +309,12 @@ async function uploadAvatar(event: Event) {
   const file = input.files?.[0];
   if (file) {
     newAvatarObjectUrl.value = URL.createObjectURL(file);
+    showAvatarCroppingModal.value = true;
   }
+}
+async function onAvatarUploaded() {
+  showAvatarCroppingModal.value = false;
+  newAvatarObjectUrl.value = null;
 }
 async function clearAvatar() {
   const { error } = await supabase.storage
