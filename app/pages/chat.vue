@@ -110,10 +110,7 @@
             :key="index"
             :class="`message user ${themedUserMessageColor}`"
           >
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
+            <UAvatar class="justify-self-center" :src="avatarUrl" />
             <div class="message-content">
               <p>{{ message.text }}</p>
               <span class="message-time">{{ message.timestamp }}</span>
@@ -240,7 +237,6 @@ watch(
 );
 
 onMounted(() => {
-  loadFromDatabase();
   loadFromDatabase();
   window.addEventListener("keydown", handleKeyDown);
   scrollToBottom();
