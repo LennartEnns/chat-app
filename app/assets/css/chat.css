@@ -51,38 +51,22 @@
 }
 
 .user-dark {
-  background-color: color-mix(
-    in srgb,
-    var(--color-primaryMain) 55%,
-    transparent
-  );
+  background-color: color-mix(in srgb, var(--ui-primary) 55%, transparent);
   color: white;
 }
 
 .user-light {
-  background-color: color-mix(
-    in srgb,
-    var(--color-primaryMain) 65%,
-    transparent
-  );
+  background-color: color-mix(in srgb, var(--ui-primary) 65%, transparent);
   color: black;
 }
 
 .partner-dark {
-  background-color: color-mix(
-    in srgb,
-    var(--color-primaryMain) 20%,
-    transparent
-  );
+  background-color: color-mix(in srgb, var(--ui-primary) 20%, transparent);
   color: white;
 }
 
 .partner-light {
-  background-color: color-mix(
-    in srgb,
-    var(--color-primaryMain) 30%,
-    transparent
-  );
+  background-color: color-mix(in srgb, var(--ui-primary) 30%, transparent);
   color: black;
 }
 
@@ -92,6 +76,15 @@
   flex-direction: row;
   margin-top: auto;
   min-width: fit-content;
+}
+.write div textarea {
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.write button {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
 }
 
 .chat {
@@ -126,4 +119,13 @@
 
 .user-light .message-time {
   color: rgba(0, 0, 0, 0.5);
+}
+
+.chat > span {
+  height: 100%;
+  background-color: transparent;
+  align-items: start;
+}
+.chat span img {
+  height: max-content;
 }

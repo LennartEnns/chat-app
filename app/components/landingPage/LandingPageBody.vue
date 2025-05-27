@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 
 const navigationItems = ref<NavigationMenuItem[]>([
   { label: 'Chat', icon: 'i-lucide-messages-square', to: '/chat' },

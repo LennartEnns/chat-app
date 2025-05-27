@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
 import type {
   RecursivePartial,
   IOptions,
@@ -21,7 +20,7 @@ import type {
 } from "@tsparticles/engine";
 import type { Reactive } from "vue";
 
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 const slideoverOpen = ref(false);
 
 onMounted(() => {
@@ -115,7 +114,7 @@ const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
     links: {
       enable: true,
       color: particlesColor,
-      opacity: 0.5,
+      opacity: 0.7,
     },
   },
   detectRetina: true,
@@ -123,7 +122,6 @@ const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
 
 let particlesContainer: Container | null = null;
 const onParticlesLoad = (container: Container) => {
-  console.log("load");
   particlesContainer = container;
 };
 watch(particleOptions, () => {
@@ -131,12 +129,10 @@ watch(particleOptions, () => {
 });
 
 const gradientColor1 = computed(() =>
-  isLight.value
-    ? "var(--color-primaryMain-400)"
-    : "var(--color-primaryMain-600)"
+  isLight.value ? "var(--ui-color-primary-400)" : "var(--ui-color-primary-600)"
 );
 const gradientColor2 = computed(() =>
-  isLight.value ? "var(--color-primaryMain-100)" : "#0c1223"
+  isLight.value ? "var(--ui-color-primary-100)" : "#0c1223"
 );
 </script>
 

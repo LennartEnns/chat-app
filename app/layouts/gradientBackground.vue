@@ -2,19 +2,18 @@
   <div
     class="min-h-dvh flex flex-col align-content-center justify-center landing-background"
   >
-    <LandingPageHeader />
     <slot />
   </div>
 </template>
 
 <script lang="ts" setup>
-const isLight = useSSRSafeTheme();
+const { isLight } = useSSRSafeTheme();
 
 const gradientColor1 = computed(() =>
-  isLight.value ? "#d3dbf2" : "var(--color-primaryMain-700)"
+  isLight.value ? "#d3dbf2" : "var(--ui-color-primary-700)"
 );
 const gradientColor2 = computed(() =>
-  isLight.value ? "var(--color-primaryMain-300)" : "#0c1223"
+  isLight.value ? "var(--ui-color-primary-300)" : "#0c1223"
 );
 </script>
 

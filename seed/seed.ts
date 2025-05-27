@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { Client } from "pg";
 import testUsers from "./testUsers";
 import { readFileSync } from 'fs';
 import path from "path";
@@ -8,7 +9,10 @@ const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SE
     autoRefreshToken: false,
     persistSession: false,
   }
-})
+});
+const pgClient = new Client({
+  connectionString: process.env.SUPABASE_DB_URL
+});
 
 const seedTestUsers = async() => {
   const defaultPassword = 'password'
@@ -39,24 +43,30 @@ const uploadAvatars = async () => {
 
     const avatarBuffer = readFileSync(path.join(avatarsDir, user.username + '.jpg'))
     const avatarUrl = `public/${ user.id }.jpg`
-    const { error } = await supabase
+    const { data: uploadResult, error: uploadError } = await supabase
       .storage
       .from('avatars')
       .upload(avatarUrl, avatarBuffer, {
+        
         cacheControl: '3600',
         upsert: false,
         contentType: 'image/jpg',
       })
-    if (error) {
-      console.log(error);
+    if (uploadError) {
+      console.log(uploadError);
       process.exit();
     }
+
+    // Set user as owner of the file
+    await pgClient.query(`UPDATE storage.objects SET owner=$1::uuid, owner_id=$1::text WHERE id=$2`, [user.id, uploadResult.id]);
   }
 }
 
 const main = async () => {
+  await pgClient.connect();
   await seedTestUsers();
-  await uploadAvatars();
+  await uploadAvatars().catch(console.error);
+  await pgClient.end();
 
   console.log("Database seeded successfully!");
 

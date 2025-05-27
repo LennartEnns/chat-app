@@ -5,6 +5,15 @@ export const useSSRSafeTheme = () => {
         themeSSRCookie.value = mode.preference; // Keep cookie in sync with the mode from local storage
     });
 
+    const preference = computed({
+        get(): string {
+            return themeSSRCookie.value || 'system';
+        },
+        set(val: 'light' | 'dark' | 'system') {
+            colorMode.preference = val;
+        },
+    });
+
     const isLight = computed({
         get(): boolean {
             return (themeSSRCookie.value === "light");
@@ -14,5 +23,5 @@ export const useSSRSafeTheme = () => {
         },
     });
     
-    return isLight;
+    return { preference, isLight };
 }

@@ -17,6 +17,13 @@
     ogDescription: description,
     ogLocale: 'en_US',
   });
+
+  const preferredPrimary = useCookie('uiPrimary');
+  if (preferredPrimary.value) {
+      updateAppConfig({ ui: { colors: { primary: preferredPrimary.value } } });
+  } else {
+      preferredPrimary.value = useAppConfig().ui.colors.primary;
+  }
 </script>
 
 <style>
