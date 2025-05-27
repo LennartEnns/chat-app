@@ -30,7 +30,7 @@
       <UNavigationMenu
         v-if="!isMobile"
         :items="items"
-        class="w-min justify-self-center"
+        class="w-min justify-self-center z-50"
       />
       <UDrawer
         v-else
