@@ -102,7 +102,11 @@
             <div class="message-content">
               <p>
                 User messages are now saved to the database and loaded on
-                page-reload. Start messaging today!
+                page-reload. Start messaging today! **Note** If you want to test
+                this create a local chatroom and add your logged in user's ID to
+                it all via http://localhost:54323/. Afterwards change the
+                currently hardcoded chatroom_id to this chatroom's ID. Now you
+                can use the database!
               </p>
               <span class="message-time">12:48</span>
             </div>
@@ -240,12 +244,11 @@ onMounted(async () => {
 });
 
 import type { Database } from "@@/database.types";
-import LoggedIn from "~/layouts/loggedIn.vue";
 
 const isMobile = useMobileDetector();
 useFirstLoginDetector();
 
-const open = ref<boolean>(false); //placeholder for command pallette (search bar)
+const open = ref<boolean>(false);
 const newMessage = ref<string>("");
 const userMessages = ref<any[]>([]);
 const messagesContainer = ref<any>(null);
