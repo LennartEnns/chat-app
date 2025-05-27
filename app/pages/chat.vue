@@ -240,6 +240,7 @@ onMounted(async () => {
 });
 
 import type { Database } from "@@/database.types";
+import LoggedIn from "~/layouts/loggedIn.vue";
 
 const isMobile = useMobileDetector();
 useFirstLoginDetector();
@@ -359,48 +360,7 @@ onUnmounted(() => {
 
 // place actual user-avatar in message copied from profile page [composable needed] | changed null -> undefinied to fix error
 
-const avatarUrl = ref<string | undefined>(undefined);
-
-async function checkAvatarExists(url: string): Promise<boolean> {
-  try {
-    const response = await fetch(url, { method: "HEAD" });
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-onMounted(async () => {
-  if (user.value) {
-    const avatarUrlData = supabase.storage
-      .from("avatars")
-      .getPublicUrl(`public/${user.value.id}.jpg`);
-    const url = avatarUrlData.data.publicUrl;
-    if (url && (await checkAvatarExists(url))) {
-      avatarUrl.value = url;
-    } else {
-      avatarUrl.value = undefined;
-    }
-  } else {
-    avatarUrl.value = undefined;
-  }
-});
-
-watch(user, async (newUser) => {
-  if (newUser) {
-    const avatarUrlData = supabase.storage
-      .from("avatars")
-      .getPublicUrl(`public/${newUser.id}.jpg`);
-    const url = avatarUrlData.data.publicUrl;
-    if (url && (await checkAvatarExists(url))) {
-      avatarUrl.value = url;
-    } else {
-      avatarUrl.value = undefined;
-    }
-  } else {
-    avatarUrl.value = undefined;
-  }
-});
+const avatarUrl = getAvatarUrl(account.id);
 </script>
 
 <style>
