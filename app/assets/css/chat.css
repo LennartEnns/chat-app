@@ -17,6 +17,7 @@
   flex-direction: column;
   justify-content: flex-start;
   min-width: fit-content;
+  border-right: solid 1px var(--color-neutralMain-300);
 }
 
 .message {
@@ -95,6 +96,29 @@
 .profile-bar {
   margin-bottom: auto;
   justify-content: center;
+  border-radius: 2px;
+  z-index: 10;
+}
+
+.message-content {
+  position: relative;
+  width: 100%;
+}
+
+.message-time {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.partner-light .message-time {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.user-light .message-time {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .chat > span {
