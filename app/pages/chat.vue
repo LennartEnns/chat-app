@@ -300,6 +300,8 @@ async function saveToDatabase(message: string) {
   return null;
 }
 
+const avatarUrl = getAvatarUrl(account.id);
+
 async function loadFromDatabase() {
   const { data, error } = (await supabase.from("messages").select("*")) as any;
 
@@ -357,10 +359,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
 });
-
-// place actual user-avatar in message copied from profile page [composable needed] | changed null -> undefinied to fix error
-
-const avatarUrl = getAvatarUrl(account.id);
 </script>
 
 <style>
