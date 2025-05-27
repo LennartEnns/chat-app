@@ -48,7 +48,7 @@ const uploadAvatars = async () => {
       .from('avatars')
       .upload(avatarUrl, avatarBuffer, {
         upsert: false,
-        contentType: 'image/jpg',
+        contentType: 'image/jpeg',
         cacheControl: 'no-cache',
       })
     if (uploadError) {

@@ -131,15 +131,16 @@ if (route.path === "/chat") {
 }
 
 async function logout(scope: "global" | "local" | "others") {
+  if (scope !== "others") {
+    navigateTo("/");
+  }
   const { error } = await supabase.auth.signOut({
     scope,
   });
   if (error) {
     console.log(`Logout error: ${error}`);
     operationFeedbackHandler.displayError('An unexpected error occured during logout.');
-  } else if (scope !== "others") {
-    navigateTo("/");
-  } else {
+  } else if (scope === "others") {
     operationFeedbackHandler.displaySuccess('All other sessions have been terminated.');
     showLogoutModal.value = false;
   }

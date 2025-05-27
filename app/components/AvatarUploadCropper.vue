@@ -55,6 +55,7 @@ async function uploadCroppedImage() {
       .from('avatars')
       .upload(userData.avatarPath, blob, {
         upsert: true,
+        contentType: 'image/jpeg',
         cacheControl: 'no-cache',
       });
     emit('upload');
