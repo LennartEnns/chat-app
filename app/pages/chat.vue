@@ -161,8 +161,8 @@ function getAvatarUrl(userId: string): string {
     !data.publicUrl ||
     data.publicUrl.includes("error") ||
     data.publicUrl === ""
-  ) {
-    return "https://eunokvzfqixyoauwvqlt.supabase.co/storage/v1/object/public/avatars/public/default.png";
+  ){
+    return null;
   }
   return data.publicUrl;
 }
@@ -228,7 +228,7 @@ onMounted(async () => {
       id: user.user_id,
       label: user.displayname,
       suffix: user.username,
-      to: `/profile/${user.user_id}`,
+      to: `/profile/${user.username}`,
       target: "_self",
       avatar: { src: getAvatarUrl(user.user_id) },
       raw: user,
