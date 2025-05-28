@@ -11,6 +11,7 @@
                 color="neutral"
                 variant="subtle"
                 icon="i-lucide-search"
+                class="glassContainer"
               />
               <template>
                 <UAvatar src="https://github.com/benjamincanac.png" />
@@ -35,7 +36,6 @@
                 src: 'https://github.com/nuxt.png',
               }"
               color="primary"
-              variant="outline"
               size="xl"
               >Florian Steckchen</UButton
             >
@@ -45,7 +45,6 @@
                 src: 'https://github.com/nuxt.png',
               }"
               color="primary"
-              variant="outline"
               size="xl"
               >Johannes Weigel</UButton
             >
@@ -99,7 +98,7 @@
         <UCard class="profile-bar" variant="subtle">
           <div class="flex items-center gap-2">
             <UAvatar src="https://github.com/nuxt.png" />
-            <h1>Florian Steckchen</h1>
+            <h1 class="text-black">Florian Steckchen</h1>
           </div>
         </UCard>
         <div class="messages" ref="messagesContainer">

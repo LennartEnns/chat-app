@@ -1,14 +1,21 @@
 <template>
   <UCard
-    variant="subtle" class="border-1 border-gray-500"
+    variant="subtle"
+    class="border-1 border-gray-500"
     :ui="{
-      header: 'border-none pb-1 text-lg'
-  }">
+      header: 'border-none pb-1 text-lg',
+    }"
+  >
     <template #header>
-      <p class="font-bold">Register an Account</p>
+      <p class="font-bold text-black">Register an Account</p>
     </template>
 
-    <UForm :schema="schema" :state="state" class="space-y-4 w-3xs xl:w-2xs" @submit="onSubmit">
+    <UForm
+      :schema="schema"
+      :state="state"
+      class="space-y-4 w-3xs xl:w-2xs"
+      @submit="onSubmit"
+    >
       <UFormField label="Email" name="email" required>
         <UInput v-model="state.email" class="w-full" />
       </UFormField>
@@ -27,11 +34,16 @@
 
       <UButton class="button" type="submit">
         Sign Up
-        <UModal v-model:open="showSuccessModal" title="Registration successful" description="Open the link in your confirmation email." :dismissible="false">
+        <UModal
+          v-model:open="showSuccessModal"
+          title="Registration successful"
+          description="Open the link in your confirmation email."
+          :dismissible="false"
+        >
           <template #body>
             <ULink to="/login" class="flex align-center" color="primary">
               <div>Return to login</div>
-              <UIcon name="i-lucide-arrow-right" class="self-center ml-1"/>
+              <UIcon name="i-lucide-arrow-right" class="self-center ml-1" />
             </ULink>
           </template>
         </UModal>
@@ -41,29 +53,29 @@
 </template>
 
 <script setup lang="ts">
-import * as z from 'zod'
-import type { FormSubmitEvent } from '@nuxt/ui'
-import { registrationSchema } from '../../../validation/schemas/input/inputUserSchemas'
-import { getAuthErrorMessage, logAuthError } from '../../../errors/authErrors'
-import PasswordToggleInput from '../Input/PasswordToggleInput.vue'
+import * as z from "zod";
+import type { FormSubmitEvent } from "@nuxt/ui";
+import { registrationSchema } from "../../../validation/schemas/input/inputUserSchemas";
+import { getAuthErrorMessage, logAuthError } from "../../../errors/authErrors";
+import PasswordToggleInput from "../Input/PasswordToggleInput.vue";
 
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 
-const showSuccessModal = ref(false)
+const showSuccessModal = ref(false);
 
 // Extend the registration schema with a confirmPassword property
-let schemaPassword = ''
-const schema = registrationSchema
-  .extend({
-    password: registrationSchema.shape.password.refine(
-    (value) => {
-      schemaPassword = value
-      return true
-    }),
-    confirmPassword: z.string().refine((value) => value === schemaPassword, 'Passwords do not match'),
-  })
-type Schema = z.output<typeof schema>
+let schemaPassword = "";
+const schema = registrationSchema.extend({
+  password: registrationSchema.shape.password.refine((value) => {
+    schemaPassword = value;
+    return true;
+  }),
+  confirmPassword: z
+    .string()
+    .refine((value) => value === schemaPassword, "Passwords do not match"),
+});
+type Schema = z.output<typeof schema>;
 
 const state = reactive<Partial<Schema>>({
   email: undefined,
@@ -75,12 +87,12 @@ const state = reactive<Partial<Schema>>({
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Check if the username already exists
   const { data: existingUser } = await supabase
-    .from('profiles')
-    .select('user_id')
-    .eq('username', event.data.username)
+    .from("profiles")
+    .select("user_id")
+    .eq("username", event.data.username)
     .maybeSingle();
   if (existingUser) {
-    operationFeedbackHandler.displayError('Username already taken');
+    operationFeedbackHandler.displayError("Username already taken");
     return;
   }
 
@@ -88,7 +100,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     email: event.data.email,
     password: event.data.password,
     options: {
-      emailRedirectTo: toFullUrl('/flow/confirm-email'),
+      emailRedirectTo: toFullUrl("/flow/confirm-email"),
       data: {
         username: event.data.username,
         first_login: true, // Used to recognize first login, e.g. to show welcome messages
@@ -96,17 +108,21 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     },
   });
   if (data && !error) {
-    operationFeedbackHandler.displaySuccess('We have sent you a confirmation email.');
-    showSuccessModal.value = true
+    operationFeedbackHandler.displaySuccess(
+      "We have sent you a confirmation email."
+    );
+    showSuccessModal.value = true;
   } else if (error) {
-    logAuthError(error, 'registration');
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error, 'Unknown error during registration'));
+    logAuthError(error, "registration");
+    operationFeedbackHandler.displayError(
+      getAuthErrorMessage(error, "Unknown error during registration")
+    );
   }
 }
 </script>
 
 <style scoped>
-  .button {
-    cursor: pointer;
-  }
+.button {
+  cursor: pointer;
+}
 </style>
