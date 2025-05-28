@@ -181,20 +181,20 @@
       </div>
     </div>
 
-    <UModal v-model:open="newChatModalOpen" :ui="{ width: 'sm:max-w-md' }">
+    <UModal v-model:open="newChatModalOpen">
+      <template #content>
+        <NewChat @create="handleCreateChat" @cancel="closeNewChatModal" />
+      </template>
     </UModal>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-// 1. Import der NewChat Komponente
-import NewChat from "~/components/Form/NewChatForm.vue"; // Passe den Pfad an
+import NewChat from "~/components/Form/NewChatForm.vue";
 
-// 2. Neue reactive Variables
 const newChatModalOpen = ref(false);
 
-// 3. Neue Funktionen
 function openNewChatModal() {
   newChatModalOpen.value = true;
 }
@@ -210,15 +210,8 @@ function handleCreateChat(data: {
 }) {
   console.log("Neuer Chat erstellt:", data);
 
-  // Hier fügst du später deine eigene Logik ein:
-  // - Chat in Datenbank speichern
-  // - Chat zur Liste hinzufügen
-  // - etc.
-
-  // Modal schließen
   closeNewChatModal();
 
-  // Optional: Toast-Nachricht anzeigen
   toast.add({
     title: "Chat erstellt",
     description: `${data.type === "group" ? "Gruppe" : "Chat"} "${
