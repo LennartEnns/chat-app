@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout name="logged-in">
     <div class="flex justify-center pageWrap grow">
-      <div class="mainContainer">
+      <div class="mainContainer glassContainer">
         <UNavigationMenu :items="navMenuItems" class="w-full justify-center" />
         <slot />
       </div>
