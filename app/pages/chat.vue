@@ -21,7 +21,11 @@
                   v-model:search-term="searchTerm"
                   :groups="groups"
                   @update:open="open = $event"
-                />
+                  @keydown="handleKeydown">
+                  <template #empty="{ searchTerm }">
+                    Search for a user
+                  </template>
+                </UCommandPalette>
               </template>
             </UModal>
             <UButton
@@ -62,7 +66,11 @@
               v-model:search-term="searchTerm"
               :groups="groups"
               @update:open="open = $event"
-            />
+              @keydown="handleKeydown">
+              <template #empty="{ searchTerm }">
+                Search for a user
+              </template>
+            </UCommandPalette>
           </template>
         </UModal>
         <UButton
@@ -150,7 +158,7 @@ import { useUserSearch } from "~/composables/useUserSearch";
 import type { Database } from "@@/database.types";
 
 //search bar
-const { searchTerm, groups } = useUserSearch();
+const { searchTerm, groups, handleKeydown } = useUserSearch();
 const open = ref<boolean>(false);
 
 // responsive mobile UI

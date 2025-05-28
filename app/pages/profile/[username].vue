@@ -59,6 +59,16 @@
               />
               <div class="grow" />
               <UButton
+                v-if="!isOwnProfile"
+                :icon="'i-lucide-message-circle-more'"
+                size="lg"
+                variant="soft"
+                color="primary"
+                class="cursor-pointer self-center"
+                @click="openChat(profileUserId)"> 
+                Chat 
+              </UButton>
+              <UButton
                 v-if="isOwnProfile"
                 :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pencil'"
                 size="lg"

@@ -1,10 +1,15 @@
 import { ref, watch } from "vue";
 import type { CommandGroup, CommandItem, Users } from "../types/userSearch";
-import { useSupabaseClient, useSupabaseUser, useToast } from "#imports";
+import { useSupabaseClient, useSupabaseUser } from "#imports";
+import {
+    getPostgrestErrorMessage,
+    logPostgrestError,
+} from "~~/errors/postgrestErrors";
 
 export function useUserSearch() {
     const supabase = useSupabaseClient();
-    const toast = useToast();
+    const operationFeedbackHandler = useOperationFeedbackHandler();
+    const unknownErrorMessage = "Unknown error during data retrieval";
     const username = useSupabaseUser().value?.user_metadata?.username ?? "";
 
     const users = ref<CommandItem[]>([]);
@@ -17,24 +22,31 @@ export function useUserSearch() {
     ]);
     const searchTerm = ref("");
 
+    async function handleKeydown(event: KeyboardEvent) {
+        if (event.key === "Enter") {
+            await searchUsers(searchTerm.value);
+        }
+    }
+
     async function searchUsers(searchTerm: string) {
         if (searchTerm === "") {
             users.value = [];
+            updateGroups();
             return;
         }
 
         const { data, error } = await supabase
             .from("profiles")
             .select("*")
+            .order("username")
             .or(`username.ilike.%${searchTerm}%, displayname.ilike.%${searchTerm}%`)
             .limit(5);
 
         if (error) {
-            toast.add({
-                title: "Error loading users",
-                description: error.message,
-                color: "error",
-            });
+            logPostgrestError(error, "data retrieval");
+            operationFeedbackHandler.displayError(
+                getPostgrestErrorMessage(error, unknownErrorMessage),
+            );
             return;
         }
 
@@ -58,7 +70,9 @@ export function useUserSearch() {
                 avatar: { src: getAvatarUrl(user.user_id) },
                 raw: user,
             }));
-
+        updateGroups();
+    }
+    function updateGroups() {
         groups.value = [
             {
                 id: "users",
@@ -72,6 +86,7 @@ export function useUserSearch() {
     return {
         searchTerm,
         groups,
+        handleKeydown,
     };
 }
 
