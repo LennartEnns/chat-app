@@ -1,161 +1,159 @@
 <template>
-  <GradientBackground>
-    <NuxtLayout name="logged-in">
-      <div class="main-layout grow">
-        <!--Mobile UI drawer for choosing chats-->
-        <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
-          <template #body>
-            <div class="align-column">
-              <UModal v-model:open="open" class="mb-[10px]">
-                <UButton
-                  label="Search users..."
-                  color="neutral"
-                  variant="subtle"
-                  icon="i-lucide-search"
-                />
-                <template>
-                  <UAvatar src="https://github.com/benjamincanac.png" />
-                </template>
-                <template #content>
-                  <UCommandPalette
-                    close
-                    v-model:search-term="searchTerm"
-                    :groups="groups"
-                    @update:open="open = $event"
-                    @keydown="handleKeydown"
-                  >
-                    <template #empty="{ searchTerm }">
-                      Search for a user
-                    </template>
-                  </UCommandPalette>
-                </template>
-              </UModal>
+  <NuxtLayout name="logged-in">
+    <div class="main-layout grow">
+      <!--Mobile UI drawer for choosing chats-->
+      <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
+        <template #body>
+          <div class="align-column">
+            <UModal v-model:open="open" class="mb-[10px]">
               <UButton
-                class="chat"
-                :avatar="{
-                  src: 'https://github.com/nuxt.png',
-                }"
-                color="primary"
-                variant="outline"
-                size="xl"
-                >Florian Steckchen</UButton
-              >
-              <UButton
-                class="chat"
-                :avatar="{
-                  src: 'https://github.com/nuxt.png',
-                }"
-                color="primary"
-                variant="outline"
-                size="xl"
-                >Johannes Weigel</UButton
-              >
-            </div>
-          </template>
-        </UDrawer>
-        <!--Desktop column for choosing chats-->
-        <div class="align-column" v-if="!isMobile">
-          <UModal v-model:open="open" class="mb-[10px]">
-            <UButton
-              label="Search users..."
-              color="neutral"
-              variant="subtle"
-              icon="i-lucide-search"
-            />
-            <template #content>
-              <UCommandPalette
-                close
-                v-model:search-term="searchTerm"
-                :groups="groups"
-                @update:open="open = $event"
-                @keydown="handleKeydown"
-              >
-                <template #empty="{ searchTerm }"> Search for a user </template>
-              </UCommandPalette>
-            </template>
-          </UModal>
-          <UButton
-            class="chat"
-            :avatar="{
-              src: 'https://github.com/nuxt.png',
-            }"
-            color="primary"
-            variant="outline"
-            size="xl"
-            >Florian Steckchen</UButton
-          >
-          <UButton
-            class="chat"
-            :avatar="{
-              src: 'https://github.com/nuxt.png',
-            }"
-            color="primary"
-            variant="outline"
-            size="xl"
-            >Johannes Weigel</UButton
-          >
-        </div>
-        <!--Messaging column-->
-        <div class="align-column">
-          <UCard class="profile-bar">
-            <div class="flex items-center gap-2">
-              <UAvatar src="https://github.com/nuxt.png" />
-              <h1>Florian Steckchen</h1>
-            </div>
-          </UCard>
-          <div class="messages" ref="messagesContainer">
-            <!--example messages-->
-            <div :class="`message partner ${themedPartnerMessageColor}`">
-              <UAvatar
-                class="justify-self-center"
-                src="https://github.com/nuxt.png"
+                label="Search users..."
+                color="neutral"
+                variant="subtle"
+                icon="i-lucide-search"
               />
-              <div class="message-content">
-                <p>
-                  User messages are now saved to the database and loaded on
-                  page-reload. Start messaging today! **Note** If you want to
-                  test this create a local chatroom and add your logged in
-                  user's ID to it all via http://localhost:54323/. Afterwards
-                  change the currently hardcoded chatroom_id to this chatroom's
-                  ID. Now you can use the database!
-                </p>
-                <span class="message-time">12:48</span>
-              </div>
-            </div>
-            <div
-              v-for="(message, index) in userMessages"
-              :key="index"
-              :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
+              <template>
+                <UAvatar src="https://github.com/benjamincanac.png" />
+              </template>
+              <template #content>
+                <UCommandPalette
+                  close
+                  v-model:search-term="searchTerm"
+                  :groups="groups"
+                  @update:open="open = $event"
+                  @keydown="handleKeydown"
+                >
+                  <template #empty="{ searchTerm }">
+                    Search for a user
+                  </template>
+                </UCommandPalette>
+              </template>
+            </UModal>
+            <UButton
+              class="chat"
+              :avatar="{
+                src: 'https://github.com/nuxt.png',
+              }"
+              color="primary"
+              variant="outline"
+              size="xl"
+              >Florian Steckchen</UButton
             >
-              <UAvatar class="justify-self-center" :src="avatarUrl" />
-              <div class="message-content">
-                <p>{{ message.text }}</p>
-                <span class="message-time">{{ message.timestamp }}</span>
-              </div>
+            <UButton
+              class="chat"
+              :avatar="{
+                src: 'https://github.com/nuxt.png',
+              }"
+              color="primary"
+              variant="outline"
+              size="xl"
+              >Johannes Weigel</UButton
+            >
+          </div>
+        </template>
+      </UDrawer>
+      <!--Desktop column for choosing chats-->
+      <div class="align-column" v-if="!isMobile">
+        <UModal v-model:open="open" class="mb-[10px]">
+          <UButton
+            label="Search users..."
+            color="neutral"
+            variant="subtle"
+            icon="i-lucide-search"
+          />
+          <template #content>
+            <UCommandPalette
+              close
+              v-model:search-term="searchTerm"
+              :groups="groups"
+              @update:open="open = $event"
+              @keydown="handleKeydown"
+            >
+              <template #empty="{ searchTerm }"> Search for a user </template>
+            </UCommandPalette>
+          </template>
+        </UModal>
+        <UButton
+          class="chat"
+          :avatar="{
+            src: 'https://github.com/nuxt.png',
+          }"
+          color="primary"
+          variant="outline"
+          size="xl"
+          >Florian Steckchen</UButton
+        >
+        <UButton
+          class="chat"
+          :avatar="{
+            src: 'https://github.com/nuxt.png',
+          }"
+          color="primary"
+          variant="outline"
+          size="xl"
+          >Johannes Weigel</UButton
+        >
+      </div>
+      <!--Messaging column-->
+      <div class="align-column">
+        <UCard class="profile-bar">
+          <div class="flex items-center gap-2">
+            <UAvatar src="https://github.com/nuxt.png" />
+            <h1>Florian Steckchen</h1>
+          </div>
+        </UCard>
+        <div class="messages" ref="messagesContainer">
+          <!--example messages-->
+          <div :class="`message partner ${themedPartnerMessageColor}`">
+            <UAvatar
+              class="justify-self-center"
+              src="https://github.com/nuxt.png"
+            />
+            <div class="message-content">
+              <p>
+                User messages are now saved to the database and loaded on
+                page-reload. Start messaging today! **Note** If you want to test
+                this create a local chatroom and add your logged in user's ID to
+                it all via http://localhost:54323/. Afterwards change the
+                currently hardcoded chatroom_id to this chatroom's ID. Now you
+                can use the database!
+              </p>
+              <span class="message-time">12:48</span>
             </div>
           </div>
-          <!--Text Input for new messages-->
-          <div class="write">
-            <UTextarea
-              variant="subtle"
-              v-model="newMessage"
-              class="w-full"
-              placeholder="Write a message..."
-              autoresize
-              :rows="4"
-              :maxrows="4"
-            />
-            <UButton @click="sendMessage" :class="`${themedUserMessageColor}`"
-              ><Icon name="ic:baseline-send"
-            /></UButton>
+          <div
+            v-for="(message, index) in userMessages"
+            :key="index"
+            :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
+          >
+            <UAvatar class="justify-self-center" :src="avatarUrl" />
+            <div class="message-content">
+              <p>{{ message.text }}</p>
+              <span class="message-time">{{ message.timestamp }}</span>
+            </div>
           </div>
         </div>
-      </div> </NuxtLayout
-  ></GradientBackground>
+        <!--Text Input for new messages-->
+        <div class="write">
+          <UTextarea
+            variant="subtle"
+            v-model="newMessage"
+            class="w-full"
+            placeholder="Write a message..."
+            autoresize
+            :rows="4"
+            :maxrows="4"
+          />
+          <UButton @click="sendMessage" :class="`${themedUserMessageColor}`"
+            ><Icon name="ic:baseline-send"
+          /></UButton>
+        </div>
+      </div>
+    </div>
+  </NuxtLayout>
 </template>
 
 <script setup lang="ts">
-import GradientBackground from "~/layouts/gradientBackground.vue";
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useUserSearch } from "~/composables/useUserSearch";
 import type { Database } from "@@/database.types";
