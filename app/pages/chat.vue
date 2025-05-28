@@ -183,7 +183,6 @@ const userMessages = ref<any[]>([]);
 const messagesContainer = ref<any>(null);
 
 // databasae
-
 const supabase = useSupabaseClient<Database>();
 
 // pushes written message to chat UI & database
