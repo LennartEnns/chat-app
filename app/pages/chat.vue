@@ -145,27 +145,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick} from "vue";
-import { useUserSearch } from '~/composables/useUserSearch'
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { useUserSearch } from "~/composables/useUserSearch";
 import type { Database } from "@@/database.types";
 
-const { searchTerm, groups } = useUserSearch()
+//search bar
 
-const toast = useToast();
-const supabase = useSupabaseClient();
-const user = useSupabaseUser();
-const profileData = user.value?.user_metadata;
-const username = profileData?.username || "";
+const { searchTerm, groups } = useUserSearch();
+const open = ref<boolean>(false);
+
+// responsive mobile UI
 
 const isMobile = useMobileDetector();
+
+// login dialogue
+
 useFirstLoginDetector();
 
-const open = ref<boolean>(false);
-const newMessage = ref<string>("");
-const userMessages = ref<any[]>([]);
-const messagesContainer = ref<any>(null);
+// drawer
 
 const drawerOpen = useOpenDrawer();
+
+//theming
+
 const { isLight } = useSSRSafeTheme();
 
 const themedUserMessageColor = computed(() =>
@@ -176,7 +178,23 @@ const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
 
+// user data
+
+const account = useUserData();
+const avatarUrl = getAvatarUrl(account.id);
+
+// messages and writing
+
+const newMessage = ref<string>("");
+const userMessages = ref<any[]>([]);
+const messagesContainer = ref<any>(null);
+
+// databasae
+
+const supabase = useSupabaseClient<Database>();
+
 function sendMessage(): void {
+  // pushes written message to chat UI & database
   if (newMessage.value.trim()) {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, "0");
@@ -191,17 +209,14 @@ function sendMessage(): void {
   }
 }
 
-const supabaseRead = useSupabaseClient<Database>();
-
-const account = useUserData();
-
 async function saveToDatabase(message: string) {
-  const { data, error } = await supabaseRead
+  // saves messages to database
+  const { data, error } = await supabase
     .from("messages")
     .insert([
       {
         user_id: account.id,
-        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8",
+        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
         content: message,
       },
     ])
@@ -215,9 +230,8 @@ async function saveToDatabase(message: string) {
   return null;
 }
 
-const avatarUrl = getAvatarUrl(account.id);
-
 async function loadFromDatabase() {
+  // load messages from database and push to chat UI
   const { data, error } = (await supabase.from("messages").select("*")) as any;
 
   if (error) {
@@ -235,6 +249,7 @@ async function loadFromDatabase() {
 }
 
 function parseTimeStamp(timestamp: string) {
+  // format database timestamp to UI format
   const date = new Date(timestamp);
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -243,6 +258,7 @@ function parseTimeStamp(timestamp: string) {
 }
 
 function handleKeyDown(event: KeyboardEvent): void {
+  // Enable using enter for sending a message
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
@@ -250,6 +266,7 @@ function handleKeyDown(event: KeyboardEvent): void {
 }
 
 const scrollToBottom = async (): Promise<void> => {
+  // make the screen scroll down on sending
   await nextTick();
   const component = messagesContainer.value;
   if (component) {
@@ -264,6 +281,8 @@ watch(
   },
   { deep: true }
 );
+
+// on reload
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
