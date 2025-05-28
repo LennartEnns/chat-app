@@ -114,7 +114,7 @@
           <div
             v-for="(message, index) in userMessages"
             :key="index"
-            :class="`message user ${themedUserMessageColor}`"
+            :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
           >
             <UAvatar class="justify-self-center" :src="avatarUrl" />
             <div class="message-content">
