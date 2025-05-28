@@ -96,7 +96,7 @@
       </div>
       <!--Messaging column-->
       <div class="align-column">
-        <UCard class="profile-bar">
+        <UCard class="profile-bar" variant="subtle">
           <div class="flex items-center gap-2">
             <UAvatar src="https://github.com/nuxt.png" />
             <h1>Florian Steckchen</h1>
