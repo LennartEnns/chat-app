@@ -1,105 +1,107 @@
 <template>
-  <div class="min-h-dvh h-dvh max-h-dvh flex flex-col">
-    <div
-      :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
+  <div class="min-h-dvh h-dvh max-h-dvh flex justify-center">
+    <div class="h-full w-full max-w-[100rem] flex flex-col">
+      <div
+        :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
             ${
               isMobile
                 ? 'justify-between py-1 border-b-1 border-neutral-500'
                 : ''
             }`"
-    >
-      <UButton
-        v-if="isMobile"
-        :icon="buttonIcon"
-        color="neutral"
-        variant="ghost"
-        class="py-1 h-min self-center cursor-pointer"
-        size="xl"
-        :label="buttonText"
-        @click="buttonTarget"
-      />
-      <UButton
-        variant="ghost"
-        class="text-xl font-bold p-0 hover:bg-transparent cursor-pointer text-primary"
-        @click="navigateTo('/')"
-      >
-        YapSpace
-      </UButton>
-      <ThemeSwitch v-if="!isMobile" class="ml-4" />
-      <div v-if="!isMobile" class="w-full" />
-      <UNavigationMenu
-        v-if="!isMobile"
-        :items="items"
-        class="w-min justify-self-center z-50"
-      />
-      <UDrawer
-        v-else
-        v-model:open="mobileMenuOpen"
-        direction="top"
-        :ui="{
-          header: 'flex flex-row justify-end',
-          container: 'gap-0',
-        }"
       >
         <UButton
-          trailing-icon="i-lucide-menu"
+          v-if="isMobile"
+          :icon="buttonIcon"
           color="neutral"
           variant="ghost"
+          class="py-1 h-min self-center cursor-pointer"
           size="xl"
-          >Menu</UButton
+          :label="buttonText"
+          @click="buttonTarget"
+        />
+        <UButton
+          variant="ghost"
+          class="text-xl font-bold p-0 hover:bg-transparent cursor-pointer text-primary"
+          @click="navigateTo('/')"
         >
-        <template #header>
+          YapSpace
+        </UButton>
+        <ThemeSwitch v-if="!isMobile" class="ml-4" />
+        <div v-if="!isMobile" class="w-full" />
+        <UNavigationMenu
+          v-if="!isMobile"
+          :items="items"
+          class="w-min justify-self-center z-50"
+        />
+        <UDrawer
+          v-else
+          v-model:open="mobileMenuOpen"
+          direction="top"
+          :ui="{
+            header: 'flex flex-row justify-end',
+            container: 'gap-0',
+          }"
+        >
           <UButton
+            trailing-icon="i-lucide-menu"
             color="neutral"
             variant="ghost"
-            icon="i-lucide-x"
-            @click="mobileMenuOpen = false"
-          />
-        </template>
+            size="xl"
+            >Menu</UButton
+          >
+          <template #header>
+            <UButton
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-x"
+              @click="mobileMenuOpen = false"
+            />
+          </template>
+          <template #body>
+            <UNavigationMenu
+              :items="items"
+              orientation="vertical"
+              :ui="{
+                linkLeadingIcon: 'size-6',
+                linkLabel: 'text-lg',
+              }"
+            />
+          </template>
+        </UDrawer>
+      </div>
+      <UModal
+        v-model:open="showLogoutModal"
+        title="Terminate Sessions"
+        description="Choose which sessions to terminate."
+      >
         <template #body>
-          <UNavigationMenu
-            :items="items"
-            orientation="vertical"
-            :ui="{
-              linkLeadingIcon: 'size-6',
-              linkLabel: 'text-lg',
-            }"
-          />
+          <div class="flex flex-col gap-1 md:flex-row md:gap-0">
+            <UButton
+              variant="ghost"
+              icon="i-lucide-log-out"
+              @click="logout('local')"
+            >
+              This session only
+            </UButton>
+            <UButton
+              variant="ghost"
+              icon="i-lucide-log-out"
+              @click="logout('global')"
+            >
+              All sessions
+            </UButton>
+            <UButton
+              variant="ghost"
+              icon="i-lucide-log-out"
+              @click="logout('others')"
+            >
+              Other sessions only
+            </UButton>
+          </div>
         </template>
-      </UDrawer>
+      </UModal>
+      <slot />
     </div>
-    <UModal
-      v-model:open="showLogoutModal"
-      title="Terminate Sessions"
-      description="Choose which sessions to terminate."
-    >
-      <template #body>
-        <div class="flex flex-col gap-1 md:flex-row md:gap-0">
-          <UButton
-            variant="ghost"
-            icon="i-lucide-log-out"
-            @click="logout('local')"
-          >
-            This session only
-          </UButton>
-          <UButton
-            variant="ghost"
-            icon="i-lucide-log-out"
-            @click="logout('global')"
-          >
-            All sessions
-          </UButton>
-          <UButton
-            variant="ghost"
-            icon="i-lucide-log-out"
-            @click="logout('others')"
-          >
-            Other sessions only
-          </UButton>
-        </div>
-      </template>
-    </UModal>
-    <slot />
   </div>
 </template>
 
@@ -139,9 +141,13 @@ async function logout(scope: "global" | "local" | "others") {
   });
   if (error) {
     console.log(`Logout error: ${error}`);
-    operationFeedbackHandler.displayError('An unexpected error occured during logout.');
+    operationFeedbackHandler.displayError(
+      "An unexpected error occured during logout."
+    );
   } else if (scope === "others") {
-    operationFeedbackHandler.displaySuccess('All other sessions have been terminated.');
+    operationFeedbackHandler.displaySuccess(
+      "All other sessions have been terminated."
+    );
     showLogoutModal.value = false;
   }
 }
