@@ -150,24 +150,19 @@ import { useUserSearch } from "~/composables/useUserSearch";
 import type { Database } from "@@/database.types";
 
 //search bar
-
 const { searchTerm, groups } = useUserSearch();
 const open = ref<boolean>(false);
 
 // responsive mobile UI
-
 const isMobile = useMobileDetector();
 
 // login dialogue
-
 useFirstLoginDetector();
 
 // drawer
-
 const drawerOpen = useOpenDrawer();
 
 //theming
-
 const { isLight } = useSSRSafeTheme();
 
 const themedUserMessageColor = computed(() =>
@@ -179,12 +174,10 @@ const themedPartnerMessageColor = computed(() =>
 );
 
 // user data
-
 const account = useUserData();
 const avatarUrl = getAvatarUrl(account.id);
 
 // messages and writing
-
 const newMessage = ref<string>("");
 const userMessages = ref<any[]>([]);
 const messagesContainer = ref<any>(null);
@@ -193,8 +186,8 @@ const messagesContainer = ref<any>(null);
 
 const supabase = useSupabaseClient<Database>();
 
+// pushes written message to chat UI & database
 function sendMessage(): void {
-  // pushes written message to chat UI & database
   if (newMessage.value.trim()) {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, "0");
@@ -209,8 +202,8 @@ function sendMessage(): void {
   }
 }
 
+// saves messages to database
 async function saveToDatabase(message: string) {
-  // saves messages to database
   const { data, error } = await supabase
     .from("messages")
     .insert([
@@ -230,8 +223,8 @@ async function saveToDatabase(message: string) {
   return null;
 }
 
+// load messages from database and push to chat UI
 async function loadFromDatabase() {
-  // load messages from database and push to chat UI
   const { data, error } = (await supabase.from("messages").select("*")) as any;
 
   if (error) {
@@ -248,8 +241,8 @@ async function loadFromDatabase() {
   return null;
 }
 
+// format database timestamp to UI format
 function parseTimeStamp(timestamp: string) {
-  // format database timestamp to UI format
   const date = new Date(timestamp);
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -257,16 +250,16 @@ function parseTimeStamp(timestamp: string) {
   return timestampDB;
 }
 
+// Enable using enter for sending a message
 function handleKeyDown(event: KeyboardEvent): void {
-  // Enable using enter for sending a message
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 }
 
+// make the screen scroll down on sending
 const scrollToBottom = async (): Promise<void> => {
-  // make the screen scroll down on sending
   await nextTick();
   const component = messagesContainer.value;
   if (component) {
@@ -283,7 +276,6 @@ watch(
 );
 
 // on reload
-
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
   loadFromDatabase();
