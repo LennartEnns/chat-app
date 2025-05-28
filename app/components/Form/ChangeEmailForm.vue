@@ -58,7 +58,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     state.email = "";
   } else if (error) {
     logAuthError(error, 'email change');
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, 'Unknown error during email change'));
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error, 'Unknown error during email change'));
   }
 }
 </script>

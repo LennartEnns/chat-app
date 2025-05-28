@@ -1,5 +1,15 @@
 <template>
   <NuxtLayout name="logged-in">
+    <UModal
+    v-model:open="showAvatarCroppingModal"
+    title="Crop Avatar"
+    :ui="{
+      header: 'justify-center',
+    }">
+      <template #body>
+        <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" @upload="onUploadCroppedAvatar" />
+      </template>
+    </UModal>
     <UCard class="ring-0" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">
@@ -164,6 +174,7 @@
 import { userLimits } from "~~/validation/commonLimits";
 import { displayNameSchema } from "~~/validation/schemas/input/inputUserSchemas";
 import type { UserData } from "~/composables/useUserData";
+import { getStorageErrorMessage, logStorageError } from '~~/errors/storageErrors';
 import type { Tables } from '~~/database.types';
 
 type ProfileUserData = Pick<UserData, 'avatarUrl' | 'avatarPath' | 'existsAvatarAtUrl' | 'username' | 'displayname' | 'description'>;
@@ -180,6 +191,8 @@ const routeUsername = computed(() => {
   return params.username as string;
 });
 const isOwnProfile = computed(() => userData.username === routeUsername.value);
+const newAvatarObjectUrl = ref<string | null>(null);
+const showAvatarCroppingModal = ref(false);
 
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
@@ -248,7 +261,7 @@ async function loadUserProfile(username: string) {
       // Fetch other user's profile from database
       const { data, error: dbError } = await supabase
         .from('profiles')
-        .select('displayname, description')
+        .select('user_id, displayname, description')
         .eq('username', username)
         .single();
 
@@ -256,14 +269,15 @@ async function loadUserProfile(username: string) {
         console.error('Error fetching profile:', dbError);
         return;
       }
-      const avatarPath = `public/${username}.jpg`;
+
+      const dbProfile: Omit<Tables<'profiles'>, 'username'> = data;
+      const avatarPath = `public/${dbProfile.user_id}.jpg`;
       const avatarUrlData = supabase.storage
         .from("avatars")
         .getPublicUrl(avatarPath);
       const avatarUrl = avatarUrlData.data.publicUrl;
       const { data: existsAvatarAtUrl } = await supabase.storage.from('avatars').exists(avatarPath);
 
-      const dbProfile: Omit<Tables<'profiles'>, 'user_id'> = data;
       profileData.value = {
         ...dbProfile,
         username,
@@ -295,20 +309,27 @@ async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (file) {
-    const { error } = await supabase.storage
-      .from('avatars')
-      .upload(userData.avatarPath, file, {
-        upsert: true,
-        cacheControl: 'no-cache',
-      });
-    if (error) {
-      console.log(`Error uploading avatar: ${error}`);
-      operationFeedbackHandler.displayError('Could not upload avatar.');
-      return;
-    } else {
-      userData.existsAvatarAtUrl = true;
-      operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
-    }
+    newAvatarObjectUrl.value = URL.createObjectURL(file);
+    showAvatarCroppingModal.value = true;
+  }
+}
+async function onUploadCroppedAvatar(blob: Blob) {
+  showAvatarCroppingModal.value = false;
+  newAvatarObjectUrl.value = null;
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(userData.avatarPath, blob, {
+      upsert: true,
+      contentType: 'image/jpeg',
+      cacheControl: 'no-cache',
+    });
+  if (error) {
+    logStorageError(error, 'avatar upload');
+    operationFeedbackHandler.displayError(getStorageErrorMessage(error, 'Unknown error uploading avatar'));
+    return;
+  } else {
+    userData.existsAvatarAtUrl = true;
+    operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
   }
 }
 async function clearAvatar() {
