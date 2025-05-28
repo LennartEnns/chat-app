@@ -24,6 +24,14 @@
               </template>
             </UModal>
             <UButton
+              class="mb-[10px]"
+              label="Neuen Chat erstellen"
+              color="primary"
+              variant="solid"
+              icon="i-lucide-plus"
+              @click="openNewChatModal"
+            />
+            <UButton
               class="chat"
               :avatar="{
                 src: 'https://github.com/nuxt.png',
@@ -46,6 +54,7 @@
           </div>
         </template>
       </UDrawer>
+
       <!--Desktop column for choosing chats-->
       <div class="align-column" v-if="!isMobile">
         <UModal v-model:open="open" class="mb-[10px]">
@@ -63,6 +72,15 @@
             />
           </template>
         </UModal>
+
+        <UButton
+          class="mb-[10px]"
+          label="Neuen Chat erstellen"
+          color="primary"
+          variant="solid"
+          icon="i-lucide-plus"
+          @click="openNewChatModal"
+        />
         <UButton
           class="chat"
           :avatar="{
@@ -84,6 +102,7 @@
           >Johannes Weigel</UButton
         >
       </div>
+
       <!--Messaging column-->
       <div class="align-column">
         <UCard class="profile-bar">
@@ -161,28 +180,73 @@
         </div>
       </div>
     </div>
+
+    <UModal v-model:open="newChatModalOpen" :ui="{ width: 'sm:max-w-md' }">
+    </UModal>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+// 1. Import der NewChat Komponente
+import NewChat from "~/components/Form/NewChatForm.vue"; // Passe den Pfad an
 
-const toast = useToast()
-const supabase = useSupabaseClient()
+// 2. Neue reactive Variables
+const newChatModalOpen = ref(false);
+
+// 3. Neue Funktionen
+function openNewChatModal() {
+  newChatModalOpen.value = true;
+}
+
+function closeNewChatModal() {
+  newChatModalOpen.value = false;
+}
+
+function handleCreateChat(data: {
+  type: string;
+  name: string;
+  description?: string;
+}) {
+  console.log("Neuer Chat erstellt:", data);
+
+  // Hier fügst du später deine eigene Logik ein:
+  // - Chat in Datenbank speichern
+  // - Chat zur Liste hinzufügen
+  // - etc.
+
+  // Modal schließen
+  closeNewChatModal();
+
+  // Optional: Toast-Nachricht anzeigen
+  toast.add({
+    title: "Chat erstellt",
+    description: `${data.type === "group" ? "Gruppe" : "Chat"} "${
+      data.name
+    }" wurde erstellt.`,
+    color: "primary",
+  });
+}
+
+const toast = useToast();
+const supabase = useSupabaseClient();
 
 const user = useSupabaseUser();
 const profileData = user.value?.user_metadata;
 const username = profileData?.username || "";
 
 function getAvatarUrl(userId: string): string {
-  const { data } = supabase
-    .storage
-    .from('avatars')
-    .getPublicUrl('public/' + userId + '.jpg')
-    if (!data.publicUrl || data.publicUrl.includes('error') || data.publicUrl === '') {
-      return 'https://eunokvzfqixyoauwvqlt.supabase.co/storage/v1/object/public/avatars/public/default.png';
-    }
-  return data.publicUrl
+  const { data } = supabase.storage
+    .from("avatars")
+    .getPublicUrl("public/" + userId + ".jpg");
+  if (
+    !data.publicUrl ||
+    data.publicUrl.includes("error") ||
+    data.publicUrl === ""
+  ) {
+    return "https://eunokvzfqixyoauwvqlt.supabase.co/storage/v1/object/public/avatars/public/default.png";
+  }
+  return data.publicUrl;
 }
 
 interface Users {
@@ -198,7 +262,7 @@ interface CommandItem {
   suffix: string;
   to: string;
   target: string;
-  avatar: {src: string};
+  avatar: { src: string };
   raw: Users;
 }
 
@@ -226,30 +290,31 @@ onMounted(async () => {
     toast.add({
       title: "Error loading users",
       description: error.message,
-      color: 'error',
+      color: "error",
     });
     return;
   }
 
-
   users.value = (data || [])
     .filter((user: Users) => {
-      return user && 
-            user.user_id && 
-            user.user_id.trim() !== '' && 
-            user.username !== username &&
-            user.displayname && 
-            user.displayname.trim() !== '';
-      })
+      return (
+        user &&
+        user.user_id &&
+        user.user_id.trim() !== "" &&
+        user.username !== username &&
+        user.displayname &&
+        user.displayname.trim() !== ""
+      );
+    })
     .map((user: Users) => ({
       id: user.user_id,
       label: user.displayname,
       suffix: user.username,
       to: `/profile/${user.user_id}`,
-      target: '_self',
-      avatar: {src: getAvatarUrl(user.user_id)},
+      target: "_self",
+      avatar: { src: getAvatarUrl(user.user_id) },
       raw: user,
-  }));
+    }));
 
   groups.value = [
     {
