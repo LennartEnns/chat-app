@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-dvh h-dvh max-h-dvh flex justify-center">
-    <div class="h-full w-full max-w-[100rem] flex flex-col">
+    <div class="h-full w-full max-w-[120rem] flex flex-col">
       <div
         :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
             ${
