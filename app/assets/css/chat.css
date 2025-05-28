@@ -78,6 +78,7 @@
   min-width: fit-content;
 }
 .write div textarea {
+  background-color: color-mix(in srgb, var(--ui-bg) 30%, transparent);
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
 }
