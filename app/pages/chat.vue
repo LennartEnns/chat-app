@@ -1,5 +1,5 @@
 <template>
-  <NuxtLayout name="logged-in">
+  <NuxtLayout name="logged-in" class="max-h-dvh">
     <div class="main-layout grow">
       <!--Mobile UI drawer for choosing chats-->
       <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
@@ -138,7 +138,7 @@
           <UTextarea
             variant="subtle"
             v-model="newMessage"
-            class="w-full"
+            class="w-full glassBG"
             placeholder="Write a message..."
             autoresize
             :rows="4"
