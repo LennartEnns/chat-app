@@ -1,19 +1,30 @@
 <template>
   <NuxtLayout name="logged-in">
     <UModal
-    v-model:open="showAvatarCroppingModal"
-    title="Crop Avatar"
-    :ui="{
-      header: 'justify-center',
-    }">
+      v-model:open="showAvatarCroppingModal"
+      title="Crop Avatar"
+      :ui="{
+        header: 'justify-center',
+      }"
+    >
       <template #body>
-        <AvatarUploadCropper v-if="newAvatarObjectUrl" :image-url="newAvatarObjectUrl" @upload="onUploadCroppedAvatar" />
+        <AvatarUploadCropper
+          v-if="newAvatarObjectUrl"
+          :image-url="newAvatarObjectUrl"
+          @upload="onUploadCroppedAvatar"
+        />
       </template>
     </UModal>
-    <UCard class="ring-0" :ui="{ header: 'border-none' }">
+    <UCard class="ring-0 bg-transparent h-full" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">
-          {{ loading ? 'Loading...' : (isOwnProfile ? 'Your Profile' : `${profileData?.username}'s Profile`) }}
+          {{
+            loading
+              ? "Loading..."
+              : isOwnProfile
+              ? "Your Profile"
+              : `${profileData?.username}'s Profile`
+          }}
         </p>
       </template>
 
@@ -29,7 +40,11 @@
           <div class="avatar-container">
             <UAvatar
               class="border-2"
-              :src="profileData.existsAvatarAtUrl ? profileData.avatarUrl : undefined"
+              :src="
+                profileData.existsAvatarAtUrl
+                  ? profileData.avatarUrl
+                  : undefined
+              "
               icon="i-lucide-user"
               :ui="{ root: 'size-35', icon: 'size-30' }"
             />
@@ -38,16 +53,28 @@
               Edit Picture
               <input
                 type="file"
-                style="position: absolute; width: 100%; height: 100%; opacity: 0"
+                style="
+                  position: absolute;
+                  width: 100%;
+                  height: 100%;
+                  opacity: 0;
+                "
                 accept="image/*"
                 @change="uploadAvatar"
-              >
+              />
             </div>
           </div>
           <div :class="`mt-4 ${themedTextsColor}`">
             {{ profileData.username }}
           </div>
-          <UButton v-if="isOwnProfile && profileData.existsAvatarAtUrl" label="Clear Avatar" variant="ghost" class="cursor-pointer mt-1" color="error" @click="clearAvatar" />
+          <UButton
+            v-if="isOwnProfile && profileData.existsAvatarAtUrl"
+            label="Clear Avatar"
+            variant="ghost"
+            class="cursor-pointer mt-1"
+            color="error"
+            @click="clearAvatar"
+          />
         </div>
         <div class="profile-container">
           <div class="section-container">
@@ -65,8 +92,9 @@
                 variant="soft"
                 color="primary"
                 class="cursor-pointer self-center"
-                @click="openChat(profileUserId)"> 
-                Chat 
+                @click="openChat(profileUserId)"
+              >
+                Chat
               </UButton>
               <UButton
                 v-if="isOwnProfile"
@@ -90,9 +118,17 @@
               <div class="field-content">
                 <div
                   v-if="!isEditingName"
-                  :class="`${isFalsy(profileData.displayname) ? themedWeakColor : themedTextsColor}`"
+                  :class="`${
+                    isFalsy(profileData.displayname)
+                      ? themedWeakColor
+                      : themedTextsColor
+                  }`"
                 >
-                  {{ isFalsy(profileData.displayname) ? profileData.username : profileData.displayname }}
+                  {{
+                    isFalsy(profileData.displayname)
+                      ? profileData.username
+                      : profileData.displayname
+                  }}
                 </div>
                 <UInput
                   v-else
@@ -152,9 +188,17 @@
               >
                 <div
                   v-if="!isOwnProfile || !isEditingDescription"
-                  :class="`whitespace-pre-line break-all ${isFalsy(profileData.description) ? themedWeakColor : themedTextsColor}`"
+                  :class="`whitespace-pre-line break-all ${
+                    isFalsy(profileData.description)
+                      ? themedWeakColor
+                      : themedTextsColor
+                  }`"
                 >
-                  {{ isFalsy(profileData.description) ? 'Empty' : profileData.description }}
+                  {{
+                    isFalsy(profileData.description)
+                      ? "Empty"
+                      : profileData.description
+                  }}
                 </div>
                 <UTextarea
                   v-else
@@ -170,10 +214,14 @@
               </div>
             </div>
           </div>
-          <ULink v-if="isOwnProfile" to="/settings/account" class="flex items-center mt-4">
-          <div>Go To Account Settings</div>
-          <UIcon name="i-lucide-arrow-right" class="ml-1"/>
-        </ULink>
+          <ULink
+            v-if="isOwnProfile"
+            to="/settings/account"
+            class="flex items-center mt-4"
+          >
+            <div>Go To Account Settings</div>
+            <UIcon name="i-lucide-arrow-right" class="ml-1" />
+          </ULink>
         </div>
       </div>
     </UCard>
@@ -184,10 +232,21 @@
 import { userLimits } from "~~/validation/commonLimits";
 import { displayNameSchema } from "~~/validation/schemas/input/inputUserSchemas";
 import type { UserData } from "~/composables/useUserData";
-import { getStorageErrorMessage, logStorageError } from '~~/errors/storageErrors';
-import type { Tables } from '~~/database.types';
+import {
+  getStorageErrorMessage,
+  logStorageError,
+} from "~~/errors/storageErrors";
+import type { Tables } from "~~/database.types";
 
-type ProfileUserData = Pick<UserData, 'avatarUrl' | 'avatarPath' | 'existsAvatarAtUrl' | 'username' | 'displayname' | 'description'>;
+type ProfileUserData = Pick<
+  UserData,
+  | "avatarUrl"
+  | "avatarPath"
+  | "existsAvatarAtUrl"
+  | "username"
+  | "displayname"
+  | "description"
+>;
 
 const route = useRoute();
 const supabase = useSupabaseClient();
@@ -209,13 +268,19 @@ const loading = ref(true);
 
 const isEditingName = ref(false);
 const newDisplayName = ref("");
-const displayNameChanged = computed(() => userData.displayname !== newDisplayName.value);
+const displayNameChanged = computed(
+  () => userData.displayname !== newDisplayName.value
+);
 const isEditingDescription = ref(false);
 const newDescription = ref("");
-const descriptionChanged = computed(() => userData.description !== newDescription.value);
+const descriptionChanged = computed(
+  () => userData.description !== newDescription.value
+);
 
-const descriptionRowCount = computed(
-  () => (profileData.value?.description ? ((profileData.value.description.match(/\n/g) || '').length + 1) : 0)
+const descriptionRowCount = computed(() =>
+  profileData.value?.description
+    ? (profileData.value.description.match(/\n/g) || "").length + 1
+    : 0
 );
 const displayNameSanitized = computed(() =>
   isFalsy(newDisplayName.value) ? null : newDisplayName.value.trim()
@@ -255,38 +320,44 @@ async function loadUserProfile(username: string) {
 
     // If it's the current user, get data from users metadata
     if (isOwnProfile.value) {
-      watch(userData, (newUserData) => {
-        profileData.value = {
-          avatarUrl: newUserData.avatarUrl,
-          avatarPath: newUserData.avatarPath,
-          existsAvatarAtUrl: newUserData.existsAvatarAtUrl,
-          username: newUserData.username,
-          displayname: newUserData.displayname,
-          description: newUserData.description,
-        };
-      }, {
-        immediate: true,
-      })
+      watch(
+        userData,
+        (newUserData) => {
+          profileData.value = {
+            avatarUrl: newUserData.avatarUrl,
+            avatarPath: newUserData.avatarPath,
+            existsAvatarAtUrl: newUserData.existsAvatarAtUrl,
+            username: newUserData.username,
+            displayname: newUserData.displayname,
+            description: newUserData.description,
+          };
+        },
+        {
+          immediate: true,
+        }
+      );
     } else {
       // Fetch other user's profile from database
       const { data, error: dbError } = await supabase
-        .from('profiles')
-        .select('user_id, displayname, description')
-        .eq('username', username)
+        .from("profiles")
+        .select("user_id, displayname, description")
+        .eq("username", username)
         .single();
 
       if (dbError || !data) {
-        console.error('Error fetching profile:', dbError);
+        console.error("Error fetching profile:", dbError);
         return;
       }
 
-      const dbProfile: Omit<Tables<'profiles'>, 'username'> = data;
+      const dbProfile: Omit<Tables<"profiles">, "username"> = data;
       const avatarPath = `public/${dbProfile.user_id}.jpg`;
       const avatarUrlData = supabase.storage
         .from("avatars")
         .getPublicUrl(avatarPath);
       const avatarUrl = avatarUrlData.data.publicUrl;
-      const { data: existsAvatarAtUrl } = await supabase.storage.from('avatars').exists(avatarPath);
+      const { data: existsAvatarAtUrl } = await supabase.storage
+        .from("avatars")
+        .exists(avatarPath);
 
       profileData.value = {
         ...dbProfile,
@@ -297,7 +368,7 @@ async function loadUserProfile(username: string) {
       };
     }
   } catch (err) {
-    console.error('Error loading profile:', err);
+    console.error("Error loading profile:", err);
   } finally {
     loading.value = false;
   }
@@ -309,9 +380,9 @@ async function updateProfileData(
   const { error } = await supabase.auth.updateUser({ data });
   if (error) {
     console.log(`Error updating profile: ${error}`);
-    operationFeedbackHandler.displayError('Could not update profile data.');
+    operationFeedbackHandler.displayError("Could not update profile data.");
   } else {
-    operationFeedbackHandler.displaySuccess('Updated profile.');
+    operationFeedbackHandler.displaySuccess("Updated profile.");
   }
 }
 
@@ -327,19 +398,23 @@ async function onUploadCroppedAvatar(blob: Blob) {
   showAvatarCroppingModal.value = false;
   newAvatarObjectUrl.value = null;
   const { error } = await supabase.storage
-    .from('avatars')
+    .from("avatars")
     .upload(userData.avatarPath, blob, {
       upsert: true,
-      contentType: 'image/jpeg',
-      cacheControl: 'no-cache',
+      contentType: "image/jpeg",
+      cacheControl: "no-cache",
     });
   if (error) {
-    logStorageError(error, 'avatar upload');
-    operationFeedbackHandler.displayError(getStorageErrorMessage(error, 'Unknown error uploading avatar'));
+    logStorageError(error, "avatar upload");
+    operationFeedbackHandler.displayError(
+      getStorageErrorMessage(error, "Unknown error uploading avatar")
+    );
     return;
   } else {
     userData.existsAvatarAtUrl = true;
-    operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
+    operationFeedbackHandler.displaySuccess(
+      "Your avatar has been updated. You may need to reload the page."
+    );
   }
 }
 async function clearAvatar() {
@@ -347,7 +422,7 @@ async function clearAvatar() {
     .from("avatars")
     .remove([userData.avatarPath]);
   if (error) {
-    operationFeedbackHandler.displayError('Could not clear your avatar.');
+    operationFeedbackHandler.displayError("Could not clear your avatar.");
   } else {
     userData.existsAvatarAtUrl = false;
   }
@@ -355,7 +430,7 @@ async function clearAvatar() {
 
 async function toggleEditDisplayName() {
   isEditingName.value = !isEditingName.value;
-  if (isEditingName.value) newDisplayName.value = userData.displayname || '';
+  if (isEditingName.value) newDisplayName.value = userData.displayname || "";
 }
 async function saveDisplayName() {
   userData.displayname = displayNameParsed.value.data ?? null;
@@ -364,7 +439,8 @@ async function saveDisplayName() {
 }
 async function toggleEditDescription() {
   isEditingDescription.value = !isEditingDescription.value;
-  if (isEditingDescription.value) newDescription.value = userData.description || '';
+  if (isEditingDescription.value)
+    newDescription.value = userData.description || "";
 }
 async function saveDescription() {
   userData.description = descriptionSanitized.value ?? null;
