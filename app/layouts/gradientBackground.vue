@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-dvh flex flex-col align-content-center justify-center landing-background"
+    class="min-h-[100vh] h-[100%] flex flex-col align-content-center justify-center landing-background"
   >
     <slot />
   </div>
@@ -13,7 +13,7 @@ const gradientColor1 = computed(() =>
   isLight.value ? "#d3dbf2" : "var(--ui-color-primary-700)"
 );
 const gradientColor2 = computed(() =>
-  isLight.value ? "var(--ui-color-primary-300)" : "#0c1223"
+  isLight.value ? "var(--ui-color-primary-700)" : "#0c1223"
 );
 </script>
 
@@ -31,7 +31,6 @@ const gradientColor2 = computed(() =>
       v-bind(gradientColor2) 75%
     );
   background-color: #0c0c0c;
-  overflow: hidden;
   background-attachment: initial;
 }
 </style>

@@ -1,8 +1,9 @@
 <template>
   <GradientBackground>
     <div>
-      <slot /></div
-  ></GradientBackground>
+      <slot />
+    </div>
+  </GradientBackground>
 </template>
 
 <script setup>
