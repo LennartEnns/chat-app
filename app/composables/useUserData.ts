@@ -8,7 +8,6 @@ export interface UserData {
   description: string | null,
   avatarPath: string,
   avatarUrl: string,
-  existsAvatarAtUrl: boolean,
 };
 
 export function useUserData(): Reactive<UserData> {
@@ -30,14 +29,7 @@ export function useUserData(): Reactive<UserData> {
     description: profileData?.description ?? null,
     avatarPath,
     avatarUrl,
-
-    existsAvatarAtUrl: false,
   });
-
-  onNuxtReady(async () => {
-    const {data} = await supabase.storage.from('avatars').exists(avatarPath);
-    userData.existsAvatarAtUrl = data;
-  })
 
   watch(user, () => { // Update data along with the user ref
     const profileData = user.value?.user_metadata;

@@ -28,7 +28,8 @@ export default defineNuxtConfig({
       login: '/login',
       callback: '/confirm',
       exclude: ['/', '/register', '/flow/**'],
-    }
+    },
+    types: '~~/database.types.ts',
   },
 
   particles: {

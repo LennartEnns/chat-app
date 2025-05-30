@@ -1,46 +1,51 @@
-import { ref, watch } from "vue";
-import type { CommandGroup, CommandItem, Users } from "../types/userSearch";
-import { useSupabaseClient, useSupabaseUser } from "#imports";
-import {
-    getPostgrestErrorMessage,
-    logPostgrestError,
-} from "~~/errors/postgrestErrors";
+import { getPostgrestErrorMessage, logPostgrestError } from "~~/errors/postgrestErrors";
+import type { CommandPaletteGroup, CommandPaletteItem } from "@nuxt/ui";
+import type { UserCommandPaletteItem } from "~/types/userSearch";
+import { validateUsernameSearch, validateDisplayNameSearch } from "~~/validation/commonRules";
 
+/**
+ * Composable that provides stateful logic for the user search command palette.
+ */
 export function useUserSearch() {
     const supabase = useSupabaseClient();
     const operationFeedbackHandler = useOperationFeedbackHandler();
-    const unknownErrorMessage = "Unknown error during data retrieval";
-    const username = useSupabaseUser().value?.user_metadata?.username ?? "";
+    const userData = useUserData();
 
-    const users = ref<CommandItem[]>([]);
-    const groups = ref<CommandGroup[]>([
+    const unknownErrorMessage = "Unknown error during data retrieval";
+    const minTimeBetweenSearches = 500; // ms
+    const userSelectLimit = 5;    
+
+    const searchTerm = ref("");
+    // Smallest subterm (substring in the current term)
+    // for which the db search returned less than [userSelectLimit] users
+    const lastRedundantSubterm = ref<string | null>(null);
+
+    const users = ref<UserCommandPaletteItem[]>([]);
+    const loading = ref(false);
+
+    // @ts-expect-error ignore deep type instantiation warning
+    const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
         {
             id: "users",
-            label: "Users",
-            items: [],
+            label: searchTerm.value ? `Users matching “${searchTerm.value}”...` : 'Users',
+            items: users.value,
+
+            // If we already have all matching users, search locally
+            ignoreFilter: !lastRedundantSubterm.value,
         },
     ]);
-    const searchTerm = ref("");
 
-    async function handleKeydown(event: KeyboardEvent) {
-        if (event.key === "Enter") {
-            await searchUsers(searchTerm.value);
-        }
-    }
-
-    async function searchUsers(searchTerm: string) {
-        if (searchTerm === "") {
-            users.value = [];
-            updateGroups();
-            return;
-        }
-
-        const { data, error } = await supabase
+    async function searchUsersInDatabase(term: string) {
+        const usersQuery = supabase
             .from("profiles")
-            .select("*")
+            .select("user_id, username, displayname")
+            .neq('username', userData.username)
+            .or(`username.ilike.%${term}%, displayname.ilike.%${term}%`)
             .order("username")
-            .or(`username.ilike.%${searchTerm}%, displayname.ilike.%${searchTerm}%`)
-            .limit(5);
+            .limit(userSelectLimit);
+
+        const { data, error } = await usersQuery;
+        loading.value = false;
 
         if (error) {
             logPostgrestError(error, "data retrieval");
@@ -48,59 +53,59 @@ export function useUserSearch() {
                 getPostgrestErrorMessage(error, unknownErrorMessage),
             );
             return;
+        } else if (data.length < userSelectLimit) {
+            // We know for sure that we already have all users that match the term,
+            // so no more database fetching is necessary for queries that have this as a substring
+            lastRedundantSubterm.value = term;
         }
 
         users.value = (data || [])
-            .filter((user: Users) => {
-                return (
-                    user &&
-                    user.user_id &&
-                    user.user_id.trim() !== "" &&
-                    user.username !== username &&
-                    user.displayname &&
-                    user.displayname.trim() !== ""
-                );
-            })
-            .map((user: Users) => ({
+            // @ts-expect-error ignore deep type instantiation warning
+            .map((user) => ({
                 id: user.user_id,
-                label: user.displayname,
+                label: user.displayname ?? user.username,
                 suffix: user.username,
-                to: `/profile/${user.username}`,
-                target: "_self",
-                avatar: { src: getAvatarUrl(user.user_id) },
-                raw: user,
+                avatar: {
+                    src: getAvatarUrl(user.user_id),
+                    icon: 'i-lucide-user',
+                    ui: {
+                        icon: 'size-11/12',
+                    },
+                },
+                user,
             }));
-        updateGroups();
     }
-    function updateGroups() {
-        groups.value = [
-            {
-                id: "users",
-                label: "Users",
-                items: users.value,
-            },
-        ];
-    }
-    watch(searchTerm, searchUsers);
+
+    // Timeout mechanism to prevent spamming from the client
+    const searchTimeout = ref<NodeJS.Timeout | null>(null);
+    watch(searchTerm, (newTerm) => {
+        if (searchTimeout.value) {
+            clearTimeout(searchTimeout.value);
+            searchTimeout.value = null;
+        }
+        if (newTerm === "" || (!validateUsernameSearch(newTerm) && !validateDisplayNameSearch(newTerm))) {
+            loading.value = false;
+            return;
+        }
+        loading.value = true;
+        searchTimeout.value = setTimeout(() => {
+            if (searchTerm.value !== newTerm) return;
+            if (lastRedundantSubterm.value) {
+                if (newTerm.toLowerCase().includes(lastRedundantSubterm.value.toLowerCase())) {
+                    loading.value = false;
+                    return;
+                } else {
+                    // Last redundant subterm is not a substring anymore => Need to switch to db search again
+                    lastRedundantSubterm.value = null;
+                }
+            }
+            searchUsersInDatabase(newTerm);
+        }, minTimeBetweenSearches);
+    });
 
     return {
         searchTerm,
         groups,
-        handleKeydown,
+        loading,
     };
-}
-
-export function getAvatarUrl(userId: string): string {
-    const supabase = useSupabaseClient();
-    const { data } = supabase.storage
-        .from("avatars")
-        .getPublicUrl("public/" + userId + ".jpg");
-    if (
-        !data.publicUrl ||
-        data.publicUrl.includes("error") ||
-        data.publicUrl === ""
-    ) {
-        return "";
-    }
-    return data.publicUrl;
 }

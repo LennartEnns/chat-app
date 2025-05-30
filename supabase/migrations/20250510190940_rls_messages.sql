@@ -11,6 +11,7 @@ on messages for insert to authenticated
 with check (
   is_user_in_chatroom((select auth.uid()), messages.chatroom_id)
   and (select auth.uid()) = user_id
+  and created_at is null
 );
 
 create policy "Users can update their own messages"

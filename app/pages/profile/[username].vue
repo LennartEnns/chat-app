@@ -13,7 +13,7 @@
     <UCard class="ring-0" :ui="{ header: 'border-none' }">
       <template #header>
         <p class="font-bold text-xl text-center">
-          {{ loading ? 'Loading...' : (isOwnProfile ? 'Your Profile' : `${profileData?.username}'s Profile`) }}
+          {{ profileTitle }}
         </p>
       </template>
 
@@ -29,9 +29,9 @@
           <div class="avatar-container">
             <UAvatar
               class="border-2"
-              :src="profileData.existsAvatarAtUrl ? profileData.avatarUrl : undefined"
+              :src="(isOwnProfile && !existsOwnAvatar) ? undefined : profileData.avatarUrl"
               icon="i-lucide-user"
-              :ui="{ root: 'size-35', icon: 'size-30' }"
+              :ui="{ root: 'size-35', icon: 'size-11/12' }"
             />
             <div v-if="isOwnProfile" class="avatar-overlay">
               <UIcon name="i-lucide-camera" size="xx-large" />
@@ -47,7 +47,7 @@
           <div :class="`mt-4 ${themedTextsColor}`">
             {{ profileData.username }}
           </div>
-          <UButton v-if="isOwnProfile && profileData.existsAvatarAtUrl" label="Clear Avatar" variant="ghost" class="cursor-pointer mt-1" color="error" @click="clearAvatar" />
+          <UButton v-if="isOwnProfile && existsOwnAvatar" label="Clear Avatar" variant="ghost" class="cursor-pointer mt-1" color="error" @click="clearAvatar" />
         </div>
         <div class="profile-container">
           <div class="section-container">
@@ -58,16 +58,6 @@
                 class="self-center"
               />
               <div class="grow" />
-              <UButton
-                v-if="!isOwnProfile"
-                :icon="'i-lucide-message-circle-more'"
-                size="lg"
-                variant="soft"
-                color="primary"
-                class="cursor-pointer self-center"
-                @click="openChat(profileUserId)"> 
-                Chat 
-              </UButton>
               <UButton
                 v-if="isOwnProfile"
                 :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pencil'"
@@ -185,9 +175,10 @@ import { userLimits } from "~~/validation/commonLimits";
 import { displayNameSchema } from "~~/validation/schemas/input/inputUserSchemas";
 import type { UserData } from "~/composables/useUserData";
 import { getStorageErrorMessage, logStorageError } from '~~/errors/storageErrors';
-import type { Tables } from '~~/database.types';
+import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
+import { getPostgrestErrorMessage, logPostgrestError } from "~~/errors/postgrestErrors";
 
-type ProfileUserData = Pick<UserData, 'avatarUrl' | 'avatarPath' | 'existsAvatarAtUrl' | 'username' | 'displayname' | 'description'>;
+type ProfileUserData = Pick<UserData, 'avatarUrl' | 'avatarPath' | 'username' | 'displayname' | 'description'>;
 
 const route = useRoute();
 const supabase = useSupabaseClient();
@@ -200,12 +191,16 @@ const routeUsername = computed(() => {
   const params = route.params;
   return params.username as string;
 });
-const isOwnProfile = computed(() => userData.username === routeUsername.value);
+const isOwnProfile = computed(() =>  routeUsername.value === userData.username);
+const existsOwnAvatar = ref(false);
 const newAvatarObjectUrl = ref<string | null>(null);
 const showAvatarCroppingModal = ref(false);
 
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
+const profileTitle = computed(() => loading.value ? 'Loading...' :
+  (isOwnProfile.value ? 'Your Profile' :
+  `${profileData.value?.username ?? ''}'${profileData.value?.username.endsWith('s') ? '' : 's'} Profile`))
 
 const isEditingName = ref(false);
 const newDisplayName = ref("");
@@ -250,57 +245,46 @@ const showDescriptionLengthIndicator = computed(
 );
 
 async function loadUserProfile(username: string) {
-  try {
-    loading.value = true;
+  loading.value = true;
 
-    // If it's the current user, get data from users metadata
-    if (isOwnProfile.value) {
-      watch(userData, (newUserData) => {
-        profileData.value = {
-          avatarUrl: newUserData.avatarUrl,
-          avatarPath: newUserData.avatarPath,
-          existsAvatarAtUrl: newUserData.existsAvatarAtUrl,
-          username: newUserData.username,
-          displayname: newUserData.displayname,
-          description: newUserData.description,
-        };
-      }, {
-        immediate: true,
-      })
-    } else {
-      // Fetch other user's profile from database
-      const { data, error: dbError } = await supabase
-        .from('profiles')
-        .select('user_id, displayname, description')
-        .eq('username', username)
-        .single();
-
-      if (dbError || !data) {
-        console.error('Error fetching profile:', dbError);
-        return;
-      }
-
-      const dbProfile: Omit<Tables<'profiles'>, 'username'> = data;
-      const avatarPath = `public/${dbProfile.user_id}.jpg`;
-      const avatarUrlData = supabase.storage
-        .from("avatars")
-        .getPublicUrl(avatarPath);
-      const avatarUrl = avatarUrlData.data.publicUrl;
-      const { data: existsAvatarAtUrl } = await supabase.storage.from('avatars').exists(avatarPath);
-
+  // If it's the current user, get data from users metadata
+  if (isOwnProfile.value) {
+    watch(userData, (newUserData) => {
       profileData.value = {
-        ...dbProfile,
-        username,
-        avatarPath,
-        avatarUrl,
-        existsAvatarAtUrl,
+        avatarUrl: newUserData.avatarUrl,
+        avatarPath: newUserData.avatarPath,
+        username: newUserData.username,
+        displayname: newUserData.displayname,
+        description: newUserData.description,
       };
+    }, {
+      immediate: true,
+    })
+  } else {
+    // Fetch other user's profile from database
+    const { data, error: dbError } = await supabase
+      .from('profiles')
+      .select('user_id, displayname, description')
+      .eq('username', username)
+      .single();
+
+    if (dbError) {
+      logPostgrestError(dbError, 'profile loading');
+      operationFeedbackHandler.displayError(getPostgrestErrorMessage(dbError, 'Unknown error loading profile'));
+      return;
     }
-  } catch (err) {
-    console.error('Error loading profile:', err);
-  } finally {
-    loading.value = false;
+
+    const avatarPath = getAvatarPath(data.user_id);
+    const avatarUrl = getAvatarUrl(data.user_id);
+
+    profileData.value = {
+      ...data,
+      username,
+      avatarPath,
+      avatarUrl,
+    };
   }
+  loading.value = false;
 }
 
 async function updateProfileData(
@@ -308,8 +292,8 @@ async function updateProfileData(
 ) {
   const { error } = await supabase.auth.updateUser({ data });
   if (error) {
-    console.log(`Error updating profile: ${error}`);
-    operationFeedbackHandler.displayError('Could not update profile data.');
+    logAuthError(error, 'profile update');
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error, 'Could not update profile data.'));
   } else {
     operationFeedbackHandler.displaySuccess('Updated profile.');
   }
@@ -331,14 +315,19 @@ async function onUploadCroppedAvatar(blob: Blob) {
     .upload(userData.avatarPath, blob, {
       upsert: true,
       contentType: 'image/jpeg',
-      cacheControl: 'no-cache',
+      cacheControl: '0',
+
+      // Kind of unnecessary next to max-age=0, but better be on the safe side ;)
+      headers: {
+        'cache-control': 'no-cache',
+      },
     });
   if (error) {
     logStorageError(error, 'avatar upload');
     operationFeedbackHandler.displayError(getStorageErrorMessage(error, 'Unknown error uploading avatar'));
     return;
   } else {
-    userData.existsAvatarAtUrl = true;
+    existsOwnAvatar.value = true;
     operationFeedbackHandler.displaySuccess('Your avatar has been updated. You may need to reload the page.');
   }
 }
@@ -349,7 +338,7 @@ async function clearAvatar() {
   if (error) {
     operationFeedbackHandler.displayError('Could not clear your avatar.');
   } else {
-    userData.existsAvatarAtUrl = false;
+    existsOwnAvatar.value = false;
   }
 }
 
@@ -379,6 +368,12 @@ async function attachDisplayNameInputEnterHandler() {
       if (e.code === "Enter") saveDisplayName();
     });
 }
+
+onNuxtReady(async () => {
+  if (!isOwnProfile.value) return; // Value only needed on the own profile page
+  const {data} = await supabase.storage.from('avatars').exists(userData.avatarPath);
+  existsOwnAvatar.value = data;
+})
 
 onMounted(() => {
   loadUserProfile(routeUsername.value);

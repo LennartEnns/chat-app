@@ -24,7 +24,7 @@ import { z } from 'zod';
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { emailSchema } from '~~/validation/schemas/input/inputUserSchemas';
 
-const emit = defineEmits<{ close: [string | null] }>()
+const emit = defineEmits<{ close: [string | null] }>();
 
 const schema = z.object({
   email: emailSchema,

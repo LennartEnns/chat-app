@@ -1,22 +1,8 @@
-export interface Users {
-    user_id: string;
-    username: string;
-    displayname: string;
-    description: string;
-}
+import type { Tables } from "~~/database.types";
+import type { CommandPaletteItem } from '@nuxt/ui';
 
-export interface CommandItem {
-    id: string;
-    label: string;
-    suffix: string;
-    to: string;
-    target: string;
-    avatar: { src: string };
-    raw: Users;
-}
-
-export interface CommandGroup {
-    id: string;
-    label: string;
-    items: CommandItem[];
+export type UserSearchColumns = 'user_id' | 'username' | 'displayname';
+export type UserSearchResult = Pick<Tables<'profiles'>, UserSearchColumns>;
+export interface UserCommandPaletteItem extends CommandPaletteItem {
+  user: UserSearchResult,
 }

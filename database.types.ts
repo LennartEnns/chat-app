@@ -65,7 +65,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           chatroom_id?: string
@@ -86,19 +86,19 @@ export type Database = {
       }
       profiles: {
         Row: {
-          description: string
+          description: string | null
           displayname: string | null
           user_id: string
           username: string
         }
         Insert: {
-          description?: string
+          description?: string | null
           displayname?: string | null
           user_id: string
           username: string
         }
         Update: {
-          description?: string
+          description?: string | null
           displayname?: string | null
           user_id?: string
           username?: string

@@ -2,97 +2,30 @@
   <NuxtLayout name="logged-in">
     <div class="main-layout grow">
       <!--Mobile UI drawer for choosing chats-->
-      <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
+      <UDrawer v-if="isMobile" v-model:open="drawerOpen" direction="bottom">
         <template #body>
           <div class="align-column">
-            <UModal v-model:open="open" class="mb-[10px]">
+            <ModalSearchUser @close="onUserSelect">
               <UButton
-                label="Search users..."
+                label="Search Users"
                 color="neutral"
                 variant="subtle"
                 icon="i-lucide-search"
               />
-              <template>
-                <UAvatar src="https://github.com/benjamincanac.png" />
-              </template>
-              <template #content>
-                <UCommandPalette
-                  close
-                  v-model:search-term="searchTerm"
-                  :groups="groups"
-                  @update:open="open = $event"
-                  @keydown="handleKeydown">
-                  <template #empty="{ searchTerm }">
-                    Search for a user
-                  </template>
-                </UCommandPalette>
-              </template>
-            </UModal>
-            <UButton
-              class="chat"
-              :avatar="{
-                src: 'https://github.com/nuxt.png',
-              }"
-              color="primary"
-              variant="outline"
-              size="xl"
-              >Florian Steckchen</UButton
-            >
-            <UButton
-              class="chat"
-              :avatar="{
-                src: 'https://github.com/nuxt.png',
-              }"
-              color="primary"
-              variant="outline"
-              size="xl"
-              >Johannes Weigel</UButton
-            >
+            </ModalSearchUser>
           </div>
         </template>
       </UDrawer>
       <!--Desktop column for choosing chats-->
-      <div class="align-column" v-if="!isMobile">
-        <UModal v-model:open="open" class="mb-[10px]">
+      <div v-if="!isMobile" class="align-column">
+        <ModalSearchUser @close="onUserSelect">
           <UButton
-            label="Search users..."
+            label="Search Users"
             color="neutral"
             variant="subtle"
             icon="i-lucide-search"
           />
-          <template #content>
-            <UCommandPalette
-              close
-              v-model:search-term="searchTerm"
-              :groups="groups"
-              @update:open="open = $event"
-              @keydown="handleKeydown">
-              <template #empty="{ searchTerm }">
-                Search for a user
-              </template>
-            </UCommandPalette>
-          </template>
-        </UModal>
-        <UButton
-          class="chat"
-          :avatar="{
-            src: 'https://github.com/nuxt.png',
-          }"
-          color="primary"
-          variant="outline"
-          size="xl"
-          >Florian Steckchen</UButton
-        >
-        <UButton
-          class="chat"
-          :avatar="{
-            src: 'https://github.com/nuxt.png',
-          }"
-          color="primary"
-          variant="outline"
-          size="xl"
-          >Johannes Weigel</UButton
-        >
+        </ModalSearchUser>
       </div>
       <!--Messaging column-->
       <div class="align-column">
@@ -102,7 +35,7 @@
             <h1>Florian Steckchen</h1>
           </div>
         </UCard>
-        <div class="messages" ref="messagesContainer">
+        <div ref="messagesContainer" class="messages">
           <!--example messages-->
           <div :class="`message partner ${themedPartnerMessageColor}`">
             <UAvatar
@@ -126,7 +59,7 @@
             :key="index"
             :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
           >
-            <UAvatar class="justify-self-center" :src="avatarUrl" />
+            <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
             <div class="message-content">
               <p>{{ message.text }}</p>
               <span class="message-time">{{ message.timestamp }}</span>
@@ -143,7 +76,7 @@
             :rows="4"
             :maxrows="4"
           />
-          <UButton @click="sendMessage" :class="`${themedUserMessageColor}`"
+          <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
             ><Icon name="ic:baseline-send"
           /></UButton>
         </div>
@@ -153,25 +86,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-import { useUserSearch } from "~/composables/useUserSearch";
-import type { Database } from "@@/database.types";
+import { getPostgrestErrorMessage, logPostgrestError } from "~~/errors/postgrestErrors";
+import type { UserSearchResult } from "~/types/userSearch";
 
-//search bar
-const { searchTerm, groups, handleKeydown } = useUserSearch();
-const open = ref<boolean>(false);
-
-// responsive mobile UI
 const isMobile = useMobileDetector();
-
-// login dialogue
 useFirstLoginDetector();
-
-// drawer
 const drawerOpen = useOpenDrawer();
-
-//theming
 const { isLight } = useSSRSafeTheme();
+const operationFeedbackHandler = useOperationFeedbackHandler();
+const userData = useUserData();
+const supabase = useSupabaseClient();
 
 const themedUserMessageColor = computed(() =>
   isLight.value ? "user-light" : "user-dark"
@@ -181,25 +105,55 @@ const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
 
-// user data
-const account = useUserData();
-const avatarUrl = getAvatarUrl(account.id);
-
 // messages and writing
+type DisplayedMessage = {
+  text: string,
+  timestamp: string,
+}
 const newMessage = ref<string>("");
-const userMessages = ref<any[]>([]);
-const messagesContainer = ref<any>(null);
+const userMessages = ref<DisplayedMessage[]>([]);
+const messagesContainer = ref<HTMLElement | null>(null);
 
-// databasae
-const supabase = useSupabaseClient<Database>();
+// Load messages from database and push to chat UI
+async function loadFromDatabase() {
+  const { data, error } = (await supabase.from("messages").select('*'));
 
-// pushes written message to chat UI & database
-function sendMessage(): void {
+  if (error) {
+    logPostgrestError(error, 'message fetching');
+    operationFeedbackHandler.displayError(getPostgrestErrorMessage(error, 'Unknown message fetching error'));
+    return;
+  }
+  data.forEach((element) => {
+    userMessages.value.push({
+      text: element.content,
+      timestamp: dateToHMTime(new Date(element.created_at)),
+    });
+  });
+}
+
+// Save messages to database
+async function saveToDatabase(message: string) {
+  const { error } = await supabase
+    .from("messages")
+    .insert([
+      {
+        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
+        content: message,
+      },
+    ]);
+
+  if (error) {
+    logPostgrestError(error, 'message insert');
+    operationFeedbackHandler.displayError(getPostgrestErrorMessage(error, 'Unknown message upload error'));
+  }
+
+  return null;
+}
+
+// Push written message to chat UI & database
+async function sendMessage() {
   if (newMessage.value.trim()) {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const timestamp = `${hours}:${minutes}`;
+    const timestamp = dateToHMTime(new Date());
     saveToDatabase(newMessage.value.trim());
     userMessages.value.push({
       text: newMessage.value.trim(),
@@ -209,70 +163,28 @@ function sendMessage(): void {
   }
 }
 
-// saves messages to database
-async function saveToDatabase(message: string) {
-  const { data, error } = await supabase
-    .from("messages")
-    .insert([
-      {
-        user_id: account.id,
-        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
-        content: message,
-      },
-    ])
-    .select();
-
-  if (error) {
-    console.error("Error inserting message:", error);
-    return null;
-  }
-
-  return null;
-}
-
-// load messages from database and push to chat UI
-async function loadFromDatabase() {
-  const { data, error } = (await supabase.from("messages").select("*")) as any;
-
-  if (error) {
-    console.error("Error loading messages:", error);
-    return null;
-  }
-  data.forEach((element: any) => {
-    userMessages.value.push({
-      text: element["content"],
-      timestamp: parseTimeStamp(element["created_at"]),
-    });
-  });
-  console.log(data);
-  return null;
-}
-
-// format database timestamp to UI format
-function parseTimeStamp(timestamp: string) {
-  const date = new Date(timestamp);
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const timestampDB = `${hours}:${minutes}`;
-  return timestampDB;
-}
-
 // Enable using enter for sending a message
-function handleKeyDown(event: KeyboardEvent): void {
+async function handleKeyDown(event: KeyboardEvent) {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 }
 
-// make the screen scroll down on sending
-const scrollToBottom = async (): Promise<void> => {
+// Scroll to the newest message
+async function scrollToBottom() {
   await nextTick();
   const component = messagesContainer.value;
   if (component) {
     component.scrollTop = component.scrollHeight;
   }
 };
+
+// Handle user selection in the command palette
+async function onUserSelect(result: UserSearchResult | null) {
+  if (!result) return;
+  navigateTo(`/profile/${result.username}`);
+}
 
 watch(
   userMessages,
