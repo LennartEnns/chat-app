@@ -52,6 +52,38 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          chatroom_id: string
+          created_at: string
+          invitee_id: string
+          invitor_id: string
+          role: Database["public"]["Enums"]["chatroom_role"]
+        }
+        Insert: {
+          chatroom_id: string
+          created_at?: string
+          invitee_id: string
+          invitor_id?: string
+          role: Database["public"]["Enums"]["chatroom_role"]
+        }
+        Update: {
+          chatroom_id?: string
+          created_at?: string
+          invitee_id?: string
+          invitor_id?: string
+          role?: Database["public"]["Enums"]["chatroom_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           chatroom_id: string
@@ -76,11 +108,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "messages_user_id_chatroom_id_fkey"
-            columns: ["user_id", "chatroom_id"]
+            foreignKeyName: "messages_chatroom_id_fkey"
+            columns: ["chatroom_id"]
             isOneToOne: false
-            referencedRelation: "user_to_chatroom"
-            referencedColumns: ["user_id", "chatroom_id"]
+            referencedRelation: "chatrooms"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -108,14 +140,17 @@ export type Database = {
       user_to_chatroom: {
         Row: {
           chatroom_id: string
+          role: Database["public"]["Enums"]["chatroom_role"]
           user_id: string
         }
         Insert: {
           chatroom_id: string
+          role: Database["public"]["Enums"]["chatroom_role"]
           user_id: string
         }
         Update: {
           chatroom_id?: string
+          role?: Database["public"]["Enums"]["chatroom_role"]
           user_id?: string
         }
         Relationships: [
@@ -133,13 +168,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_user_in_chatroom: {
+      get_role_in_chatroom: {
         Args: { uid: string; cid: string }
-        Returns: boolean
+        Returns: Database["public"]["Enums"]["chatroom_role"]
+      }
+      get_role_in_invitation: {
+        Args: { uid: string; cid: string }
+        Returns: Database["public"]["Enums"]["chatroom_role"]
       }
     }
     Enums: {
-      [_ in never]: never
+      chatroom_role: "admin" | "mod" | "member" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -257,7 +296,9 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      chatroom_role: ["admin", "mod", "member", "viewer"],
+    },
   },
 } as const
 

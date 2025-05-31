@@ -16,6 +16,7 @@ begin
   return null;
 end;
 $$;
+revoke execute on function public.auto_delete_empty_chatroom() from authenticated, anon;
 
 create trigger auto_delete_empty_chatroom
   after delete on public.user_to_chatroom

@@ -14,6 +14,7 @@ begin
   return new;
 end;
 $$;
+revoke execute on function public.handle_new_user() from authenticated, anon;
 
 -- trigger the function every time a user is created
 create trigger on_auth_user_created
