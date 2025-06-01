@@ -7,4 +7,4 @@ as $$
   select role from public.user_to_chatroom
   where user_id = uid and chatroom_id = cid
 $$;
-revoke execute on function public.get_role_in_chatroom(uuid, uuid) from authenticated, anon;
+revoke all on function public.get_role_in_chatroom(uuid, uuid) from authenticated, anon;

@@ -4,7 +4,7 @@ language sql
 security definer set search_path = ''
 stable
 as $$
-  select role from public.invitations
+  select as_role from public.invitations
   where invitee_id = uid and chatroom_id = cid
 $$;
-revoke execute on function public.get_role_in_invitation(uuid, uuid) from authenticated, anon;
+revoke all on function public.get_role_in_invitation(uuid, uuid) from authenticated, anon;

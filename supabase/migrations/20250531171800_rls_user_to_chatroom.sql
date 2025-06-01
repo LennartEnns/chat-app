@@ -41,3 +41,12 @@ on user_to_chatroom for delete to authenticated
 using (
   user_id = (select auth.uid())
 );
+
+-- Only the role column can be updated
+revoke update
+on table public.user_to_chatroom
+from authenticated;
+
+grant update (role)
+on table public.user_to_chatroom
+to authenticated;

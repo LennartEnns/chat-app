@@ -16,7 +16,7 @@ create policy "Mods can invite users as member/viewer"
 on invitations for insert to authenticated
 with check (
   get_role_in_chatroom((select auth.uid()), invitations.chatroom_id) = 'mod'
-  and invitations.role in ('member', 'viewer')
+  and invitations.as_role in ('member', 'viewer')
   and invitations.invitor_id is null
 );
 

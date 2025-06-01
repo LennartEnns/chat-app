@@ -14,7 +14,7 @@ begin
   return new;
 end;
 $$;
-revoke execute on function public.handle_new_chatroom() from authenticated, anon;
+revoke all on function public.handle_new_chatroom() from authenticated, anon;
 
 -- trigger the function for each chatroom that is inserted
 create trigger on_public_chatroom_created

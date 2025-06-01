@@ -12,7 +12,7 @@ begin
   return new;
 end;
 $$;
-revoke execute on function public.handle_new_user_to_chatroom() from authenticated, anon;
+revoke all on function public.handle_new_user_to_chatroom() from authenticated, anon;
 
 -- trigger the function for each user_to_chatroom association that is inserted
 create trigger on_public_user_to_chatroom_created

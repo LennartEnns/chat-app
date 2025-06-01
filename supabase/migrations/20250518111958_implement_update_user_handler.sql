@@ -15,7 +15,7 @@ begin
   return new;
 end;
 $$;
-revoke execute on function public.handle_user_metadata_update() from authenticated, anon;
+revoke all on function public.handle_user_metadata_update() from authenticated, anon;
 
 -- trigger the function every time a user is updated with new new metadata
 create trigger on_auth_user_updated
