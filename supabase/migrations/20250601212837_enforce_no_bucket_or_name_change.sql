@@ -1,5 +1,5 @@
 -- Prevents all storage objects from being renamed/relocated
-create or replace function prevent_immutable_storage_updates()
+create or replace function prevent_storage_object_relocation()
 returns trigger
 language plpgsql
 security definer set search_path = ''
@@ -16,9 +16,9 @@ begin
   return new;
 end;
 $$;
-revoke all on function prevent_immutable_storage_updates() from authenticated, anon;
+revoke all on function prevent_storage_object_relocation() from authenticated, anon;
 
 create trigger no_bucket_or_name_change
 before update on storage.objects
 for each row
-execute procedure prevent_immutable_storage_updates();
+execute procedure prevent_storage_object_relocation();
