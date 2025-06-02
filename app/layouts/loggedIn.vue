@@ -100,7 +100,7 @@
           </div>
         </template>
       </UModal>
-      <div class="pt-[1vh] pb-[3vh] flex-grow"><slot /></div>
+      <div class="pt-[1vh] pb-[2vh] flex-grow"><slot /></div>
     </div>
   </div>
 </template>

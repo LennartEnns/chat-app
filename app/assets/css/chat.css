@@ -16,7 +16,8 @@
 }
 
 .align-column {
-  padding: 1vh 5vh;
+  padding: 0vh 5vh;
+  padding-top: 1vh;
   height: 100%;
   overflow: hidden;
   display: flex;
