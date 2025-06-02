@@ -1,0 +1,7 @@
+.member {
+  display: grid;
+  grid-template-columns: 1fr 5fr;
+  width: 200px;
+  border-radius: 5px;
+  padding: 0.6rem;
+}
