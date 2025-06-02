@@ -9,8 +9,9 @@ using (
 create policy "Users can add themselves as members based on an invitation"
 on user_to_chatroom for insert to authenticated
 with check (
-  user_to_chatroom.role is not null
-  and get_role_in_invitation((select auth.uid()), user_to_chatroom.chatroom_id) = user_to_chatroom.role
+  user_to_chatroom.user_id = (select auth.uid())
+  and user_to_chatroom.role is not null
+  and get_role_in_invitation(user_to_chatroom.user_id, user_to_chatroom.chatroom_id) = user_to_chatroom.role
 );
 
 create policy "Mods can convert member to viewer and vice versa"

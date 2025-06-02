@@ -5,6 +5,9 @@ language plpgsql
 security definer set search_path = ''
 as $$
 begin
+  if auth.uid() is null then 
+    return new;
+  end if;
   insert into public.user_to_chatroom (user_id, chatroom_id, role)
   values (
     (select auth.uid()),
