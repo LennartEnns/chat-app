@@ -100,7 +100,7 @@
           </div>
         </template>
       </UModal>
-      <slot />
+      <div class="pt-[1vh] flex-grow"><slot /></div>
     </div>
   </div>
 </template>
@@ -141,8 +141,10 @@ async function logout(scope: "global" | "local" | "others") {
     scope,
   });
   if (error) {
-    logAuthError(error, 'logout');
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error, "Unexpected error during logout"));
+    logAuthError(error, "logout");
+    operationFeedbackHandler.displayError(
+      getAuthErrorMessage(error, "Unexpected error during logout")
+    );
   } else if (scope === "others") {
     operationFeedbackHandler.displaySuccess(
       "All other sessions have been terminated."
