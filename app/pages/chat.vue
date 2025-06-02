@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout
     name="logged-in"
-    :class="`${isLight ? 'base' : 'base-dark'} max-h-dvh `"
+    :class="`${isLight ? 'base' : 'base-dark'} max-h-dvh`"
   >
     <div class="main-layout grow">
       <!--Mobile UI drawer for choosing chats-->
@@ -73,8 +73,8 @@
         <!--Text Input for new messages-->
         <div class="write">
           <UTextarea
-            variant="subtle"
             v-model="newMessage"
+            variant="subtle"
             class="w-full glassBG"
             placeholder="Write a message..."
             autoresize

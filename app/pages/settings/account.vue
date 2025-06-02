@@ -3,7 +3,7 @@
     <div class="w-full flex align-center justify-center mt-2">
       <UAvatar
         class="border-2"
-        :src="userData.existsAvatarAtUrl ? userData.avatarUrl : undefined"
+        :src="userData.avatarUrl"
         icon="i-lucide-user"
         :ui="{ root: 'size-10', icon: 'size-8' }"
       />

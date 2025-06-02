@@ -1,13 +1,13 @@
 <template>
-  <GradientBackground>
+  <NuxtLayout name="gradient-background">
     <div>
       <slot />
     </div>
-  </GradientBackground>
+  </NuxtLayout>
 </template>
 
 <script setup>
-import GradientBackground from "~/layouts/gradientBackground.vue";
+
 </script>
 
 <style></style>

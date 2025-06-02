@@ -5,7 +5,7 @@
         :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
             ${
               isMobile
-                ? 'justify-between py-1 border-b-1 border-neutral-500'
+                ? 'justify-between py-1'
                 : ''
             }`"
       >
@@ -100,7 +100,7 @@
           </div>
         </template>
       </UModal>
-      <div class="pt-[1vh] flex-grow"><slot /></div>
+      <div class="pt-[1vh] pb-[3vh] flex-grow"><slot /></div>
     </div>
   </div>
 </template>
