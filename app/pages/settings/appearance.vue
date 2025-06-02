@@ -23,7 +23,11 @@
       <template #item="{ item }">
         <div
           class="flex items-center gap-2 relative overflow-hidden"
-          :class="{ 'shine-effect': item.isCurrent }"
+          :class="{
+            'shine-effect': item.isCurrent,
+            'shine-effect-background-light': isLight,
+            'shine-effect-background-dark': !isLight,
+            }"
         >
           <div class="w-4 h-4 rounded" :class="item.colorClass" />
           <span
@@ -42,7 +46,7 @@
 <script lang="ts" setup>
 import type { DropdownMenuItem, RadioGroupItem } from "@nuxt/ui";
 
-const { preference } = useSSRSafeTheme();
+const { preference, isLight } = useSSRSafeTheme();
 const preferredPrimary = useCookie("uiPrimary");
 const isMobile = useMobileDetector();
 
@@ -163,7 +167,6 @@ const colorItems: ColorItem[] = [
 <style scoped>
 .bioGroup {
   display: flex;
-
   height: max-content;
 }
 
@@ -199,13 +202,23 @@ const colorItems: ColorItem[] = [
   left: -100%;
   width: 50%;
   height: 100%;
+  animation: shine 2s infinite;
+}
+.shine-effect-background-light::after {
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.7),
+    transparent
+  );
+}
+.shine-effect-background-dark::after {
   background: linear-gradient(
     to right,
     transparent,
     rgba(255, 255, 255, 0.3),
     transparent
   );
-  animation: shine 2s infinite;
 }
 
 @keyframes shine {

@@ -1,90 +1,58 @@
 <template>
-  <NuxtLayout
-    name="logged-in"
-    :class="`${isLight ? 'base' : 'base-dark'} max-h-dvh`"
-  >
-    <div class="main-layout grow">
-      <!--Mobile UI drawer for choosing chats-->
-      <UDrawer v-if="isMobile" v-model:open="drawerOpen" direction="bottom">
-        <template #body>
-          <div class="align-column">
-            <ModalSearchUser @close="onUserSelect">
-              <UButton
-                label="Search Users"
-                color="neutral"
-                variant="subtle"
-                icon="i-lucide-search"
-                class="glassContainer"
-              />
-            </ModalSearchUser>
-          </div>
-        </template>
-      </UDrawer>
-      <!--Desktop column for choosing chats-->
-      <div v-if="!isMobile" class="align-column">
-        <ModalSearchUser @close="onUserSelect">
-          <UButton
-            label="Search Users"
-            color="neutral"
-            variant="subtle"
-            icon="i-lucide-search"
+  <NuxtLayout name="chat">
+    <!--Messaging column-->
+    <div class="align-column">
+      <UCard class="profile-bar" variant="subtle">
+        <div class="flex items-center gap-2">
+          <UAvatar src="https://github.com/nuxt.png" />
+          <h1 class="text-black dark:text-white">Florian Steckchen</h1>
+        </div>
+      </UCard>
+      <div ref="messagesContainer" class="messages">
+        <!--example messages-->
+        <div :class="`message partner ${themedPartnerMessageColor}`">
+          <UAvatar
+            class="justify-self-center"
+            src="https://github.com/nuxt.png"
           />
-        </ModalSearchUser>
+          <div class="message-content">
+            <p>
+              User messages are now saved to the database and loaded on
+              page-reload. Start messaging today! **Note** If you want to test
+              this create a local chatroom and add your logged in user's ID to
+              it all via http://localhost:54323/. Afterwards change the
+              currently hardcoded chatroom_id to this chatroom's ID. Now you
+              can use the database!
+            </p>
+            <span class="message-time">12:48</span>
+          </div>
+        </div>
+        <div
+          v-for="(message, index) in userMessages"
+          :key="index"
+          :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
+        >
+          <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
+          <div class="message-content">
+            <p>{{ message.text }}</p>
+            <span class="message-time">{{ message.timestamp }}</span>
+          </div>
+        </div>
       </div>
-      <!--Messaging column-->
-      <div class="align-column">
-        <UCard class="profile-bar" variant="subtle">
-          <div class="flex items-center gap-2">
-            <UAvatar src="https://github.com/nuxt.png" />
-            <h1 class="text-black dark:text-white">Florian Steckchen</h1>
-          </div>
-        </UCard>
-        <div ref="messagesContainer" class="messages">
-          <!--example messages-->
-          <div :class="`message partner ${themedPartnerMessageColor}`">
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
-            <div class="message-content">
-              <p>
-                User messages are now saved to the database and loaded on
-                page-reload. Start messaging today! **Note** If you want to test
-                this create a local chatroom and add your logged in user's ID to
-                it all via http://localhost:54323/. Afterwards change the
-                currently hardcoded chatroom_id to this chatroom's ID. Now you
-                can use the database!
-              </p>
-              <span class="message-time">12:48</span>
-            </div>
-          </div>
-          <div
-            v-for="(message, index) in userMessages"
-            :key="index"
-            :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
-          >
-            <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
-            <div class="message-content">
-              <p>{{ message.text }}</p>
-              <span class="message-time">{{ message.timestamp }}</span>
-            </div>
-          </div>
-        </div>
-        <!--Text Input for new messages-->
-        <div class="write">
-          <UTextarea
-            v-model="newMessage"
-            variant="subtle"
-            class="w-full glassBG"
-            placeholder="Write a message..."
-            autoresize
-            :rows="4"
-            :maxrows="4"
-          />
-          <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
-            ><Icon name="ic:baseline-send"
-          /></UButton>
-        </div>
+      <!--Text Input for new messages-->
+      <div class="write">
+        <UTextarea
+          v-model="newMessage"
+          variant="subtle"
+          class="w-full glassBG"
+          placeholder="Write a message..."
+          autoresize
+          :rows="4"
+          :maxrows="4"
+        />
+        <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
+          ><Icon name="ic:baseline-send"
+        /></UButton>
       </div>
     </div>
   </NuxtLayout>
@@ -95,11 +63,8 @@ import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
-import type { UserSearchResult } from "~/types/userSearch";
 
-const isMobile = useMobileDetector();
 useFirstLoginDetector();
-const drawerOpen = useOpenDrawer();
 const { isLight } = useSSRSafeTheme();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
@@ -188,12 +153,6 @@ async function scrollToBottom() {
   if (component) {
     component.scrollTop = component.scrollHeight;
   }
-}
-
-// Handle user selection in the command palette
-async function onUserSelect(result: UserSearchResult | null) {
-  if (!result) return;
-  navigateTo(`/profile/${result.username}`);
 }
 
 watch(
