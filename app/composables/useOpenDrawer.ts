@@ -1,3 +1,3 @@
 export const useOpenDrawer = () => {
-    return useState<boolean>('drawerOpen', () => false);
-  };
+  return useState<boolean>('drawerOpen', () => false);
+};
