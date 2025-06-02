@@ -6,11 +6,11 @@ security definer set search_path = ''
 as $$
 begin
   if NEW.name is distinct from OLD.name then
-    raise exception 'Changing the file path is not allowed'
+    raise exception 'Changing the file path is not allowed';
   end if;
 
   if NEW.bucket_id is distinct from OLD.bucket_id then
-    raise exception 'Changing the bucket_id is not allowed'
+    raise exception 'Changing the bucket_id is not allowed';
   end if;
 
   return new;
