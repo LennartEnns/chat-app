@@ -4,7 +4,7 @@
     <UInput v-model="state.username" class="w-full" />
   </UFormField>
 
-  <UButton label="Change" class="cursor-pointer" type="submit" />
+  <UButton label="Change" variant="outline" class="cursor-pointer" type="submit" />
 </UForm>
 </template>
 
