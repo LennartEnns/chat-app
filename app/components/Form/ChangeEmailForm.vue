@@ -3,7 +3,7 @@
     <UFormField label="New Email Address" name="email" required>
       <UInput v-model="state.email" class="w-full" />
     </UFormField>
-    <UButton label="Change" class="cursor-pointer" type="submit" />
+    <UButton label="Change" variant="outline" class="cursor-pointer" type="submit" />
     <UModal
       v-model:open="showSuccessModal"
       :dismissible="false">
