@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="logged-in">
-    <div class="flex justify-center align-middle">
+    <div class="flex justify-center items-center">
       <div class="glassContainer w-[41rem] max-w-[90%] md:max-w-[70%]">
         <UModal
           v-model:open="showAvatarCroppingModal"
