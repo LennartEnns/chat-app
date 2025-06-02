@@ -101,13 +101,6 @@ const particleOptions: Reactive<RecursivePartial<IOptions>> = reactive({
         max: 10,
       },
     },
-    modes: {
-      parallax: {
-        enable: true,
-        force: 60, // How strong the parallax movement is
-        smooth: 10, // Smoothness of the movement
-      },
-    },
     shape: {
       type: "square",
     },

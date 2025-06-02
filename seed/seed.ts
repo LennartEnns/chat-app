@@ -49,7 +49,10 @@ const uploadAvatars = async () => {
       .upload(avatarUrl, avatarBuffer, {
         upsert: false,
         contentType: 'image/jpeg',
-        cacheControl: 'no-cache',
+        cacheControl: '0',
+        headers: {
+          'cache-control': 'no-cache',
+        },
       })
     if (uploadError) {
       console.log(uploadError);

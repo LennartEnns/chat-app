@@ -107,6 +107,7 @@
 
 <script lang="ts" setup>
 import type { NavigationMenuItem } from "@nuxt/ui";
+import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -140,10 +141,8 @@ async function logout(scope: "global" | "local" | "others") {
     scope,
   });
   if (error) {
-    console.log(`Logout error: ${error}`);
-    operationFeedbackHandler.displayError(
-      "An unexpected error occured during logout."
-    );
+    logAuthError(error, 'logout');
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error, "Unexpected error during logout"));
   } else if (scope === "others") {
     operationFeedbackHandler.displaySuccess(
       "All other sessions have been terminated."
