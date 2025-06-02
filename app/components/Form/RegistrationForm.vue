@@ -7,7 +7,7 @@
     }"
   >
     <template #header>
-      <p class="font-bold text-black">Register an Account</p>
+      <p class="font-bold text-black dark:text-white">Register an Account</p>
     </template>
 
     <UForm

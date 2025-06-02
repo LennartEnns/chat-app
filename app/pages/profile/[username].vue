@@ -22,7 +22,7 @@
           :ui="{ header: 'border-none' }"
         >
           <template #header>
-            <p class="font-bold text-black text-xl text-center">
+            <p class="font-bold text-black dark:text-white text-xl text-center">
               {{
                 loading
                   ? "Loading..."

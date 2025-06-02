@@ -1,5 +1,8 @@
 <template>
-  <NuxtLayout name="logged-in" class="max-h-dvh">
+  <NuxtLayout
+    name="logged-in"
+    :class="`${isLight ? 'base' : 'base-dark'} max-h-dvh `"
+  >
     <div class="main-layout grow">
       <!--Mobile UI drawer for choosing chats-->
       <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
@@ -98,7 +101,7 @@
         <UCard class="profile-bar" variant="subtle">
           <div class="flex items-center gap-2">
             <UAvatar src="https://github.com/nuxt.png" />
-            <h1 class="text-black">Florian Steckchen</h1>
+            <h1 class="text-black dark:text-white">Florian Steckchen</h1>
           </div>
         </UCard>
         <div class="messages" ref="messagesContainer">

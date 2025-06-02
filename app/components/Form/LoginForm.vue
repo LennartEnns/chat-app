@@ -7,7 +7,7 @@
     }"
   >
     <template #header>
-      <p class="font-bold text-black">Log into your Account</p>
+      <p class="font-bold text-black dark:text-white">Log into your Account</p>
     </template>
 
     <UForm
