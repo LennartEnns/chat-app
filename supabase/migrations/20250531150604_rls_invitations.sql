@@ -17,15 +17,22 @@ on invitations for insert to authenticated
 with check (
   get_role_in_chatroom((select auth.uid()), invitations.chatroom_id) = 'mod'
   and invitations.as_role in ('member', 'viewer')
-  and invitations.invitor_id is null
 );
 
 create policy "Admins can invite users as any role"
 on invitations for insert to authenticated
 with check (
   get_role_in_chatroom((select auth.uid()), invitations.chatroom_id) = 'admin'
-  and invitations.invitor_id is null
 );
+
+-- Allow only inserts of invitee_id, chatroom_id and as_role
+revoke insert
+on table public.invitations
+from authenticated;
+
+grant insert (invitee_id, chatroom_id, as_role)
+on table public.invitations
+to authenticated;
 
 -- Updating invitations is not allowed, so no permissive update policies
 
