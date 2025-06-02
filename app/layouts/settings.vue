@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout name="logged-in">
-    <div class="flex justify-center pageWrap grow">
-      <div class="mainContainer">
+    <div class="flex justify-center grow">
+      <div class="mainContainer max-w-[35rem] glassContainer">
         <UNavigationMenu :items="navMenuItems" class="w-full justify-center" />
         <slot />
       </div>
@@ -27,15 +27,10 @@ const navMenuItems = ref<NavigationMenuItem[]>([
 </script>
 
 <style scoped>
-.pageWrap {
-  padding: 20px;
-}
-
 .mainContainer {
   display: flex;
   flex-direction: column;
   gap: 1rem; /* Consistent spacing between sections */
   width: 100%;
-  max-width: 30rem;
 }
 </style>

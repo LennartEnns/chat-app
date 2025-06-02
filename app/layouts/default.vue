@@ -1,13 +1,13 @@
 <template>
+  <GradientBackground>
     <div>
-        <slot />
+      <slot />
     </div>
+  </GradientBackground>
 </template>
 
 <script setup>
-
+import GradientBackground from "~/layouts/gradientBackground.vue";
 </script>
 
-<style>
-
-</style>
+<style></style>

@@ -1,5 +1,8 @@
 <template>
-  <NuxtLayout name="logged-in">
+  <NuxtLayout
+    name="logged-in"
+    :class="`${isLight ? 'base' : 'base-dark'} max-h-dvh `"
+  >
     <div class="main-layout grow">
       <!--Mobile UI drawer for choosing chats-->
       <UDrawer v-if="isMobile" v-model:open="drawerOpen" direction="bottom">
@@ -11,6 +14,7 @@
                 color="neutral"
                 variant="subtle"
                 icon="i-lucide-search"
+                class="glassContainer"
               />
             </ModalSearchUser>
           </div>
@@ -29,10 +33,10 @@
       </div>
       <!--Messaging column-->
       <div class="align-column">
-        <UCard class="profile-bar">
+        <UCard class="profile-bar" variant="subtle">
           <div class="flex items-center gap-2">
             <UAvatar src="https://github.com/nuxt.png" />
-            <h1>Florian Steckchen</h1>
+            <h1 class="text-black dark:text-white">Florian Steckchen</h1>
           </div>
         </UCard>
         <div ref="messagesContainer" class="messages">
@@ -69,8 +73,9 @@
         <!--Text Input for new messages-->
         <div class="write">
           <UTextarea
+            variant="subtle"
             v-model="newMessage"
-            class="w-full"
+            class="w-full glassBG"
             placeholder="Write a message..."
             autoresize
             :rows="4"
@@ -86,7 +91,10 @@
 </template>
 
 <script setup lang="ts">
-import { getPostgrestErrorMessage, logPostgrestError } from "~~/errors/postgrestErrors";
+import {
+  getPostgrestErrorMessage,
+  logPostgrestError,
+} from "~~/errors/postgrestErrors";
 import type { UserSearchResult } from "~/types/userSearch";
 
 const isMobile = useMobileDetector();
@@ -107,20 +115,22 @@ const themedPartnerMessageColor = computed(() =>
 
 // messages and writing
 type DisplayedMessage = {
-  text: string,
-  timestamp: string,
-}
+  text: string;
+  timestamp: string;
+};
 const newMessage = ref<string>("");
 const userMessages = ref<DisplayedMessage[]>([]);
 const messagesContainer = ref<HTMLElement | null>(null);
 
 // Load messages from database and push to chat UI
 async function loadFromDatabase() {
-  const { data, error } = (await supabase.from("messages").select('*'));
+  const { data, error } = await supabase.from("messages").select("*");
 
   if (error) {
-    logPostgrestError(error, 'message fetching');
-    operationFeedbackHandler.displayError(getPostgrestErrorMessage(error, 'Unknown message fetching error'));
+    logPostgrestError(error, "message fetching");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown message fetching error")
+    );
     return;
   }
   data.forEach((element) => {
@@ -133,18 +143,18 @@ async function loadFromDatabase() {
 
 // Save messages to database
 async function saveToDatabase(message: string) {
-  const { error } = await supabase
-    .from("messages")
-    .insert([
-      {
-        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
-        content: message,
-      },
-    ]);
+  const { error } = await supabase.from("messages").insert([
+    {
+      chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
+      content: message,
+    },
+  ]);
 
   if (error) {
-    logPostgrestError(error, 'message insert');
-    operationFeedbackHandler.displayError(getPostgrestErrorMessage(error, 'Unknown message upload error'));
+    logPostgrestError(error, "message insert");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown message upload error")
+    );
   }
 
   return null;
@@ -178,7 +188,7 @@ async function scrollToBottom() {
   if (component) {
     component.scrollTop = component.scrollHeight;
   }
-};
+}
 
 // Handle user selection in the command palette
 async function onUserSelect(result: UserSearchResult | null) {

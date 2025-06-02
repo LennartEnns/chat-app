@@ -1,3 +1,9 @@
+.base {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+.base-dark {
+  background-color: rgba(0, 0, 0, 0.7);
+}
 .main-layout {
   height: 100%;
   min-width: 100%;
@@ -78,6 +84,7 @@
   min-width: fit-content;
 }
 .write div textarea {
+  background-color: color-mix(in srgb, var(--ui-bg) 30%, transparent);
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
 }
