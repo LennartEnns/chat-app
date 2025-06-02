@@ -36,17 +36,17 @@ export type Database = {
     Tables: {
       chatrooms: {
         Row: {
-          description: string
+          description: string | null
           id: string
           name: string
         }
         Insert: {
-          description?: string
+          description?: string | null
           id?: string
           name: string
         }
         Update: {
-          description?: string
+          description?: string | null
           id?: string
           name?: string
         }
@@ -54,25 +54,25 @@ export type Database = {
       }
       invitations: {
         Row: {
+          as_role: Database["public"]["Enums"]["chatroom_role"]
           chatroom_id: string
           created_at: string
           invitee_id: string
           invitor_id: string
-          role: Database["public"]["Enums"]["chatroom_role"]
         }
         Insert: {
+          as_role: Database["public"]["Enums"]["chatroom_role"]
           chatroom_id: string
           created_at?: string
           invitee_id: string
           invitor_id?: string
-          role: Database["public"]["Enums"]["chatroom_role"]
         }
         Update: {
+          as_role?: Database["public"]["Enums"]["chatroom_role"]
           chatroom_id?: string
           created_at?: string
           invitee_id?: string
           invitor_id?: string
-          role?: Database["public"]["Enums"]["chatroom_role"]
         }
         Relationships: [
           {
@@ -168,6 +168,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_filename_as_uuid: {
+        Args: { filename_with_extension: string }
+        Returns: string
+      }
       get_role_in_chatroom: {
         Args: { uid: string; cid: string }
         Returns: Database["public"]["Enums"]["chatroom_role"]
