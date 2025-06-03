@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="logged-in">
-    <div class="flex justify-center items-center">
+    <div class="flex justify-center align-middle">
       <div class="glassContainer w-[41rem] max-w-[90%] md:max-w-[70%]">
         <UModal
           v-model:open="showAvatarCroppingModal"
@@ -342,6 +342,13 @@ async function loadUserProfile(username: string) {
       .select("user_id, displayname, description")
       .eq("username", username)
       .single();
+
+    if(data == null){
+      showError({
+          statusCode: 404,
+          statusMessage: "The user you searched for is not found",
+      });
+    }
 
     if (dbError) {
       logPostgrestError(dbError, "profile loading");
