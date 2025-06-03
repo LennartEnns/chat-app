@@ -38,7 +38,7 @@ const props = defineProps<{
 }>()
 
 const themedUserColor = computed(() =>
-  isLight.value ? "user-light" : "user-dark"
+  isLight.value ? "user-light-mode" : "user-dark-mode"
 );
 const handleError = () => {
   if(authenticated == "authenticated"){
@@ -74,7 +74,7 @@ const gradientColor2 = computed(() => {
   }
 
   const colorShades = colors[primaryColor as keyof typeof colors]
-  return isLight.value ? colorShades[600] : "#0c1223"
+  return isLight.value ? colorShades[200] : "#0c1223"
 })
 
 const gradientColor1 = computed(() => {
@@ -92,7 +92,7 @@ const primaryColorValue = computed(() => {
   }
 
   const colorShades = colors[primaryColor as keyof typeof colors]
-  return colorShades[600]
+  return isLight.value ? colorShades[400] : colorShades[600];
 })
 </script>
 
@@ -136,14 +136,14 @@ const primaryColorValue = computed(() => {
   opacity: 1;
 }
   
-.user-dark {
-  background-color: color-mix(in srgb, v-bind(primaryColorValue));
+.user-dark-mode {
+  background-color: color-mix(in srgb, v-bind(primaryColorValue) 55%, transparent);
   color: white;
   border-color: v-bind(primaryColorValue);
 }
 
-.user-light {
-  background-color: color-mix(in srgb, v-bind(primaryColorValue) 100%, transparent);
+.user-light-mode {
+  background-color: color-mix(in srgb, v-bind(primaryColorValue) 65%, transparent);
   color: black;
   border-color: v-bind(primaryColorValue);
 }
