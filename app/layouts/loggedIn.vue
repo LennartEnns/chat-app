@@ -1,13 +1,9 @@
 <template>
   <div class="min-h-dvh h-full flex justify-center">
-    <div class="w-full max-w-[120rem] flex flex-col">
+    <div class="w-full max-w-[120rem] flex flex-col pb-[2vh]">
       <div
-        :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
-            ${
-              isMobile
-                ? 'justify-between py-1'
-                : ''
-            }`"
+        :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6  pb-[1vh]
+            ${isMobile ? 'justify-between py-1' : ''}`"
       >
         <UButton
           v-if="isMobile"
@@ -100,9 +96,7 @@
           </div>
         </template>
       </UModal>
-      <div class="pt-[1vh] pb-[2vh] flex-grow flex items-center justify-center">
-        <slot />
-      </div>
+      <slot />
     </div>
   </div>
 </template>
