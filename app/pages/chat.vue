@@ -56,7 +56,7 @@
       </UDrawer>
 
       <!--Desktop column for choosing chats-->
-      <div class="align-column" v-if="!isMobile">
+      <div v-if="!isMobile" class="align-column">
         <UModal v-model:open="open" class="mb-[10px]">
           <UButton
             label="Search users..."
@@ -196,6 +196,7 @@ import NewChat from "~/components/Form/NewChatForm.vue";
 const newChatModalOpen = ref(false);
 
 function openNewChatModal() {
+  drawerOpen.value = false;
   newChatModalOpen.value = true;
 }
 
