@@ -12,7 +12,7 @@
 
     <div class="space-y-4 w-3xs xl:w-2xs">
       <UFormField label="Chat-Typ" name="chatType" required>
-        <USelectMenu v-model="value" :items="items" class="w-48" />
+        <USelectMenu v-model="chatType" :items="items" class="w-48" />
       </UFormField>
 
       <UFormField label="Chat-Name" name="chatName" required>
@@ -24,7 +24,7 @@
       </UFormField>
 
       <UFormField
-        v-if="chatType === 'group'"
+        v-if="chatType === 'Gruppe'"
         label="Beschreibung (optional)"
         name="description"
       >
@@ -59,18 +59,17 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 
-const chatType = ref("private");
+const chatType = ref("Privat");
 const chatName = ref("");
 const description = ref("");
 
 const items = ref(["Privat", "Gruppe"]);
-const value = ref("Privat");
 
 function onCreate() {
   if (!chatName.value.trim()) return;
 
   emit("create", {
-    type: chatType.value,
+    type: chatType.value.toLowerCase(), // "privat" oder "gruppe"
     name: chatName.value.trim(),
     description: description.value.trim() || undefined,
   });
@@ -81,7 +80,7 @@ function onCancel() {
 }
 
 onMounted(() => {
-  chatType.value = "private";
+  chatType.value = "Privat";
   chatName.value = "";
   description.value = "";
 });
