@@ -40,12 +40,56 @@
         />
       </UFormField>
 
+      <UFormField :label="userSelectionLabel" name="users" required>
+        <div v-if="chatType === 'Privat'">
+          <USelectMenu
+            v-model="selectedUser"
+            :items="availableUsers"
+            searchable
+            placeholder="Wähle einen Benutzer aus..."
+            class="w-full"
+          />
+        </div>
+
+        <div v-else class="space-y-2">
+          <USelectMenu
+            v-model="userToAdd"
+            :items="availableUsersForGroup"
+            searchable
+            placeholder="Benutzer hinzufügen..."
+            class="w-full"
+            @update:model-value="addUserToGroup"
+          />
+
+          <div v-if="selectedUsers.length > 0" class="space-y-1">
+            <p class="text-sm text-gray-600">Ausgewählte Benutzer:</p>
+            <div class="flex flex-wrap gap-2">
+              <UBadge
+                v-for="user in selectedUsers"
+                :key="user.value"
+                color="primary"
+                variant="subtle"
+                class="flex items-center gap-1"
+              >
+                {{ user.label }}
+                <UButton
+                  icon="i-heroicons-x-mark-20-solid"
+                  color="primary"
+                  variant="ghost"
+                  @click="removeUserFromGroup(user)"
+                />
+              </UBadge>
+            </div>
+          </div>
+        </div>
+      </UFormField>
+
       <div class="flex gap-3 pt-2">
         <UButton
           class="flex-1"
           color="primary"
-          @click="onCreate"
           :disabled="isCreateDisabled"
+          @click="onCreate"
         >
           Erstellen
         </UButton>
@@ -59,13 +103,43 @@
 
 <script setup lang="ts">
 const emit = defineEmits<{
-  create: [data: { type: string; name: string; description?: string }];
+  create: [
+    data: {
+      type: string;
+      name: string;
+      description?: string;
+      users: string[];
+    }
+  ];
   cancel: [];
 }>();
 
 const chatType = ref("Privat");
 const chatName = ref("");
 const description = ref("");
+const selectedUser = ref<User | null>(null);
+const selectedUsers = ref<User[]>([]);
+const userToAdd = ref<User | null>(null);
+
+// Mock user
+const availableUsers = ref<User[]>([
+  { label: "Jakobyte", value: "user1" },
+  { label: "Vaterkinds", value: "user2" },
+  { label: "Lennator", value: "user3" },
+]);
+
+const userSelectionLabel = computed(() => {
+  return chatType.value === "Gruppe"
+    ? "Benutzer hinzufügen"
+    : "Benutzer auswählen";
+});
+
+const availableUsersForGroup = computed(() => {
+  return availableUsers.value.filter(
+    (user) =>
+      !selectedUsers.value.some((selected) => selected.value === user.value)
+  );
+});
 
 const items = ref(["Privat", "Group-chat"]);
 
@@ -82,21 +156,38 @@ const chatNamePlaceholder = computed(() => {
 });
 
 const isCreateDisabled = computed(() => {
-  if (chatType.value === "Group-chat") {
+  if (chatType.value === "Gruppe") {
     return !chatName.value.trim();
   }
+
+  if (chatType.value === "Privat") {
+    return !selectedUser.value;
+  }
+
   return false;
 });
 
 function onCreate() {
-  if (chatType.value === "Group-chat" && !chatName.value.trim()) {
+  if (chatType.value === "Gruppe" && !chatName.value.trim()) {
     return;
+  }
+
+  if (chatType.value === "Privat" && !selectedUser.value) {
+    return;
+  }
+
+  let userList: string[] = [];
+  if (chatType.value === "Privat" && selectedUser.value) {
+    userList = [selectedUser.value.value];
+  } else if (chatType.value === "Gruppe") {
+    userList = selectedUsers.value.map((user) => user.value);
   }
 
   emit("create", {
     type: chatType.value.toLowerCase(),
     name: chatName.value.trim(),
     description: description.value.trim() || undefined,
+    users: userList,
   });
 }
 
@@ -104,9 +195,30 @@ function onCancel() {
   emit("cancel");
 }
 
+function addUserToGroup(user: User | null) {
+  if (user && !selectedUsers.value.some((u) => u.value === user.value)) {
+    selectedUsers.value.push(user);
+    userToAdd.value = null;
+  }
+}
+
+function removeUserFromGroup(user: User) {
+  selectedUsers.value = selectedUsers.value.filter(
+    (u) => u.value !== user.value
+  );
+}
+
+watch(chatType, () => {
+  selectedUser.value = null;
+  selectedUsers.value = [];
+  userToAdd.value = null;
+});
+
 onMounted(() => {
   chatType.value = "Privat";
   chatName.value = "";
   description.value = "";
+  selectedUser.value = null;
+  selectedUsers.value = [];
 });
 </script>
