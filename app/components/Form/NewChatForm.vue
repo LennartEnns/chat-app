@@ -15,23 +15,27 @@
         <USelectMenu v-model="chatType" :items="items" class="w-48" />
       </UFormField>
 
-      <UFormField label="Chat-Name" name="chatName" required>
+      <UFormField
+        :label="chatNameLabel"
+        name="chatName"
+        :required="chatType === 'Group-chat'"
+      >
         <UInput
           v-model="chatName"
           class="w-full"
-          placeholder="Gib einen Namen ein..."
+          :placeholder="chatNamePlaceholder"
         />
       </UFormField>
 
       <UFormField
-        v-if="chatType === 'Gruppe'"
-        label="Beschreibung (optional)"
+        v-if="chatType === 'Group-chat'"
+        label="Description (optional)"
         name="description"
       >
         <UTextarea
           v-model="description"
           class="w-full"
-          placeholder="Beschreibe die Gruppe..."
+          placeholder="Add a description..."
           :rows="3"
         />
       </UFormField>
@@ -41,7 +45,7 @@
           class="flex-1"
           color="primary"
           @click="onCreate"
-          :disabled="!chatName.trim()"
+          :disabled="isCreateDisabled"
         >
           Erstellen
         </UButton>
@@ -63,13 +67,34 @@ const chatType = ref("Privat");
 const chatName = ref("");
 const description = ref("");
 
-const items = ref(["Privat", "Gruppe"]);
+const items = ref(["Privat", "Group-chat"]);
+
+const chatNameLabel = computed(() => {
+  return chatType.value === "Group-chat"
+    ? "Group-Name"
+    : "Chat-Name (optional)";
+});
+
+const chatNamePlaceholder = computed(() => {
+  return chatType.value === "Group-chat"
+    ? "Add a groupname..."
+    : "Add a name...";
+});
+
+const isCreateDisabled = computed(() => {
+  if (chatType.value === "Group-chat") {
+    return !chatName.value.trim();
+  }
+  return false;
+});
 
 function onCreate() {
-  if (!chatName.value.trim()) return;
+  if (chatType.value === "Group-chat" && !chatName.value.trim()) {
+    return;
+  }
 
   emit("create", {
-    type: chatType.value.toLowerCase(), // "privat" oder "gruppe"
+    type: chatType.value.toLowerCase(),
     name: chatName.value.trim(),
     description: description.value.trim() || undefined,
   });
