@@ -15,6 +15,45 @@
         <USelectMenu v-model="chatType" :items="items" class="w-48" />
       </UFormField>
 
+      <UFormField label="Choose an image" name="image">
+        <div class="flex items-center gap-4">
+          <input
+            type="file"
+            ref="fileInput"
+            accept="image/*"
+            @change="onFileSelected"
+            class="hidden"
+          />
+
+          <div
+            class="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center cursor-pointer relative"
+            :class="{ 'bg-gray-200': !chatImagePreview }"
+            @click="openFileInput"
+          >
+            <img
+              v-if="chatImagePreview"
+              :src="chatImagePreview"
+              alt="Chat Bild Vorschau"
+              class="w-full h-full object-cover"
+            />
+            <UIcon
+              v-else
+              name="i-heroicons-photo"
+              class="text-gray-500 text-3xl"
+            />
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-200"
+              v-if="chatImagePreview"
+            >
+              <UIcon
+                name="i-heroicons-pencil-square"
+                class="text-white text-xl"
+              />
+            </div>
+          </div>
+        </div>
+      </UFormField>
+
       <UFormField
         :label="chatNameLabel"
         name="chatName"
@@ -102,6 +141,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch, onMounted } from "vue";
+
 const emit = defineEmits<{
   create: [
     data: {
@@ -109,10 +150,16 @@ const emit = defineEmits<{
       name: string;
       description?: string;
       users: string[];
+      image?: File | null;
     }
   ];
   cancel: [];
 }>();
+
+interface User {
+  label: string;
+  value: string;
+}
 
 const chatType = ref("Privat");
 const chatName = ref("");
@@ -120,6 +167,11 @@ const description = ref("");
 const selectedUser = ref<User | null>(null);
 const selectedUsers = ref<User[]>([]);
 const userToAdd = ref<User | null>(null);
+const chatImage = ref<File | null>(null);
+const chatImagePreview = ref<string | null>(null);
+
+// Vue ref für den Datei-Input
+const fileInput = ref<HTMLInputElement | null>(null);
 
 // Mock user
 const availableUsers = ref<User[]>([
@@ -167,6 +219,22 @@ const isCreateDisabled = computed(() => {
   return false;
 });
 
+function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    chatImage.value = input.files[0];
+    chatImagePreview.value = URL.createObjectURL(input.files[0]);
+  } else {
+    chatImage.value = null;
+    chatImagePreview.value = null;
+  }
+}
+
+// Methode, die den Klick auf den unsichtbaren Datei-Input auslöst
+function openFileInput() {
+  fileInput.value?.click();
+}
+
 function onCreate() {
   if (chatType.value === "Gruppe" && !chatName.value.trim()) {
     return;
@@ -188,10 +256,17 @@ function onCreate() {
     name: chatName.value.trim(),
     description: description.value.trim() || undefined,
     users: userList,
+    image: chatImage.value,
   });
 }
 
 function onCancel() {
+  chatImage.value = null;
+  chatImagePreview.value = null;
+  // Auch den Dateiauswahldialog zurücksetzen, falls ein Bild gewählt wurde
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
   emit("cancel");
 }
 
@@ -212,6 +287,12 @@ watch(chatType, () => {
   selectedUser.value = null;
   selectedUsers.value = [];
   userToAdd.value = null;
+  chatImage.value = null;
+  chatImagePreview.value = null;
+  // Auch den Dateiauswahldialog zurücksetzen, falls ein Bild gewählt wurde
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
 });
 
 onMounted(() => {
@@ -220,5 +301,7 @@ onMounted(() => {
   description.value = "";
   selectedUser.value = null;
   selectedUsers.value = [];
+  chatImage.value = null;
+  chatImagePreview.value = null;
 });
 </script>
