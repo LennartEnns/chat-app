@@ -1,3 +1,4 @@
+<!-- Error page mobile friendly machen -->
 <template>
   <div class="min-h-dvh flex items-center justify-center space-y-3 flex-col text-white font-sans landing-background">
     <h2 :class="`headline-space-text ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">Looks like you're lost in space</h2>
