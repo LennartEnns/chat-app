@@ -1,13 +1,13 @@
 <template>
+  <NuxtLayout name="gradient-background">
     <div>
-        <slot />
+      <slot />
     </div>
+  </NuxtLayout>
 </template>
 
 <script setup>
 
 </script>
 
-<style>
-
-</style>
+<style></style>

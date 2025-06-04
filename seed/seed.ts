@@ -1,8 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { Client } from "pg";
-import testUsers from "./testUsers";
 import { readFileSync } from 'fs';
 import path from "path";
+import testUsers from "./testUsers";
+import testChatrooms from "./testChatrooms";
+import * as queries from "./queries";
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
   auth: {
@@ -49,7 +51,10 @@ const uploadAvatars = async () => {
       .upload(avatarUrl, avatarBuffer, {
         upsert: false,
         contentType: 'image/jpeg',
-        cacheControl: 'no-cache',
+        cacheControl: '0',
+        headers: {
+          'cache-control': 'no-cache',
+        },
       })
     if (uploadError) {
       console.log(uploadError);
@@ -57,14 +62,33 @@ const uploadAvatars = async () => {
     }
 
     // Set user as owner of the file
-    await pgClient.query(`UPDATE storage.objects SET owner=$1::uuid, owner_id=$1::text WHERE id=$2`, [user.id, uploadResult.id]);
+    await pgClient.query(queries.updateStorageObjectOwnerQuery, [user.id, uploadResult.id]);
+  }
+}
+
+const seedChatrooms = async () => {
+  for (const chatroom of testChatrooms) {
+    // Create the chatroom
+    await pgClient.query(queries.createChatroomQuery, [chatroom.id, chatroom.name, chatroom.description]);
+
+    // Add the users
+    for (const user of chatroom.users) {
+      // Add user
+      await pgClient.query(queries.addUserToChatroomQuery, [user.id, chatroom.id, user.role]);
+    }
   }
 }
 
 const main = async () => {
+  console.log("Connecting to DB...");
   await pgClient.connect();
+  console.log("Seeding users...");
   await seedTestUsers();
+  console.log("Uploading avatars...");
   await uploadAvatars().catch(console.error);
+  console.log("Seeding chatrooms...");
+  await seedChatrooms().catch(console.error);
+  console.log("Closing DB connection...");
   await pgClient.end();
 
   console.log("Database seeded successfully!");

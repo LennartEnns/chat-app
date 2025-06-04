@@ -1,13 +1,9 @@
 <template>
-  <div class="min-h-dvh h-dvh max-h-dvh flex justify-center">
-    <div class="h-full w-full max-w-[100rem] flex flex-col">
+  <div class="min-h-dvh h-full flex justify-center">
+    <div class="w-full max-w-[120rem] flex flex-col pb-[2vh]">
       <div
-        :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6
-            ${
-              isMobile
-                ? 'justify-between py-1 border-b-1 border-neutral-500'
-                : ''
-            }`"
+        :class="`flex flex-row align-content-center mx-2 md:mx-4 lg:mx-6  pb-[1vh]
+            ${isMobile ? 'justify-between py-1' : ''}`"
       >
         <UButton
           v-if="isMobile"
@@ -107,6 +103,7 @@
 
 <script lang="ts" setup>
 import type { NavigationMenuItem } from "@nuxt/ui";
+import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -140,9 +137,9 @@ async function logout(scope: "global" | "local" | "others") {
     scope,
   });
   if (error) {
-    console.log(`Logout error: ${error}`);
+    logAuthError(error, "logout");
     operationFeedbackHandler.displayError(
-      "An unexpected error occured during logout."
+      getAuthErrorMessage(error, "Unexpected error during logout")
     );
   } else if (scope === "others") {
     operationFeedbackHandler.displaySuccess(

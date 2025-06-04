@@ -1,350 +1,135 @@
 <template>
-  <NuxtLayout name="logged-in">
-    <div class="main-layout grow">
-      <!--Mobile UI drawer for choosing chats-->
-      <UDrawer v-model:open="drawerOpen" direction="bottom" v-if="isMobile">
-        <template #body>
-          <div class="align-colum">
-            <UModal v-model:open="open" class="mb-[10px]">
-              <UButton
-                label="Search users..."
-                color="neutral"
-                variant="subtle"
-                icon="i-lucide-search"
-              />
-              <template>
-                <UAvatar src="https://github.com/benjamincanac.png" />
-              </template>
-              <template #content>
-                <UCommandPalette
-                  close
-                  :groups="groups"
-                  @update:open="open = $event"
-                />
-              </template>
-            </UModal>
-            <UButton
-              class="mb-[10px]"
-              label="Neuen Chat erstellen"
-              color="primary"
-              variant="solid"
-              icon="i-lucide-plus"
-              @click="openNewChatModal"
-            />
-            <UButton
-              class="chat"
-              :avatar="{
-                src: 'https://github.com/nuxt.png',
-              }"
-              color="primary"
-              variant="outline"
-              size="xl"
-              >Florian Steckchen</UButton
-            >
-            <UButton
-              class="chat"
-              :avatar="{
-                src: 'https://github.com/nuxt.png',
-              }"
-              color="primary"
-              variant="outline"
-              size="xl"
-              >Johannes Weigel</UButton
-            >
-          </div>
-        </template>
-      </UDrawer>
-
-      <!--Desktop column for choosing chats-->
-      <div v-if="!isMobile" class="align-column">
-        <UModal v-model:open="open" class="mb-[10px]">
-          <UButton
-            label="Search users..."
-            color="neutral"
-            variant="subtle"
-            icon="i-lucide-search"
+  <NuxtLayout name="chat">
+    <!--Messaging column-->
+    <div class="align-column">
+      <UCard class="profile-bar" variant="subtle">
+        <div class="flex items-center gap-2">
+          <UAvatar src="https://github.com/nuxt.png" />
+          <h1 class="text-black dark:text-white">Florian Steckchen</h1>
+        </div>
+      </UCard>
+      <div ref="messagesContainer" class="messages">
+        <!--example messages-->
+        <div :class="`message partner ${themedPartnerMessageColor}`">
+          <UAvatar
+            class="justify-self-center"
+            src="https://github.com/nuxt.png"
           />
-          <template #content>
-            <UCommandPalette
-              close
-              :groups="groups"
-              @update:open="open = $event"
-            />
-          </template>
-        </UModal>
-
-        <UButton
-          class="mb-[10px]"
-          label="Neuen Chat erstellen"
-          color="primary"
-          variant="solid"
-          icon="i-lucide-plus"
-          @click="openNewChatModal"
-        />
-        <UButton
-          class="chat"
-          :avatar="{
-            src: 'https://github.com/nuxt.png',
-          }"
-          color="primary"
-          variant="outline"
-          size="xl"
-          >Florian Steckchen</UButton
+          <div class="message-content">
+            <p>
+              User messages are now saved to the database and loaded on
+              page-reload. Start messaging today! **Note** If you want to test
+              this create a local chatroom and add your logged in user's ID to
+              it all via http://localhost:54323/. Afterwards change the
+              currently hardcoded chatroom_id to this chatroom's ID. Now you
+              can use the database!
+            </p>
+            <span class="message-time">12:48</span>
+          </div>
+        </div>
+        <div
+          v-for="(message, index) in userMessages"
+          :key="index"
+          :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
         >
-        <UButton
-          class="chat"
-          :avatar="{
-            src: 'https://github.com/nuxt.png',
-          }"
-          color="primary"
-          variant="outline"
-          size="xl"
-          >Johannes Weigel</UButton
-        >
+          <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
+          <div class="message-content">
+            <p>{{ message.text }}</p>
+            <span class="message-time">{{ message.timestamp }}</span>
+          </div>
+        </div>
       </div>
-
-      <!--Messaging column-->
-      <div class="align-column">
-        <UCard class="profile-bar">
-          <div class="flex items-center gap-2">
-            <UAvatar src="https://github.com/nuxt.png" />
-            <h1>Florian Steckchen</h1>
-          </div>
-        </UCard>
-        <div class="messages" ref="messagesContainer">
-          <!--example messages-->
-          <div :class="`message partner ${themedPartnerMessageColor}`">
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
-            <div class="message-content">
-              <p>
-                Ipsum is simply dummy an printer took a galley of type and
-                scrambled it to make a type specimen book. It has survived not
-                only five centuries, but also the leap into electronic
-                typesetting, remaining essentially unchanged. It was popularised
-                in the 1960s with the release of Letraset sheets containing
-                Lorem Ipsum passages, and more recently wit fkjsdaklfjklasd
-                jfkjsadkl jfkljsadklfj föajsklfjkladsjfkl
-              </p>
-              <span class="message-time">12:45</span>
-            </div>
-          </div>
-          <div :class="`message user ${themedUserMessageColor}`">
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
-            <div class="message-content">
-              <p>
-                Ipsum is simply dummy an printer took a galley of type and
-                scrambled it to make a type specimen book. It has survived not
-                only five centuries, but also the leap into electronic
-                typesetting, remaining essentially unchanged. It was popularised
-                in the 1960s with the release of Letraset sheets containing
-                Lorem Ipsum passages, and more recently wit fkjsdaklfjklasd
-                jfkjsadkl jfkljsadklfj föajsklfjkladsjfkl
-              </p>
-              <span class="message-time">12:48</span>
-            </div>
-          </div>
-          <div
-            v-for="(message, index) in userMessages"
-            :key="index"
-            :class="`message user ${themedUserMessageColor}`"
-          >
-            <UAvatar
-              class="justify-self-center"
-              src="https://github.com/nuxt.png"
-            />
-            <div class="message-content">
-              <p>{{ message.text }}</p>
-              <span class="message-time">{{ message.timestamp }}</span>
-            </div>
-          </div>
-        </div>
-        <!--Text Input for new messages-->
-        <div class="write">
-          <UTextarea
-            v-model="newMessage"
-            class="w-full"
-            placeholder="Write a message..."
-            autoresize
-            :rows="4"
-            :maxrows="4"
-          />
-          <UButton @click="sendMessage" :class="`${themedUserMessageColor}`"
-            ><Icon name="ic:baseline-send"
-          /></UButton>
-        </div>
+      <!--Text Input for new messages-->
+      <div class="write">
+        <UTextarea
+          v-model="newMessage"
+          variant="subtle"
+          class="w-full glassBG"
+          placeholder="Write a message..."
+          autoresize
+          :rows="4"
+          :maxrows="4"
+        />
+        <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
+          ><Icon name="ic:baseline-send"
+        /></UButton>
       </div>
     </div>
-
-    <UModal v-model:open="newChatModalOpen">
-      <template #content>
-        <NewChat @create="handleCreateChat" @cancel="closeNewChatModal" />
-      </template>
-    </UModal>
   </NuxtLayout>
 </template>
-
+ 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-import NewChat from "~/components/Form/NewChatForm.vue";
-
-const newChatModalOpen = ref(false);
-
-function openNewChatModal() {
-  drawerOpen.value = false;
-  newChatModalOpen.value = true;
-}
-
-function closeNewChatModal() {
-  newChatModalOpen.value = false;
-}
-
-function handleCreateChat(data: {
-  type: string;
-  name: string;
-  description?: string;
-}) {
-  console.log("Neuer Chat erstellt:", data);
-
-  closeNewChatModal();
-
-  toast.add({
-    title: "Chat erstellt",
-    description: `${data.type === "group" ? "Gruppe" : "Chat"} "${
-      data.name
-    }" wurde erstellt.`,
-    color: "primary",
-  });
-}
-
-const toast = useToast();
-const supabase = useSupabaseClient();
-
-const user = useSupabaseUser();
-const profileData = user.value?.user_metadata;
-const username = profileData?.username || "";
-
-function getAvatarUrl(userId: string): string {
-  const { data } = supabase.storage
-    .from("avatars")
-    .getPublicUrl("public/" + userId + ".jpg");
-  if (
-    !data.publicUrl ||
-    data.publicUrl.includes("error") ||
-    data.publicUrl === ""
-  ) {
-    return "https://eunokvzfqixyoauwvqlt.supabase.co/storage/v1/object/public/avatars/public/default.png";
-  }
-  return data.publicUrl;
-}
-
-interface Users {
-  user_id: string;
-  username: string;
-  displayname: string;
-  description: string;
-}
-
-interface CommandItem {
-  id: string;
-  label: string;
-  suffix: string;
-  to: string;
-  target: string;
-  avatar: { src: string };
-  raw: Users;
-}
-
-interface CommandGroup {
-  id: string;
-  label: string;
-  items: CommandItem[];
-}
-
-const users = ref<CommandItem[]>([]);
-
-const groups = ref<CommandGroup[]>([
-  {
-    id: "users",
-    label: "Users",
-    items: [],
-  },
-]);
-
-// --- fetch the data from supabase and transform it ---
-onMounted(async () => {
-  const { data, error } = await supabase.from("profiles").select();
-
-  if (error) {
-    toast.add({
-      title: "Error loading users",
-      description: error.message,
-      color: "error",
-    });
-    return;
-  }
-
-  users.value = (data || [])
-    .filter((user: Users) => {
-      return (
-        user &&
-        user.user_id &&
-        user.user_id.trim() !== "" &&
-        user.username !== username &&
-        user.displayname &&
-        user.displayname.trim() !== ""
-      );
-    })
-    .map((user: Users) => ({
-      id: user.user_id,
-      label: user.displayname,
-      suffix: user.username,
-      to: `/profile/${user.user_id}`,
-      target: "_self",
-      avatar: { src: getAvatarUrl(user.user_id) },
-      raw: user,
-    }));
-
-  groups.value = [
-    {
-      id: "users",
-      label: "Users",
-      items: users.value,
-    },
-  ];
-});
-
-const isMobile = useMobileDetector();
+import {
+  getPostgrestErrorMessage,
+  logPostgrestError,
+} from "~~/errors/postgrestErrors";
+ 
 useFirstLoginDetector();
-
-const open = ref<boolean>(false); //placeholder for command pallette (search bar)
-const newMessage = ref<string>("");
-const userMessages = ref<any[]>([]);
-const messagesContainer = ref<any>(null);
-
-const drawerOpen = useOpenDrawer();
 const { isLight } = useSSRSafeTheme();
-
+const operationFeedbackHandler = useOperationFeedbackHandler();
+const userData = useUserData();
+const supabase = useSupabaseClient();
+ 
 const themedUserMessageColor = computed(() =>
   isLight.value ? "user-light" : "user-dark"
 );
-
+ 
 const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
-
-function sendMessage(): void {
+ 
+// messages and writing
+type DisplayedMessage = {
+  text: string;
+  timestamp: string;
+};
+const newMessage = ref<string>("");
+const userMessages = ref<DisplayedMessage[]>([]);
+const messagesContainer = ref<HTMLElement | null>(null);
+ 
+// Load messages from database and push to chat UI
+async function loadFromDatabase() {
+  const { data, error } = await supabase.from("messages").select("*");
+ 
+  if (error) {
+    logPostgrestError(error, "message fetching");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown message fetching error")
+    );
+    return;
+  }
+  data.forEach((element) => {
+    userMessages.value.push({
+      text: element.content,
+      timestamp: dateToHMTime(new Date(element.created_at)),
+    });
+  });
+}
+ 
+// Save messages to database
+async function saveToDatabase(message: string) {
+  const { error } = await supabase.from("messages").insert([
+    {
+      chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
+      content: message,
+    },
+  ]);
+ 
+  if (error) {
+    logPostgrestError(error, "message insert");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown message upload error")
+    );
+  }
+ 
+  return null;
+}
+ 
+// Push written message to chat UI & database
+async function sendMessage() {
   if (newMessage.value.trim()) {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const timestamp = `${hours}:${minutes}`;
-
+    const timestamp = dateToHMTime(new Date());
+    saveToDatabase(newMessage.value.trim());
     userMessages.value.push({
       text: newMessage.value.trim(),
       timestamp: timestamp,
@@ -352,22 +137,24 @@ function sendMessage(): void {
     newMessage.value = "";
   }
 }
-
-function handleKeyDown(event: KeyboardEvent): void {
+ 
+// Enable using enter for sending a message
+async function handleKeyDown(event: KeyboardEvent) {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 }
-
-const scrollToBottom = async (): Promise<void> => {
+ 
+// Scroll to the newest message
+async function scrollToBottom() {
   await nextTick();
   const component = messagesContainer.value;
   if (component) {
     component.scrollTop = component.scrollHeight;
   }
-};
-
+}
+ 
 watch(
   userMessages,
   () => {
@@ -375,17 +162,19 @@ watch(
   },
   { deep: true }
 );
-
+ 
+// on reload
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
+  loadFromDatabase();
   scrollToBottom();
 });
-
+ 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
-
+ 
 <style>
 @import url("~/assets/css/chat.css");
 </style>
