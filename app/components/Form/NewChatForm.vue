@@ -7,15 +7,19 @@
     }"
   >
     <template #header>
-      <p class="font-bold">Create a new chat</p>
+      <p class="font-bold">Create new Chat</p>
     </template>
 
     <div class="space-y-4">
-      <UFormField label="Chat-Typ" name="chatType" required>
+      <UFormField label="Chat-type" name="chatType" required>
         <USelectMenu v-model="chatType" :items="items" class="w-full" />
       </UFormField>
 
-      <UFormField label="Choose an image" name="image">
+      <UFormField
+        v-if="chatType === 'Group-chat'"
+        label="Choose an image"
+        name="image"
+      >
         <div class="flex items-center gap-4">
           <input
             type="file"
@@ -33,7 +37,7 @@
             <img
               v-if="chatImagePreview"
               :src="chatImagePreview"
-              alt="chat Image Preview"
+              alt="Chat image preview"
               class="w-full h-full object-cover"
             />
             <UIcon
@@ -56,6 +60,7 @@
       </UFormField>
 
       <UFormField
+        v-if="chatType === 'Group-chat'"
         :label="chatNameLabel"
         name="chatName"
         :required="chatType === 'Group-chat'"
@@ -96,13 +101,13 @@
             v-model="userToAdd"
             :items="availableUsersForGroup"
             searchable
-            placeholder="add User..."
+            placeholder="Add a user..."
             class="w-full"
             @update:model-value="addUserToGroup"
           />
 
           <div v-if="selectedUsers.length > 0" class="space-y-1">
-            <p class="text-sm text-gray-600">Users:</p>
+            <p class="text-sm text-gray-600">User:</p>
             <div class="flex flex-wrap gap-2 w-full">
               <UBadge
                 v-for="user in selectedUsers"
@@ -173,7 +178,6 @@ const chatImagePreview = ref<string | null>(null);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 
-// Mock user
 const availableUsers = ref<User[]>([
   { label: "Jakobyte", value: "user1" },
   { label: "Vaterkinds", value: "user2" },
@@ -206,8 +210,8 @@ const chatNamePlaceholder = computed(() => {
 });
 
 const isCreateDisabled = computed(() => {
-  if (chatType.value === "Gruppe") {
-    return !chatName.value.trim();
+  if (chatType.value === "Group-chat") {
+    return !chatName.value.trim() || selectedUsers.value.length === 0;
   }
 
   if (chatType.value === "Privat") {
@@ -233,8 +237,10 @@ function openFileInput() {
 }
 
 function onCreate() {
-  if (chatType.value === "Gruppe" && !chatName.value.trim()) {
-    return;
+  if (chatType.value === "Group-chat") {
+    if (!chatName.value.trim() || selectedUsers.value.length === 0) {
+      return;
+    }
   }
 
   if (chatType.value === "Privat" && !selectedUser.value) {
@@ -242,18 +248,24 @@ function onCreate() {
   }
 
   let userList: string[] = [];
+  let chatNameToUse: string | undefined = undefined;
+
   if (chatType.value === "Privat" && selectedUser.value) {
     userList = [selectedUser.value.value];
-  } else if (chatType.value === "Gruppe") {
+  } else if (chatType.value === "Group-chat") {
     userList = selectedUsers.value.map((user) => user.value);
+    chatNameToUse = chatName.value.trim();
   }
 
   emit("create", {
     type: chatType.value.toLowerCase(),
-    name: chatName.value.trim(),
-    description: description.value.trim() || undefined,
+    name: chatNameToUse || "",
+    description:
+      chatType.value === "Group-chat"
+        ? description.value.trim() || undefined
+        : undefined,
     users: userList,
-    image: chatImage.value,
+    image: chatType.value === "Group-chat" ? chatImage.value : null,
   });
 }
 
@@ -283,6 +295,8 @@ watch(chatType, () => {
   selectedUser.value = null;
   selectedUsers.value = [];
   userToAdd.value = null;
+  chatName.value = "";
+  description.value = "";
   chatImage.value = null;
   chatImagePreview.value = null;
   if (fileInput.value) {
