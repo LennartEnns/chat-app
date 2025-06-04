@@ -25,6 +25,7 @@ const { isLight } = useSSRSafeTheme();
 const navigationItems = ref<NavigationMenuItem[]>([
   { label: 'Chat', icon: 'i-lucide-messages-square', to: '/chat' },
   { label: 'GitHub', icon: 'i-simple-icons-github', to: 'https://github.com/LennartEnns/chat-app', target: '_blank' },
+  { label: 'Instagram', icon: 'i-simple-icons-instagram', to: 'https://www.youtube.com/watch?v=xvFZjo5PgG0', target: '_blank'}
 ]);
 const navItemColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-300');
 </script>

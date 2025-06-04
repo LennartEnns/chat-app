@@ -1,7 +1,14 @@
-import { getPostgrestErrorMessage, logPostgrestError } from "~~/errors/postgrestErrors";
+import {
+    getPostgrestErrorMessage,
+    logPostgrestError,
+} from "~~/errors/postgrestErrors";
 import type { CommandPaletteGroup, CommandPaletteItem } from "@nuxt/ui";
 import type { UserCommandPaletteItem } from "~/types/userSearch";
-import { validateUsernameSearch, validateDisplayNameSearch } from "~~/validation/commonRules";
+import {
+    validateDisplayNameSearch,
+    validateUsernameSearch,
+} from "~~/validation/commonRules";
+import { da } from "@nuxt/ui/runtime/locale/index.js";
 
 /**
  * Composable that provides stateful logic for the user search command palette.
@@ -13,7 +20,7 @@ export function useUserSearch() {
 
     const unknownErrorMessage = "Unknown error during data retrieval";
     const minTimeBetweenSearches = 500; // ms
-    const userSelectLimit = 5;    
+    const userSelectLimit = 5;
 
     const searchTerm = ref("");
     // Smallest subterm (substring in the current term)
@@ -27,7 +34,9 @@ export function useUserSearch() {
     const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
         {
             id: "users",
-            label: searchTerm.value ? `Users matching “${searchTerm.value}”...` : 'Users',
+            label: searchTerm.value
+                ? `Users matching “${searchTerm.value}”...`
+                : "Users",
             items: users.value,
 
             // If we already have all matching users, search locally
@@ -39,7 +48,7 @@ export function useUserSearch() {
         const usersQuery = supabase
             .from("profiles")
             .select("user_id, username, displayname")
-            .neq('username', userData.username)
+            .neq("username", userData.username)
             .or(`username.ilike.%${term}%, displayname.ilike.%${term}%`)
             .order("username")
             .limit(userSelectLimit);
@@ -60,16 +69,15 @@ export function useUserSearch() {
         }
 
         users.value = (data || [])
-            // @ts-expect-error ignore deep type instantiation warning
             .map((user) => ({
                 id: user.user_id,
                 label: user.displayname ?? user.username,
                 suffix: user.username,
                 avatar: {
                     src: getAvatarUrl(user.user_id),
-                    icon: 'i-lucide-user',
+                    icon: "i-lucide-user",
                     ui: {
-                        icon: 'size-11/12',
+                        icon: "size-11/12",
                     },
                 },
                 user,
@@ -83,7 +91,11 @@ export function useUserSearch() {
             clearTimeout(searchTimeout.value);
             searchTimeout.value = null;
         }
-        if (newTerm === "" || (!validateUsernameSearch(newTerm) && !validateDisplayNameSearch(newTerm))) {
+        if (
+            newTerm === "" ||
+            (!validateUsernameSearch(newTerm) &&
+                !validateDisplayNameSearch(newTerm))
+        ) {
             loading.value = false;
             return;
         }
@@ -91,7 +103,11 @@ export function useUserSearch() {
         searchTimeout.value = setTimeout(() => {
             if (searchTerm.value !== newTerm) return;
             if (lastRedundantSubterm.value) {
-                if (newTerm.toLowerCase().includes(lastRedundantSubterm.value.toLowerCase())) {
+                if (
+                    newTerm.toLowerCase().includes(
+                        lastRedundantSubterm.value.toLowerCase(),
+                    )
+                ) {
                     loading.value = false;
                     return;
                 } else {
