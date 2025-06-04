@@ -21,8 +21,8 @@
               page-reload. Start messaging today! **Note** If you want to test
               this create a local chatroom and add your logged in user's ID to
               it all via http://localhost:54323/. Afterwards change the
-              currently hardcoded chatroom_id to this chatroom's ID. Now you
-              can use the database!
+              currently hardcoded chatroom_id to this chatroom's ID. Now you can
+              use the database!
             </p>
             <span class="message-time">12:48</span>
           </div>
@@ -55,16 +55,34 @@
         /></UButton>
       </div>
     </div>
+
+    <UModal v-model:open="newChatModalOpen">
+      <template #content>
+        <NewChat @create="handleCreateChat" @cancel="closeNewChatModal" />
+      </template>
+    </UModal>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
-import {
-  getPostgrestErrorMessage,
-  logPostgrestError,
-} from "~~/errors/postgrestErrors";
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { useUserSearch } from "~/composables/useUserSearch";
+import type { Database } from "@@/database.types";
 
+//search bar
+const { searchTerm, groups } = useUserSearch();
+const open = ref<boolean>(false);
+
+// responsive mobile UI
+const isMobile = useMobileDetector();
+
+// login dialogue
 useFirstLoginDetector();
+
+// drawer
+const drawerOpen = useOpenDrawer();
+
+//theming
 const { isLight } = useSSRSafeTheme();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
@@ -78,57 +96,25 @@ const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
 
+// user data
+const account = useUserData();
+const avatarUrl = getAvatarUrl(account.id);
+
 // messages and writing
-type DisplayedMessage = {
-  text: string;
-  timestamp: string;
-};
 const newMessage = ref<string>("");
-const userMessages = ref<DisplayedMessage[]>([]);
-const messagesContainer = ref<HTMLElement | null>(null);
+const userMessages = ref<any[]>([]);
+const messagesContainer = ref<any>(null);
 
-// Load messages from database and push to chat UI
-async function loadFromDatabase() {
-  const { data, error } = await supabase.from("messages").select("*");
+// databasae
+const supabase = useSupabaseClient<Database>();
 
-  if (error) {
-    logPostgrestError(error, "message fetching");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message fetching error")
-    );
-    return;
-  }
-  data.forEach((element) => {
-    userMessages.value.push({
-      text: element.content,
-      timestamp: dateToHMTime(new Date(element.created_at)),
-    });
-  });
-}
-
-// Save messages to database
-async function saveToDatabase(message: string) {
-  const { error } = await supabase.from("messages").insert([
-    {
-      chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
-      content: message,
-    },
-  ]);
-
-  if (error) {
-    logPostgrestError(error, "message insert");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message upload error")
-    );
-  }
-
-  return null;
-}
-
-// Push written message to chat UI & database
-async function sendMessage() {
+// pushes written message to chat UI & database
+function sendMessage(): void {
   if (newMessage.value.trim()) {
-    const timestamp = dateToHMTime(new Date());
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const timestamp = `${hours}:${minutes}`;
     saveToDatabase(newMessage.value.trim());
     userMessages.value.push({
       text: newMessage.value.trim(),
@@ -138,22 +124,70 @@ async function sendMessage() {
   }
 }
 
+// saves messages to database
+async function saveToDatabase(message: string) {
+  const { data, error } = await supabase
+    .from("messages")
+    .insert([
+      {
+        user_id: account.id,
+        chatroom_id: "c1714e5d-2c75-4efa-9f89-3820525bdfa8", // currently still hardcoded
+        content: message,
+      },
+    ])
+    .select();
+
+  if (error) {
+    console.error("Error inserting message:", error);
+    return null;
+  }
+
+  return null;
+}
+
+// load messages from database and push to chat UI
+async function loadFromDatabase() {
+  const { data, error } = (await supabase.from("messages").select("*")) as any;
+
+  if (error) {
+    console.error("Error loading messages:", error);
+    return null;
+  }
+  data.forEach((element: any) => {
+    userMessages.value.push({
+      text: element["content"],
+      timestamp: parseTimeStamp(element["created_at"]),
+    });
+  });
+  console.log(data);
+  return null;
+}
+
+// format database timestamp to UI format
+function parseTimeStamp(timestamp: string) {
+  const date = new Date(timestamp);
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const timestampDB = `${hours}:${minutes}`;
+  return timestampDB;
+}
+
 // Enable using enter for sending a message
-async function handleKeyDown(event: KeyboardEvent) {
+function handleKeyDown(event: KeyboardEvent): void {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 }
 
-// Scroll to the newest message
-async function scrollToBottom() {
+// make the screen scroll down on sending
+const scrollToBottom = async (): Promise<void> => {
   await nextTick();
   const component = messagesContainer.value;
   if (component) {
     component.scrollTop = component.scrollHeight;
   }
-}
+};
 
 watch(
   userMessages,
@@ -163,10 +197,8 @@ watch(
   { deep: true }
 );
 
-// on reload
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
-  loadFromDatabase();
   scrollToBottom();
 });
 
