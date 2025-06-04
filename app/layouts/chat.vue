@@ -17,6 +17,14 @@
                 class="glassContainer"
               />
             </ModalSearchUser>
+            <UButton
+              class="mb-[10px]"
+              label="Neuen Chat erstellen"
+              color="primary"
+              variant="solid"
+              icon="i-lucide-plus"
+              @click="newChatModalOpen = true"
+            />
           </div>
         </template>
       </UDrawer>
@@ -30,15 +38,32 @@
             icon="i-lucide-search"
           />
         </ModalSearchUser>
+        <UButton
+          class="mb-[10px]"
+          label="Neuen Chat erstellen"
+          color="primary"
+          variant="solid"
+          icon="i-lucide-plus"
+          @click="newChatModalOpen = true"
+        />
       </div>
       <slot />
     </div>
+    <UModal v-model:open="newChatModalOpen">
+      <template #content>
+        <NewChat
+          @create="handleCreateChat"
+          @cancel="newChatModalOpen = false"
+        />
+      </template>
+    </UModal>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
 import type { UserSearchResult } from "~/types/userSearch";
 
+const newChatModalOpen = ref(false);
 const isMobile = useMobileDetector();
 const drawerOpen = useOpenDrawer();
 const { isLight } = useSSRSafeTheme();
@@ -47,6 +72,10 @@ const { isLight } = useSSRSafeTheme();
 async function onUserSelect(result: UserSearchResult | null) {
   if (!result) return;
   navigateTo(`/profile/${result.username}`);
+}
+
+async function handleCreateChat() {
+  console.log("Test");
 }
 </script>
 
