@@ -7,12 +7,12 @@
     }"
   >
     <template #header>
-      <p class="font-bold">Neuen Chat erstellen</p>
+      <p class="font-bold">Create a new chat</p>
     </template>
 
-    <div class="space-y-4 w-3xs xl:w-2xs">
+    <div class="space-y-4">
       <UFormField label="Chat-Typ" name="chatType" required>
-        <USelectMenu v-model="chatType" :items="items" class="w-48" />
+        <USelectMenu v-model="chatType" :items="items" class="w-full" />
       </UFormField>
 
       <UFormField label="Choose an image" name="image">
@@ -33,7 +33,7 @@
             <img
               v-if="chatImagePreview"
               :src="chatImagePreview"
-              alt="Chat Bild Vorschau"
+              alt="chat Image Preview"
               class="w-full h-full object-cover"
             />
             <UIcon
@@ -51,6 +51,7 @@
               />
             </div>
           </div>
+          <span class="text-gray-700 text-sm">Choose image (optional)</span>
         </div>
       </UFormField>
 
@@ -85,7 +86,7 @@
             v-model="selectedUser"
             :items="availableUsers"
             searchable
-            placeholder="Wähle einen Benutzer aus..."
+            placeholder="Choose a user..."
             class="w-full"
           />
         </div>
@@ -95,14 +96,14 @@
             v-model="userToAdd"
             :items="availableUsersForGroup"
             searchable
-            placeholder="Benutzer hinzufügen..."
+            placeholder="add User..."
             class="w-full"
             @update:model-value="addUserToGroup"
           />
 
           <div v-if="selectedUsers.length > 0" class="space-y-1">
-            <p class="text-sm text-gray-600">Ausgewählte Benutzer:</p>
-            <div class="flex flex-wrap gap-2">
+            <p class="text-sm text-gray-600">Users:</p>
+            <div class="flex flex-wrap gap-2 w-full">
               <UBadge
                 v-for="user in selectedUsers"
                 :key="user.value"
@@ -130,10 +131,10 @@
           :disabled="isCreateDisabled"
           @click="onCreate"
         >
-          Erstellen
+          Create
         </UButton>
         <UButton class="flex-1" variant="outline" @click="onCancel">
-          Abbrechen
+          Cancel
         </UButton>
       </div>
     </div>
@@ -170,7 +171,6 @@ const userToAdd = ref<User | null>(null);
 const chatImage = ref<File | null>(null);
 const chatImagePreview = ref<string | null>(null);
 
-// Vue ref für den Datei-Input
 const fileInput = ref<HTMLInputElement | null>(null);
 
 // Mock user
@@ -181,9 +181,7 @@ const availableUsers = ref<User[]>([
 ]);
 
 const userSelectionLabel = computed(() => {
-  return chatType.value === "Gruppe"
-    ? "Benutzer hinzufügen"
-    : "Benutzer auswählen";
+  return chatType.value === "Gruppe" ? "Add user" : "Choose user";
 });
 
 const availableUsersForGroup = computed(() => {
@@ -230,7 +228,6 @@ function onFileSelected(event: Event) {
   }
 }
 
-// Methode, die den Klick auf den unsichtbaren Datei-Input auslöst
 function openFileInput() {
   fileInput.value?.click();
 }
@@ -263,7 +260,6 @@ function onCreate() {
 function onCancel() {
   chatImage.value = null;
   chatImagePreview.value = null;
-  // Auch den Dateiauswahldialog zurücksetzen, falls ein Bild gewählt wurde
   if (fileInput.value) {
     fileInput.value.value = "";
   }
@@ -289,7 +285,6 @@ watch(chatType, () => {
   userToAdd.value = null;
   chatImage.value = null;
   chatImagePreview.value = null;
-  // Auch den Dateiauswahldialog zurücksetzen, falls ein Bild gewählt wurde
   if (fileInput.value) {
     fileInput.value.value = "";
   }
