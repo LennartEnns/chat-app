@@ -40,6 +40,13 @@ Enjoy your final 2 days, 14 hours, 42 minutes and 37 seconds.',
     description: 'Don\'t worry. It\'s only Micro when it\'s Soft ;)',
   },
   {
+    id: 'b917de44-8070-49e5-b7c6-74d6f4a60f70',
+    email: 'oppenheimer.robert@nukes.gov',
+    username: 'oppenheimer',
+    displayname: 'Julius Robert Oppenheimer',
+    description: 'Now I am become Death, the Destroyer of Worlds',
+  },
+  {
     id: 'e756b055-c014-43c6-b9b1-99c853fd085d',
     email: 'jakobyte@gmail.com',
     username: 'jakobyte00',

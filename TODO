@@ -1,2 +1,0 @@
-- Avatar upload: Image cropping UI and automatic compression/resizing to fall below file size limit.
-- Custom 404 page. Should also be shown when a profile/chatroom/... with a specific ID is not found.

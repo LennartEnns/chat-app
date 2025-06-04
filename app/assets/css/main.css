@@ -31,3 +31,13 @@
   --color-defaultNeutral-900: #48485c;
   --color-defaultNeutral-950: #30303e;
 }
+.glassBG {
+  background-color: color-mix(in srgb, var(--ui-bg) 30%, transparent);
+}
+
+.glassContainer {
+  border-radius: 0.5rem;
+  background-color: color-mix(in srgb, var(--ui-bg) 45%, transparent);
+  padding: 0.6rem 2rem;
+  border: 1px solid var(--color-neutral-500);
+}

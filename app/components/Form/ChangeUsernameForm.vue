@@ -4,7 +4,7 @@
     <UInput v-model="state.username" class="w-full" />
   </UFormField>
 
-  <UButton label="Change" class="cursor-pointer" type="submit" />
+  <UButton label="Change" variant="outline" class="cursor-pointer" type="submit" />
 </UForm>
 </template>
 
@@ -50,7 +50,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     state.username = "";
   } else if (error) {
     logAuthError(error, 'username change');
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, 'Unknown error during username change'));
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error, 'Unknown error during username change'));
   }
 }
 </script>

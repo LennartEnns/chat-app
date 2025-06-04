@@ -1,4 +1,4 @@
-import type { AuthError } from '@supabase/auth-js/dist/module/lib/errors'
+import type { AuthError } from '@supabase/auth-js';
 
 const messages: { [key: string]: string } = {
     'user_already_exists': 'A user with this email already exists',
@@ -10,7 +10,8 @@ const messages: { [key: string]: string } = {
     'same_password': 'This already is your password!',
 }
 
-export function getAuthErrorMessage(code: string | undefined, fallback: string = "Unknown authentication error"): string {
+export function getAuthErrorMessage(error: AuthError, fallback: string = "Unknown authentication error"): string {
+    const code = error.code;
     if (!code) return fallback;
     const msg = messages[code];
     return msg ?? fallback;

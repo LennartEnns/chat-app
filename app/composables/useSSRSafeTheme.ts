@@ -18,7 +18,7 @@ export const useSSRSafeTheme = () => {
         get(): boolean {
             return (themeSSRCookie.value === "light");
         },
-        set(val: boolean): void {
+        set(val: boolean) {
             colorMode.preference = (val ? "light" : "dark");
         },
     });

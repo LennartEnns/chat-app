@@ -3,7 +3,7 @@
     <UFormField label="New Email Address" name="email" required>
       <UInput v-model="state.email" class="w-full" />
     </UFormField>
-    <UButton label="Change" class="cursor-pointer" type="submit" />
+    <UButton label="Change" variant="outline" class="cursor-pointer" type="submit" />
     <UModal
       v-model:open="showSuccessModal"
       :dismissible="false">
@@ -58,7 +58,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     state.email = "";
   } else if (error) {
     logAuthError(error, 'email change');
-    operationFeedbackHandler.displayError(getAuthErrorMessage(error.code, 'Unknown error during email change'));
+    operationFeedbackHandler.displayError(getAuthErrorMessage(error, 'Unknown error during email change'));
   }
 }
 </script>
