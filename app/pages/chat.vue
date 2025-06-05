@@ -57,27 +57,27 @@
     </div>
   </NuxtLayout>
 </template>
-
+ 
 <script setup lang="ts">
 import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
-
+ 
 useFirstLoginDetector();
 const { isLight } = useSSRSafeTheme();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
 const supabase = useSupabaseClient();
-
+ 
 const themedUserMessageColor = computed(() =>
   isLight.value ? "user-light" : "user-dark"
 );
-
+ 
 const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
-
+ 
 // messages and writing
 type DisplayedMessage = {
   text: string;
@@ -86,11 +86,11 @@ type DisplayedMessage = {
 const newMessage = ref<string>("");
 const userMessages = ref<DisplayedMessage[]>([]);
 const messagesContainer = ref<HTMLElement | null>(null);
-
+ 
 // Load messages from database and push to chat UI
 async function loadFromDatabase() {
   const { data, error } = await supabase.from("messages").select("*");
-
+ 
   if (error) {
     logPostgrestError(error, "message fetching");
     operationFeedbackHandler.displayError(
@@ -105,7 +105,7 @@ async function loadFromDatabase() {
     });
   });
 }
-
+ 
 // Save messages to database
 async function saveToDatabase(message: string) {
   const { error } = await supabase.from("messages").insert([
@@ -114,17 +114,17 @@ async function saveToDatabase(message: string) {
       content: message,
     },
   ]);
-
+ 
   if (error) {
     logPostgrestError(error, "message insert");
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown message upload error")
     );
   }
-
+ 
   return null;
 }
-
+ 
 // Push written message to chat UI & database
 async function sendMessage() {
   if (newMessage.value.trim()) {
@@ -137,7 +137,7 @@ async function sendMessage() {
     newMessage.value = "";
   }
 }
-
+ 
 // Enable using enter for sending a message
 async function handleKeyDown(event: KeyboardEvent) {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -145,7 +145,7 @@ async function handleKeyDown(event: KeyboardEvent) {
     sendMessage();
   }
 }
-
+ 
 // Scroll to the newest message
 async function scrollToBottom() {
   await nextTick();
@@ -154,7 +154,7 @@ async function scrollToBottom() {
     component.scrollTop = component.scrollHeight;
   }
 }
-
+ 
 watch(
   userMessages,
   () => {
@@ -162,19 +162,19 @@ watch(
   },
   { deep: true }
 );
-
+ 
 // on reload
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
   loadFromDatabase();
   scrollToBottom();
 });
-
+ 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
-
+ 
 <style>
 @import url("~/assets/css/chat.css");
 </style>

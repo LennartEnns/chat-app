@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-dvh flex items-center justify-center space-y-3 flex-col text-white font-sans landing-background">
+  <div class="min-h-dvh flex items-center justify-center space-y-3 flex-col text-white font-sans landing-background px-4">
     <h2 :class="`headline-space-text ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">Looks like you're lost in space</h2>
     <h2 :class="`headline-error-message ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">{{ error.message }}</h2>
     <div class="status-code-container">
@@ -115,6 +115,9 @@ const primaryColorValue = computed(() => {
   font-weight: 500;
   line-height: 1.5;
   z-index: 2;
+  text-align: center;
+  max-width: 90vw;
+  word-wrap: break-word;
 }
 
 .headline-space-text {
@@ -122,6 +125,9 @@ const primaryColorValue = computed(() => {
   font-weight: bolder;
   line-height: 1.2;
   z-index: 2;
+  text-align: center;
+  max-width: 90vw;
+  word-wrap: break-word;
 }
 
 .overlayImage {
@@ -133,6 +139,30 @@ const primaryColorValue = computed(() => {
   height: auto;
   z-index: 3;
   opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .headline-status-code {
+    font-size: 42.7vw;
+  }
+  
+  .headline-space-text {
+    font-size: clamp(1.25rem, 7vw, 4rem);
+  }
+  
+  .headline-error-message {
+    font-size: 3.1vw;
+  }
+  
+  .overlayImage {
+    width: 36vw;
+    right: 49%;
+    top: 63%;
+  }
+  
+  .status-code-container {
+    margin: 1rem 0;
+  }
 }
   
 .user-dark-mode {
