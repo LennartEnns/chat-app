@@ -1,22 +1,24 @@
 <template>
-  <div class="align-column">
-    <ModalSearchUser class="mb-2" @close="onUserSelect">
+  <div class="align-column p-0">
+    <div class="flex mb-2 gap-4 justify-center items-center">
+      <ModalSearchUser class="h-min" @close="onUserSelect">
+        <UButton
+          label="Search Users"
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-search"
+          class="glassContainer p-0"
+        />
+      </ModalSearchUser>
+
       <UButton
-        label="Search Users"
-        color="neutral"
-        variant="subtle"
-        icon="i-lucide-search"
-        class="glassContainer"
+        class=""
+        color="primary"
+        variant="solid"
+        icon="i-lucide-message-circle-plus"
+        @click="onCreateChat"
       />
-    </ModalSearchUser>
-    <UButton
-      label="Create Chatroom"
-      class="mb-4"
-      color="primary"
-      variant="solid"
-      icon="i-lucide-plus"
-      @click="onCreateChat"
-    />
+    </div>
     <UButton
       v-for="(user, i) in availableChatrooms.data"
       class="mb-1"
