@@ -22,7 +22,7 @@
       </UDrawer>
       <!--Desktop column for choosing chats-->
       <div v-if="!isMobile" class="align-column">
-        <ModalSearchUser @close="onUserSelect">
+        <ModalSearchUser class="mb-3" @close="onUserSelect">
           <UButton
             label="Search Users"
             color="neutral"
@@ -30,6 +30,13 @@
             icon="i-lucide-search"
           />
         </ModalSearchUser>
+
+        <UButton
+          v-for="(user, i) in availableChatrooms.data"
+          class="mb-1"
+          :label="user.name"
+          variant="subtle"
+        />
       </div>
       <slot />
     </div>
@@ -38,6 +45,7 @@
 
 <script lang="ts" setup>
 import type { UserSearchResult } from "~/types/userSearch";
+import { userLimits } from "~~/validation/commonLimits";
 
 const isMobile = useMobileDetector();
 const drawerOpen = useOpenDrawer();
@@ -48,6 +56,13 @@ async function onUserSelect(result: UserSearchResult | null) {
   if (!result) return;
   navigateTo(`/profile/${result.username}`);
 }
+
+const supabase = useSupabaseClient();
+let availableChatrooms: Object = await supabase.from("chatrooms").select("*");
+availableChatrooms.data?.forEach((element: Object, i: Number) => {
+  console.log(element);
+  console.log(i);
+});
 </script>
 
 <style>

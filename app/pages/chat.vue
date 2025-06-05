@@ -21,8 +21,8 @@
               page-reload. Start messaging today! **Note** If you want to test
               this create a local chatroom and add your logged in user's ID to
               it all via http://localhost:54323/. Afterwards change the
-              currently hardcoded chatroom_id to this chatroom's ID. Now you
-              can use the database!
+              currently hardcoded chatroom_id to this chatroom's ID. Now you can
+              use the database!
             </p>
             <span class="message-time">12:48</span>
           </div>
