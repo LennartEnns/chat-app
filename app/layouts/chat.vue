@@ -36,6 +36,7 @@
           class="mb-1"
           :label="user.name"
           variant="subtle"
+          @click="openChat(user.id)"
         />
       </div>
       <slot />
@@ -63,6 +64,10 @@ availableChatrooms.data?.forEach((element: Object, i: Number) => {
   console.log(element);
   console.log(i);
 });
+
+async function openChat(id: String) {
+  navigateTo("/chat/" + id);
+}
 </script>
 
 <style>
