@@ -7,9 +7,6 @@ using (
   get_role_in_chatroom((select auth.uid()), id) is not null
 );
 
-create policy "Users can create new chatrooms"
-on chatrooms for insert to authenticated
-with check (true);
-
--- No direct access, only through views
--- revoke all on public.chatrooms from authenticated, anon;
+-- Users can only view, not manipulate directly
+revoke all on public.chatrooms from authenticated, anon;
+grant select on public.chatrooms to authenticated, anon;

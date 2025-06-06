@@ -7,10 +7,6 @@ using (
   get_role_in_chatroom((select auth.uid()), chatroom_id) is not null
 );
 
-create policy "Users can create group chatrooms"
-on group_chatrooms for insert to authenticated
-with check (true);
-
 create policy "Admins can change group chatroom properties"
 on group_chatrooms for update to authenticated
 using (
@@ -22,10 +18,6 @@ on group_chatrooms for delete to authenticated
 using (
   get_role_in_chatroom((select auth.uid()), chatroom_id) = 'admin'
 );
-
--- Select only over view
-revoke select on public.group_chatrooms from authenticated, anon;
-
 
 -- Deletes a group chatroom when it has no members anymore
 create function public.auto_delete_empty_group_chatroom()

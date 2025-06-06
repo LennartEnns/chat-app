@@ -11,7 +11,7 @@ begin
   insert into public.user_to_group (user_id, chatroom_id, role)
   values (
     (select auth.uid()),
-    new.id,
+    new.chatroom_id,
     'admin'
   );
   return new;

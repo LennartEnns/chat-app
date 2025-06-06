@@ -20,7 +20,15 @@ using (
 
 create policy "Users can create direct chatrooms"
 on direct_chatrooms for insert to authenticated
-with check (true);
+with check (
+  user2_id is not null -- Required
+);
+
+create policy "Members can update direct chatrooms"
+on direct_chatrooms for update to authenticated
+using (
+  (select auth.uid()) in (user1_id, user2_id)
+);
 
 -- Direct Chatroom Update policies trigger
 create or replace function enforce_direct_chatrooms_update_policies()
@@ -66,11 +74,6 @@ using (
   (select auth.uid()) = user2_id and user1_id is null
 );
 
-
--- No direct access, only through views
-revoke all on public.direct_chatrooms from authenticated, anon;
-
-
 -- Deletes a direct chatroom when it has no members anymore
 create function public.auto_delete_empty_direct_chatroom()
 returns trigger
@@ -95,3 +98,12 @@ create trigger auto_delete_empty_direct_chatroom
   after update on public.direct_chatrooms
   for each row
   execute procedure public.auto_delete_empty_direct_chatroom();
+
+-- Allow only inserts of chatroom_id and user2_id
+revoke insert
+on table public.direct_chatrooms
+from authenticated;
+
+grant insert (chatroom_id, user2_id)
+on table public.direct_chatrooms
+to authenticated;
