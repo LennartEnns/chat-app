@@ -1,22 +1,23 @@
 <template>
-  <div class="align-column">
-    <ModalSearchUser @close="onUserSelect">
+  <div class="align-column p-0">
+    <div class="flex mb-2 gap-4 justify-center items-center">
+      <ModalSearchUser class="h-min" @close="onUserSelect">
+        <UButton
+          label="Search Users"
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-search"
+          class="glassContainer p-0"
+        />
+      </ModalSearchUser>
       <UButton
-        class="mb-3"
-        label="Search Users"
-        color="neutral"
-        variant="subtle"
-        icon="i-lucide-search"
+        class=""
+        color="primary"
+        variant="solid"
+        icon="i-lucide-message-circle-plus"
+        @click="onCreateChat"
       />
-    </ModalSearchUser>
-    <UButton
-      class="mb-4"
-      label="Create Chatroom"
-      color="primary"
-      variant="solid"
-      icon="i-lucide-plus"
-      @click="onCreateChat"
-    />
+    </div>
   </div>
 </template>
 
@@ -39,6 +40,4 @@ async function onCreateChat() {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>
