@@ -5,11 +5,11 @@ language plpgsql
 security definer set search_path = ''
 as $$
 begin
-  if NEW.name is distinct from OLD.name then
+  if new.name is distinct from old.name then
     raise exception 'Changing the file path is not allowed';
   end if;
 
-  if NEW.bucket_id is distinct from OLD.bucket_id then
+  if new.bucket_id is distinct from old.bucket_id then
     raise exception 'Changing the bucket_id is not allowed';
   end if;
 

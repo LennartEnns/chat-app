@@ -2,15 +2,15 @@
   <div class="align-column">
     <ModalSearchUser @close="onUserSelect">
       <UButton
+        class="mb-3"
         label="Search Users"
         color="neutral"
         variant="subtle"
         icon="i-lucide-search"
-        class="glassContainer"
       />
     </ModalSearchUser>
     <UButton
-      class="mb-[10px]"
+      class="mb-4"
       label="Create Chatroom"
       color="primary"
       variant="solid"

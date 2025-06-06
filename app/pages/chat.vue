@@ -47,8 +47,8 @@
           class="w-full glassBG"
           placeholder="Write a message..."
           autoresize
-          :rows="4"
-          :maxrows="4"
+          :rows="2"
+          :maxrows="10"
         />
         <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
           ><Icon name="ic:baseline-send"
