@@ -30,10 +30,19 @@
 import type { CommandPaletteItem } from '@nuxt/ui';
 import type { UserSearchResult, UserCommandPaletteItem } from '~/types/userSearch';
 
-const { searchTerm, groups, loading } = useUserSearch();
+const { excludeIds = [] } = defineProps<{
+  excludeIds?: string[]
+}>();
 
 const emit = defineEmits<{ close: [UserSearchResult | null] }>()
 const modalOpen = ref(false);
+
+const { searchTerm, groups, loading, excludeIds: searchExcludeIds } = useUserSearch();
+watch(() => excludeIds, (exclude) => {
+  searchExcludeIds.value = exclude;
+}, {
+  immediate: true,
+})
 
 async function onModelUpdate(value: CommandPaletteItem) {
   modalOpen.value = false;

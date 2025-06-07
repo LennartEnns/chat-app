@@ -7,11 +7,18 @@ using (
   get_role_in_chatroom((select auth.uid()), chatroom_id) is not null
 );
 
+create policy "Users can create group chatrooms"
+on group_chatrooms for insert to authenticated
+with check (true);
+
 create policy "Admins can change group chatroom properties"
 on group_chatrooms for update to authenticated
 using (
   get_role_in_chatroom((select auth.uid()), chatroom_id) = 'admin'
 );
+
+revoke update on public.group_chatrooms from authenticated;
+grant update (name, description) on public.group_chatrooms to authenticated;
 
 create policy "Admins can delete the group chatroom"
 on group_chatrooms for delete to authenticated

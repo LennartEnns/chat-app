@@ -44,8 +44,8 @@
 </template>
 
 <script lang="ts" setup>
-import ChangeUsernameForm from "../../components/Form/ChangeUsernameForm.vue";
-import ChangeEmailForm from "../../components/Form/ChangeEmailForm.vue";
+import ChangeUsernameForm from "../../components/Form/AuthFlow/ChangeUsernameForm.vue";
+import ChangeEmailForm from "../../components/Form/AuthFlow/ChangeEmailForm.vue";
 import { ModalDeleteUser } from "#components";
 
 const userData = useUserData();

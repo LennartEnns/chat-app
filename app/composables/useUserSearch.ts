@@ -8,7 +8,6 @@ import {
     validateDisplayNameSearch,
     validateUsernameSearch,
 } from "~~/validation/commonRules";
-import { da } from "@nuxt/ui/runtime/locale/index.js";
 
 /**
  * Composable that provides stateful logic for the user search command palette.
@@ -17,6 +16,7 @@ export function useUserSearch() {
     const supabase = useSupabaseClient();
     const operationFeedbackHandler = useOperationFeedbackHandler();
     const userData = useUserData();
+    const excludeIds = ref<string[]>([]);
 
     const unknownErrorMessage = "Unknown error during data retrieval";
     const minTimeBetweenSearches = 500; // ms
@@ -45,13 +45,16 @@ export function useUserSearch() {
     ]);
 
     async function searchUsersInDatabase(term: string) {
-        const usersQuery = supabase
+        let usersQuery = supabase
             .from("profiles")
             .select("user_id, username, displayname")
             .neq("username", userData.username)
             .or(`username.ilike.%${term}%, displayname.ilike.%${term}%`)
             .order("username")
             .limit(userSelectLimit);
+        if (excludeIds.value.length > 0) {
+            usersQuery = usersQuery.not('user_id', 'in', `(${excludeIds.value.join(',')})`)
+        }
 
         const { data, error } = await usersQuery;
         loading.value = false;
@@ -73,6 +76,7 @@ export function useUserSearch() {
                 id: user.user_id,
                 label: user.displayname ?? user.username,
                 suffix: user.username,
+                // @ts-expect-error ignore deep type instantiation warning
                 avatar: {
                     src: getAvatarUrl(user.user_id),
                     icon: "i-lucide-user",
@@ -119,9 +123,17 @@ export function useUserSearch() {
         }, minTimeBetweenSearches);
     });
 
+    // Filter current list in addition to db search
+    watch(excludeIds, (exclude) => {
+        users.value = users.value.filter((user) =>
+            exclude.indexOf((user as UserCommandPaletteItem).user.user_id) < 0
+        );
+    })
+
     return {
         searchTerm,
         groups,
         loading,
+        excludeIds
     };
 }

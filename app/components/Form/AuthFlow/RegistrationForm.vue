@@ -13,7 +13,7 @@
     <UForm
       :schema="schema"
       :state="state"
-      class="space-y-4 w-3xs xl:w-2xs"
+      class="space-y-4 w-xs"
       @submit="onSubmit"
     >
       <UFormField label="Email" name="email" required>
@@ -55,9 +55,9 @@
 <script setup lang="ts">
 import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
-import { registrationSchema } from "../../../validation/schemas/input/inputUserSchemas";
-import { getAuthErrorMessage, logAuthError } from "../../../errors/authErrors";
-import PasswordToggleInput from "../Input/PasswordToggleInput.vue";
+import { registrationSchema } from "../../../../validation/schemas/input/inputUserSchemas";
+import { getAuthErrorMessage, logAuthError } from "../../../../errors/authErrors";
+import PasswordToggleInput from "../../Input/PasswordToggleInput.vue";
 
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();

@@ -23,17 +23,20 @@ using (
   group_invitations.invitee_id = (select auth.uid())
 );
 
-create policy "Mods can invite users as member/viewer"
+create policy "Admins/Mods can invite users (mods only as member/viewer)"
 on group_invitations for insert to authenticated
 with check (
-  get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'mod'
-  and group_invitations.as_role in ('member', 'viewer')
-);
-
-create policy "Admins can invite users as any role"
-on group_invitations for insert to authenticated
-with check (
-  get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'admin'
+  (
+    (
+      get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'mod'
+      and group_invitations.as_role in ('member', 'viewer')
+    )
+    or
+    (
+      get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'admin'
+    )
+    -- Invited user must not be a member
+  ) and get_role_in_chatroom(group_invitations.invitee_id, group_invitations.chatroom_id) is null
 );
 
 -- Allow only inserts of invitee_id, chatroom_id and as_role

@@ -13,7 +13,7 @@
     <UForm
       :schema="loginSchema"
       :state="agnosticLoginState"
-      class="space-y-4 w-3xs xl:w-2xs"
+      class="space-y-4 w-xs"
       @submit="onSubmit"
     >
       <UFormField label="Username / Email" name="usernameOrEmail" required>
@@ -43,9 +43,9 @@
 <script setup lang="ts">
 import type * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
-import { loginSchema } from "../../../validation/schemas/input/inputUserSchemas";
-import { getAuthErrorMessage, logAuthError } from "../../../errors/authErrors";
-import PasswordToggleInput from "../Input/PasswordToggleInput.vue";
+import { loginSchema } from "../../../../validation/schemas/input/inputUserSchemas";
+import { getAuthErrorMessage, logAuthError } from "../../../../errors/authErrors";
+import PasswordToggleInput from "../../Input/PasswordToggleInput.vue";
 import ForgotPassword from "~/components/Modal/ForgotPassword.vue";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 
