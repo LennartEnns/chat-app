@@ -60,7 +60,7 @@
                     "
                     accept="image/*"
                     @change="uploadAvatar"
-                  />
+                  >
                 </div>
               </div>
               <div :class="`mt-4 ${themedTextsColor}`">
@@ -230,7 +230,6 @@ import {
 } from "~~/errors/storageErrors";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 import {
-  getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
 
@@ -343,15 +342,15 @@ async function loadUserProfile(username: string) {
       .eq("username", username)
       .single();
 
-    if(data == null){
-      showError({
-          statusCode: 404,
-          statusMessage: "The user you searched for is not found",
-      });
-    }
-
     if (dbError) {
       logPostgrestError(dbError, "profile loading");
+    }
+
+    if(!data){
+      showError({
+          statusCode: 404,
+          statusMessage: "The user you searched for was not found",
+      });
       return;
     }
 

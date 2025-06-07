@@ -57,7 +57,7 @@ export type Database = {
           user2_id: string | null
         }
         Insert: {
-          chatroom_id: string
+          chatroom_id?: string
           user1_id?: string | null
           user2_accepted?: boolean | null
           user2_id?: string | null

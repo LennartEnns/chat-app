@@ -1,5 +1,6 @@
 create table if not exists direct_chatrooms (
-  chatroom_id uuid primary key references chatrooms(id) on delete cascade,
+  -- Default value will never be used, just for correct generation of TS types
+  chatroom_id uuid primary key default gen_random_uuid() references chatrooms(id) on delete cascade,
   user1_id uuid default auth.uid() references auth.users(id) on delete set null,
   user2_id uuid references auth.users(id) on delete set null,
   user2_accepted boolean default false,
@@ -43,6 +44,7 @@ begin
     and new.user1_id in (old.user1_id, null) -- Can leave chatroom
     and new.user2_id = old.user2_id -- Must stay the same
     and new.user2_accepted = old.user2_accepted -- Must stay the same
+    and new.chatroom_id = old.chatroom_id -- Must stay the same
   then
     return new;
 
@@ -52,6 +54,7 @@ begin
     and new.user1_id = old.user1_id -- Must stay the same
     and new.user2_id in (old.user2_id, null) -- Can leave chatroom
     and new.user2_accepted in (old.user2_accepted, true) -- Can accept
+    and new.chatroom_id = old.chatroom_id -- Must stay the same
   then
     return new;
   end if;

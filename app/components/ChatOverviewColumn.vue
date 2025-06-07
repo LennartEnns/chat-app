@@ -7,7 +7,7 @@
           color="neutral"
           variant="subtle"
           icon="i-lucide-search"
-          class="glassContainer p-0"
+          class="flex-1"
         />
       </ModalSearchUser>
       <UButton
@@ -35,8 +35,15 @@ async function onUserSelect(result: UserSearchResult | null) {
 }
 
 async function onCreateChat() {
-  // Open without awaiting a result, as creation logic is handled inside the Modal
-  createChatroomModal.open();
+  const instance = createChatroomModal.open();
+  const res = await instance.result;
+  if (res) {
+    if (res.type === 'direct') {
+      navigateTo(`/chat/${res.id}`);
+    } else {
+      navigateTo(`/chat/${res.id}/info`);
+    }
+  }
 }
 </script>
 

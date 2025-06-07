@@ -9,4 +9,4 @@ using (
 
 -- Users can only view, not manipulate directly
 revoke all on public.chatrooms from authenticated, anon;
-grant select on public.chatrooms to authenticated, anon;
+grant select on public.chatrooms to authenticated;

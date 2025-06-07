@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import RegistrationForm from '~/components/Form/RegistrationForm.vue';
+import RegistrationForm from '~/components/Form/AuthFlow/RegistrationForm.vue';
 </script>
 
 <style scoped>

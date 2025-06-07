@@ -24,25 +24,25 @@
 <script setup lang="ts">
 
 import type { NuxtError } from '#app';
-import colors from 'tailwindcss/colors'
+import colors from 'tailwindcss/colors';
 
 const { isLight } = useSSRSafeTheme();
 const supabase = useSupabaseClient();
-const { data } = await supabase.auth.getSession()
-const authenticated = data.session?.user.role
+const { data } = await supabase.auth.getSession();
+const authenticated = data.session?.user.role;
 const primaryColor = useCookie("uiPrimary").value;
 
-const props = defineProps<{
+defineProps<{
   error: NuxtError
-}>()
+}>();
 
 const themedUserColor = computed(() =>
   isLight.value ? "user-light-mode" : "user-dark-mode"
 );
 const handleError = () => {
   if(authenticated == "authenticated"){
-    clearError({ redirect: '/chat'})
-  } else clearError({ redirect: '/' })
+    clearError({ redirect: '/chat'});
+  } else clearError({ redirect: '/' });
 }
 
 onMounted(() => {
@@ -69,34 +69,33 @@ onMounted(() => {
 
 const gradientColor2 = computed(() => {
   if (!primaryColor || !(primaryColor in colors)) {
-    return '#333333'
+    return '#333333';
   }
 
-  const colorShades = colors[primaryColor as keyof typeof colors]
-  return isLight.value ? colorShades[200] : "#0c1223"
+  const colorShades = colors[primaryColor as keyof typeof colors];
+  return isLight.value ? colorShades[200] : "#0c1223";
 })
 
 const gradientColor1 = computed(() => {
   if (!primaryColor || !(primaryColor in colors)) {
-    return '#555555'
+    return '#555555';
   }
 
-  const colorShades = colors[primaryColor as keyof typeof colors]
-  return isLight.value ? colorShades[400] : colorShades[600]
+  const colorShades = colors[primaryColor as keyof typeof colors];
+  return isLight.value ? colorShades[400] : colorShades[600];
 })
 
 const primaryColorValue = computed(() => {
   if (!primaryColor || !(primaryColor in colors)) {
-    return '#6366f1'
+    return '#6366f1';
   }
 
-  const colorShades = colors[primaryColor as keyof typeof colors]
+  const colorShades = colors[primaryColor as keyof typeof colors];
   return isLight.value ? colorShades[400] : colorShades[600];
 })
 </script>
 
 <style scoped>
-
 .status-code-container {
   position: relative;
   display: inline-block;
@@ -148,6 +147,7 @@ const primaryColorValue = computed(() => {
   
   .headline-space-text {
     font-size: clamp(1.25rem, 7vw, 4rem);
+    user-select: none;
   }
   
   .headline-error-message {

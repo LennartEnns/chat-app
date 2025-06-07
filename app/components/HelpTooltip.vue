@@ -12,12 +12,7 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
-  text: {
-    type: String,
-    required: true,
-  },
-});
+defineProps<{ text: string }>();
 const open = ref(false);
 </script>
 
