@@ -3,7 +3,7 @@ import { Client } from "pg";
 import { readFileSync } from 'fs';
 import path from "path";
 import testUsers from "./testUsers";
-import testChatrooms from "./testChatrooms";
+import testChatrooms from "./testGroups";
 import * as queries from "./queries";
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -66,15 +66,15 @@ const uploadAvatars = async () => {
   }
 }
 
-const seedChatrooms = async () => {
+const seedGroups = async () => {
   for (const chatroom of testChatrooms) {
-    // Create the chatroom
-    await pgClient.query(queries.createChatroomQuery, [chatroom.id, chatroom.name, chatroom.description]);
+    // Create the group
+    await pgClient.query(queries.createGroupQuery, [chatroom.id, chatroom.name, chatroom.description]);
 
     // Add the users
     for (const user of chatroom.users) {
       // Add user
-      await pgClient.query(queries.addUserToChatroomQuery, [user.id, chatroom.id, user.role]);
+      await pgClient.query(queries.addUserToGroupQuery, [user.id, chatroom.id, user.role]);
     }
   }
 }
@@ -86,8 +86,8 @@ const main = async () => {
   await seedTestUsers();
   console.log("Uploading avatars...");
   await uploadAvatars().catch(console.error);
-  console.log("Seeding chatrooms...");
-  await seedChatrooms().catch(console.error);
+  console.log("Seeding groups...");
+  await seedGroups().catch(console.error);
   console.log("Closing DB connection...");
   await pgClient.end();
 

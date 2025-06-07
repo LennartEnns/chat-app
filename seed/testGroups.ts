@@ -1,6 +1,6 @@
 import type { Enums } from "~~/database.types"
 
-type TestChatroom = {
+type TestGroup = {
   id: string,
   name: string,
   description: string | null,
@@ -10,7 +10,7 @@ type TestChatroom = {
   }[]
 }
 
-const testChatrooms: TestChatroom[] = [
+const testChatrooms: TestGroup[] = [
   {
     id: '3694a296-19ad-4351-8399-4584da6e4b70',
     name: 'Deine Mutter',

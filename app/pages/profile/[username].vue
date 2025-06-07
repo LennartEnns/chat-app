@@ -352,9 +352,6 @@ async function loadUserProfile(username: string) {
 
     if (dbError) {
       logPostgrestError(dbError, "profile loading");
-      operationFeedbackHandler.displayError(
-        getPostgrestErrorMessage(dbError, "Unknown error loading profile")
-      );
       return;
     }
 
