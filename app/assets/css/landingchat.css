@@ -1,0 +1,116 @@
+.mainContainer {
+  margin-top: 10px;
+  margin-bottom: 0.1rem;
+  margin-left: 2.7rem;
+  margin-right: 2.7rem;
+}
+
+.newMessagesContainer {
+  margin-top: 2rem;
+  margin-left: 5rem;
+  margin-right: 4rem;
+}
+
+.mainGlassContainer-dark {
+  background-color: color-mix(in srgb, var(--ui-bg) 35%, transparent);
+  border: 1px solid transparent;
+  border-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ui-primary), white 0%) 20%,
+    color-mix(in srgb, var(--ui-primary), white 70%) 30%,
+    color-mix(in srgb, var(--ui-primary), black 50%) 100%
+  );
+  border-image-slice: 1;
+}
+
+.mainGlassContainer-light {
+  background-color: color-mix(in srgb, var(--ui-bg) 20%, gray 7%);
+  border: 1px solid transparent;
+  border-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ui-primary), white 0%) 20%,
+    color-mix(in srgb, var(--ui-primary), white 70%) 30%,
+    color-mix(in srgb, var(--ui-primary), black 50%) 100%
+  );
+  border-image-slice: 1;
+}
+
+/* Desktop */
+.headlineChat-desktop {
+  margin-top: 17rem;
+  text-align: center;
+  text-justify: auto;
+  font-size: 1.5rem;
+  font-style: italic;
+  font-weight: lighter;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--ui-bg) 85%, white);
+  filter: invert(40%);
+}
+.separator-dark-desktop {
+  align-items: center;
+  padding-left: 10rem;
+  padding-right: 10rem;
+  margin-top: 3rem;
+  color: white;
+}
+.separator-light-desktop {
+  align-items: center;
+  padding-left: 10rem;
+  padding-right: 10rem;
+  margin-top: 3rem;
+  color: white;
+}
+/* Mobile */
+.headlineChat-mobile {
+  margin-top: 4rem;
+  text-align: center;
+  text-justify: auto;
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: lighter;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--ui-bg) 85%, white);
+  filter: invert(40%);
+}
+.separator-dark-mobile {
+  align-items: center;
+  padding-left: 4rem;
+  padding-right: 4rem;
+  margin-top: 2rem;
+}
+.separator-light-mobile {
+  align-items: center;
+  padding-left: 4rem;
+  padding-right: 4rem;
+  margin-top: 2rem;
+}
+.newMessages {
+  display: flex;
+  flex-direction: row;
+  margin-top: 1rem;
+  min-height: 35px;
+  background-color: color-mix(in srgb, var(--ui-bg) 20%, transparent);
+  filter: invert(40%);
+}
+.container-overlay {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  align-items: center;
+}
+
+.avatars {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  margin-top: 1.4rem;
+  margin-left: -1rem;
+  z-index: 2;
+}
+
+.button-layer {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 1;
+}
