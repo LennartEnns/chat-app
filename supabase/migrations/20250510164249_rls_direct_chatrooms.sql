@@ -31,7 +31,6 @@ begin
     (select auth.uid()) = old.user1_id
     and new.user1_id in (old.user1_id, null) -- Can leave chatroom
     and new.user2_id = old.user2_id -- Must stay the same
-    and new.user2_accepted = old.user2_accepted -- Must stay the same
     and new.chatroom_id = old.chatroom_id -- Must stay the same
   then
     return new;
@@ -41,7 +40,6 @@ begin
     (select auth.uid()) = old.user2_id
     and new.user1_id = old.user1_id -- Must stay the same
     and new.user2_id in (old.user2_id, null) -- Can leave chatroom
-    and new.user2_accepted in (old.user2_accepted, true) -- Can accept
     and new.chatroom_id = old.chatroom_id -- Must stay the same
   then
     return new;
@@ -57,12 +55,12 @@ before update on public.direct_chatrooms
 for each row
 execute procedure enforce_direct_chatrooms_update_policies();
 
-create policy "User can delete chatroom if other user is gone or user2 has not accepted"
+create policy "User can delete chatroom when other user has left"
 on direct_chatrooms for delete to authenticated
 using (
-  (select auth.uid()) = user1_id and (user2_id is null or not user2_accepted)
+  (select auth.uid()) = user1_id and user2_id is null
   or
-  (select auth.uid()) = user2_id and (user1_id is null or not user2_accepted)
+  (select auth.uid()) = user2_id and user1_id is null
 );
 
 -- Deletes a direct chatroom when it has no members anymore

@@ -75,7 +75,7 @@ const chatroomTypeTabItems = ref<TabsItem[]>([{
 
 async function onCreateDirectChatroom(chatroomData: z.output<typeof createDirectChatroomSchema>) {
   const id = await createDirectChatroom({
-    invitedUserId: chatroomData.invitedUser.user_id,
+    otherUserId: chatroomData.otherUser.user_id,
   });
   if (!id) return;
 

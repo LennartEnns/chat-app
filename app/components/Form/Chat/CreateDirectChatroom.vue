@@ -7,15 +7,15 @@
   >
     <ModalSearchUser class="h-min" @close="onUserSelect">
       <UButton
-        label="Select User"
+        label="Search User"
         color="neutral"
         variant="subtle"
         icon="i-lucide-search"
         class="w-full rounded-b-none"
       />
     </ModalSearchUser>
-    <UFormField name="invitedUser" required>
-      <div v-if="!state.invitedUser" class="text-muted border-1 border-accented rounded-lg p-2 border-t-0 rounded-t-none">
+    <UFormField name="otherUser" required>
+      <div v-if="!state.otherUser" class="text-muted border-1 border-accented rounded-lg p-2 border-t-0 rounded-t-none">
         Select a user to chat with
       </div>
       <div v-else class="flex flex-row items-center justify-start gap-2 p-1 border-1 border-accented rounded-lg border-t-0 rounded-t-none">
@@ -23,13 +23,13 @@
           :src="userAvatarUrl"
           icon="i-lucide-user" />
         <span>
-          {{ state.invitedUser.displayname ?? state.invitedUser.username }}
+          {{ state.otherUser.displayname ?? state.otherUser.username }}
         </span>
-        <span v-if="state.invitedUser.displayname" class="text-muted">
-          {{ state.invitedUser.username }}
+        <span v-if="state.otherUser.displayname" class="text-muted">
+          {{ state.otherUser.username }}
         </span>
         <div class="flex-1" />
-        <UButton icon="i-lucide-x" variant="ghost" color="error" @click="state.invitedUser = undefined" />
+        <UButton icon="i-lucide-x" variant="ghost" color="error" @click="state.otherUser = undefined" />
       </div>
     </UFormField>
   </UForm>
@@ -48,13 +48,13 @@ const emit = defineEmits<{
 }>();
 
 const state = reactive<Partial<Schema>>({
-  invitedUser: undefined,
+  otherUser: undefined,
 });
-const userAvatarUrl = computed(() => state.invitedUser ? getAvatarUrl(state.invitedUser.user_id) : undefined);
+const userAvatarUrl = computed(() => state.otherUser ? getAvatarUrl(state.otherUser.user_id) : undefined);
 
 async function onUserSelect(result: UserSearchResult | null) {
   if (result) {
-    state.invitedUser = result;
+    state.otherUser = result;
   }
 }
 

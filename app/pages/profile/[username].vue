@@ -178,7 +178,7 @@
                   >
                     <div
                       v-if="!isOwnProfile || !isEditingDescription"
-                      :class="`whitespace-pre-line break-all ${
+                      :class="`whitespace-pre-line wrap-anywhere ${
                         isFalsy(profileData.description)
                           ? themedWeakColor
                           : themedTextsColor
