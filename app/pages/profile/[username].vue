@@ -60,7 +60,7 @@
                     "
                     accept="image/*"
                     @change="uploadAvatar"
-                  />
+                  >
                 </div>
               </div>
               <div :class="`mt-4 ${themedTextsColor}`">
@@ -178,7 +178,7 @@
                   >
                     <div
                       v-if="!isOwnProfile || !isEditingDescription"
-                      :class="`whitespace-pre-line break-all ${
+                      :class="`whitespace-pre-line wrap-anywhere ${
                         isFalsy(profileData.description)
                           ? themedWeakColor
                           : themedTextsColor
@@ -230,7 +230,6 @@ import {
 } from "~~/errors/storageErrors";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 import {
-  getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
 
@@ -281,7 +280,7 @@ const descriptionChanged = computed(
 const descriptionRowCount = computed(() =>
   profileData.value?.description
     ? (profileData.value.description.match(/\n/g) || "").length + 1
-    : 0
+    : 1
 );
 const displayNameSanitized = computed(() =>
   isFalsy(newDisplayName.value) ? null : newDisplayName.value.trim()
@@ -343,15 +342,15 @@ async function loadUserProfile(username: string) {
       .eq("username", username)
       .single();
 
-    if(data == null){
-      showError({
-          statusCode: 404,
-          statusMessage: "The user you searched for is not found",
-      });
-    }
-
     if (dbError) {
       logPostgrestError(dbError, "profile loading");
+    }
+
+    if(!data){
+      showError({
+          statusCode: 404,
+          statusMessage: "The user you searched for was not found",
+      });
       return;
     }
 
@@ -397,7 +396,6 @@ async function onUploadCroppedAvatar(blob: Blob) {
     .from("avatars")
     .upload(userData.avatarPath, blob, {
       upsert: true,
-      contentType: "image/jpeg",
       cacheControl: "0",
 
       // Kind of unnecessary next to max-age=0, but better be on the safe side ;)

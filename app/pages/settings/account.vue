@@ -14,13 +14,13 @@
     </div>
 
     <USeparator label="Username" class="mt-4" color="primary" />
-    <div class="text-muted text-center">
+    <div class="text-muted">
       {{ userData.username }}
     </div>
     <ChangeUsernameForm />
 
     <USeparator label="Email/Password" class="mt-4" color="primary" />
-    <div class="text-muted text-center">
+    <div class="text-muted">
       {{ userData.email }}
     </div>
     <ChangeEmailForm />
@@ -30,9 +30,9 @@
       @click="flowActions.requestPasswordReset(userData.email)"
     />
 
-    <USeparator label="Danger Zone" class="mt-4" color="error" />
+    <USeparator label="Danger Zone" class="mt-6" color="error" />
     <UButton
-      class="flex flex-col cursor-pointer"
+      class="flex flex-col cursor-pointer mb-10"
       variant="outline"
       color="error"
       @click="onDeleteUser"
@@ -44,8 +44,8 @@
 </template>
 
 <script lang="ts" setup>
-import ChangeUsernameForm from "../../components/Form/ChangeUsernameForm.vue";
-import ChangeEmailForm from "../../components/Form/ChangeEmailForm.vue";
+import ChangeUsernameForm from "../../components/Form/AuthFlow/ChangeUsernameForm.vue";
+import ChangeEmailForm from "../../components/Form/AuthFlow/ChangeEmailForm.vue";
 import { ModalDeleteUser } from "#components";
 
 const userData = useUserData();

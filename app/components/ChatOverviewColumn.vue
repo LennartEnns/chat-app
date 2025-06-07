@@ -7,10 +7,9 @@
           color="neutral"
           variant="subtle"
           icon="i-lucide-search"
-          class="glassContainer p-0"
+          class="flex-1"
         />
       </ModalSearchUser>
-
       <UButton
         class=""
         color="primary"
@@ -19,13 +18,6 @@
         @click="onCreateChat"
       />
     </div>
-    <UButton
-      v-for="(user, i) in availableChatrooms.data"
-      class="mb-1"
-      :label="user.name"
-      variant="subtle"
-      @click="openChat(user.id)"
-    />
   </div>
 </template>
 
@@ -43,19 +35,15 @@ async function onUserSelect(result: UserSearchResult | null) {
 }
 
 async function onCreateChat() {
-  // Open without awaiting a result, as creation logic is handled inside the Modal
-  createChatroomModal.open();
-}
-
-const supabase = useSupabaseClient();
-let availableChatrooms: Object = await supabase.from("chatrooms").select("*");
-availableChatrooms.data?.forEach((element: Object, i: Number) => {
-  console.log(element);
-  console.log(i);
-});
-
-async function openChat(id: String) {
-  navigateTo("/chat/" + id);
+  const instance = createChatroomModal.open();
+  const res = await instance.result;
+  if (res) {
+    if (res.type === 'direct') {
+      navigateTo(`/chat/${res.id}`);
+    } else {
+      navigateTo(`/chat/${res.id}/info`);
+    }
+  }
 }
 </script>
 
