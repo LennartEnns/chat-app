@@ -12,10 +12,12 @@
       required
     >
       <UInput
+        id="nameInput"
         v-model="state.name"
         class="w-full"
         placeholder="Pick a name for your group"
         :maxlength="groupChatroomLimits.name"
+        @vue:mounted="attachNameInputEnterHandler"
       />
     </UFormField>
 
@@ -24,6 +26,7 @@
       name="description"
     >
       <UTextarea
+        id="descriptionInput"
         v-model="state.description"
         class="w-full"
         placeholder="Infos about the group"
@@ -31,6 +34,7 @@
         :rows="3"
         :maxrows="5"
         autoresize
+        @keydown.enter.stop
       />
     </UFormField>
 
@@ -126,7 +130,6 @@ async function onUserSelect(result: UserSearchResult | null) {
     }
   }
 }
-
 async function onSubmit() {
   const { data } = createGroupChatroomSchema.safeParse(state);
   if (data) {
@@ -136,6 +139,18 @@ async function onSubmit() {
       description: data.description?.trim(),
     })
   }
+}
+
+async function attachNameInputEnterHandler() {
+  document
+    .getElementById("nameInput")
+    ?.addEventListener("keyup", (e: KeyboardEvent) => {
+      if (e.code === "Enter") {
+        if (isFalsy(state.name)) return;
+        document.getElementById("descriptionInput")
+          ?.focus();
+      }
+    });
 }
 </script>
 

@@ -280,7 +280,7 @@ const descriptionChanged = computed(
 const descriptionRowCount = computed(() =>
   profileData.value?.description
     ? (profileData.value.description.match(/\n/g) || "").length + 1
-    : 0
+    : 1
 );
 const displayNameSanitized = computed(() =>
   isFalsy(newDisplayName.value) ? null : newDisplayName.value.trim()
@@ -396,7 +396,6 @@ async function onUploadCroppedAvatar(blob: Blob) {
     .from("avatars")
     .upload(userData.avatarPath, blob, {
       upsert: true,
-      contentType: "image/jpeg",
       cacheControl: "0",
 
       // Kind of unnecessary next to max-age=0, but better be on the safe side ;)
