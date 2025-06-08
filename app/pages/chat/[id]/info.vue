@@ -42,7 +42,9 @@
             </UModal>
           </div>
           <div class="py-5">
-            <p class="text-[40px]">{{ chatroom.displayname }}</p>
+            <p class="text-[40px] font-bold text-neutral-700 dark:text-white">
+              {{ chatroom.displayname }}
+            </p>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
             <p class="font-bold pb-5">Description:</p>
