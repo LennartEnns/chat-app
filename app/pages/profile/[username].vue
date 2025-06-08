@@ -13,9 +13,11 @@
           </template>
 
           <!-- Loading state -->
-          <div v-if="loading" class="flex justify-center items-center py-8">
-            <UIcon name="i-lucide-loader-2" class="animate-spin" size="2xl" />
-            <span class="ml-2">Loading profile...</span>
+          <div v-if="loading" class="flex flex-col gap-y-10">
+            <USkeleton class="w-32 h-32 rounded-full self-center" />
+            <USkeleton class="h-3 w-[80%]" />
+            <USkeleton class="h-3 w-[70%]" />
+            <USkeleton class="h-3 w-[100%]" />
           </div>
 
           <!-- Profile content -->
@@ -259,7 +261,7 @@ const showDescriptionLengthIndicator = computed(
 async function loadUserProfile(username: string) {
   loading.value = true;
 
-  // If it's the current user, get data from users metadata
+  // If it's the current user, get data from user's metadata
   if (isOwnProfile.value) {
     watch(
       userData,
@@ -290,8 +292,8 @@ async function loadUserProfile(username: string) {
 
     if(!data){
       showError({
-          statusCode: 404,
-          statusMessage: "The user you searched for was not found",
+        statusCode: 404,
+        statusMessage: "The user you searched for was not found",
       });
       return;
     }
