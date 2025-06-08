@@ -24,7 +24,7 @@ export default async (blob: Blob, bucket_name: string, path: string) => {
     return false;
   } else {
     operationFeedbackHandler.displaySuccess(
-      "Avatar has been updated. You may need to reload the page."
+      "Avatar has been updated"
     );
     return true;
   }

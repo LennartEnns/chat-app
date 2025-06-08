@@ -3,7 +3,7 @@
     <div class="avatar-container">
       <UAvatar
         class="border-2"
-        :src="(editable || clearable) ? cacheBustedSrc : src"
+        :src="srcModified"
         :icon="defaultIcon"
         :ui="{ root: 'size-35', icon: 'size-11/12' }"
       />
@@ -56,12 +56,11 @@ const overlay = useOverlay();
 const croppingModal = overlay.create(CropAvatar);
 
 const existsSrc = ref(false);
-const srcCacheBuster = ref(Date.now());
-const cacheBustedSrc = computed(() => props.src + `?t=${srcCacheBuster.value}`);
+const srcModified = ref(props.src);
+watch(() => props.src, (newVal) => {
+  srcModified.value = newVal;
+});
 
-async function forceReload() {
-  srcCacheBuster.value = Date.now();
-}
 async function startCroppingAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -76,7 +75,7 @@ async function startCroppingAvatar(event: Event) {
     const success = await uploadAvatarBlob(result, props.bucketName, props.filepath);
     if (success) {
       existsSrc.value = true;
-      forceReload();
+      srcModified.value = URL.createObjectURL(result);
     }
   }
 }
@@ -88,7 +87,7 @@ async function clearAvatar() {
     operationFeedbackHandler.displayError("Could not clear avatar.");
   } else {
     existsSrc.value = false;
-    forceReload();
+    srcModified.value = undefined;
     emit('clear');
   }
 }
