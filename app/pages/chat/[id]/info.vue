@@ -177,10 +177,8 @@ const supabase = useSupabaseClient();
 const route = useRoute();
 const routeChatroomId = computed(() => {
   const params = route.params;
-  return params.chatUUID as string;
+  return params.id as string;
 });
-
-console.log(routeChatroomId.value);
 
 async function openDrawer() {
   open.value = true;
