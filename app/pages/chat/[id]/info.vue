@@ -3,38 +3,16 @@
     <NuxtLayout name="logged-in">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
         <div class="flex flex-col items-center p-5">
-          <div class="pt-10 pb-5">
-            <div class="px-20">
-              <UAvatar
-                class="border-2 border-defaultNeutral-700"
-                src="https://github.com/benjamincanac.png"
-                icon="i-lucide-user"
-                :ui="{ root: 'size-fit' }"
-              />
-              <div>
-                <UIcon name="i-lucide-camera" size="xx-large" />
-                Edit Picture
-                <input
-                  type="file"
-                  style="
-                    position: absolute;
-                    width: 10%;
-                    height: 10%;
-                    opacity: 0;
-                  "
-                  accept="image/*"
-                  @change="uploadAvatar"
-                />
-              </div>
-            </div>
-            <AvatarUploadCropper
-              v-if="newAvatarObjectUrl"
-              :image-url="newAvatarObjectUrl"
-              @upload="onUploadCroppedAvatar"
-            />
-          </div>
+          <EditableAvatar 
+            :src="'https://github.com/nuxt.png'"
+            bucket-name="chatroom_avatars"
+            :filepath="chatroom.avatarPath"
+            default-icon="i-lucide-users-round"
+            :editable="false"
+            :clearable="false"
+          />
           <div class="py-5">
-            <p class="text-[20px]">{{ chatroom.displayname }}</p>
+            <p class="text-[20px]">{{ chatroom.name }}</p>
           </div>
           <div class="py-5 text-center">
             {{ chatroom?.description || "No Description" }}
@@ -84,9 +62,10 @@
                 <UTooltip text="View invitations">
                   <UButton
                     class="flex size-fit mb-3"
-                    @click="openDrawer"
-                    color="primary"
+                    label="Invitations"
                     trailing-icon="i-lucide-chevron-left"
+                    color="primary"
+                    @click="invitationsDrawerOpen = true"
                   />
                 </UTooltip>
               </div>
@@ -99,8 +78,8 @@
           </div>
         </div>
         <UDrawer
+          v-model:open="invitationsDrawerOpen"
           direction="right"
-          v-model:open="open"
           class="hidden md:block lg:hidden"
         >
           <template #body>
@@ -123,7 +102,7 @@
                       Peterskotstube wrkegjtlwkjertlwkejrce
                     </div>
                   </div>
-                  <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
+                  <UButton icon="i-lucide-trash-2" class="size-fit" />
                 </div>
               </div>
             </div>
@@ -148,7 +127,7 @@
                   Peterskotstube wrkegjtlwkjertlwkejrce
                 </div>
               </div>
-              <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
+              <UButton icon="i-lucide-trash-2" class="size-fit" />
             </div>
           </div>
         </div>
@@ -159,47 +138,26 @@
 
 <script setup lang="ts">
 import {
-  getStorageErrorMessage,
-  logStorageError,
-} from "~~/errors/storageErrors";
-
-import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
+import type { Tables } from "~~/database.types";
 
-const operationFeedbackHandler = useOperationFeedbackHandler();
-const open = ref(false);
-const newAvatarObjectUrl = ref<string | null>(null);
-const showAvatarCroppingModal = ref(false);
 const supabase = useSupabaseClient();
-
+const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
+
+const invitationsDrawerOpen = ref(false);
+
 const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
 });
 
-async function openDrawer() {
-  open.value = true;
-}
-
-type Chatroom = {
-  id: string;
-  displayname: string | null;
-  description: string | null;
+type Chatroom = Tables<'group_chatrooms'> & {
   avatarPath: string;
   avatarUrl: string;
 };
-
-async function uploadAvatar(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (file) {
-    newAvatarObjectUrl.value = URL.createObjectURL(file);
-    showAvatarCroppingModal.value = true;
-  }
-}
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
 const avatarUrlData = supabase.storage
@@ -208,8 +166,8 @@ const avatarUrlData = supabase.storage
 const avatarUrl = avatarUrlData.data.publicUrl;
 
 const chatroom = ref<Chatroom>({
-  id: routeChatroomId.value,
-  displayname: "Loading name...",
+  chatroom_id: routeChatroomId.value,
+  name: "Loading name...",
   description: "Loadind description...",
   avatarPath: avatarPath,
   avatarUrl: avatarUrl,
@@ -219,47 +177,18 @@ async function loadChatInfo() {
   const { data, error } = await supabase
     .from("group_chatrooms")
     .select("name, description")
-    .eq("chatroom_id", chatroom.value.id)
+    .eq("chatroom_id", chatroom.value.chatroom_id)
     .single();
 
   if (error) {
-    logPostgrestError(error, "message fetching");
+    logPostgrestError(error, "info fetching");
     operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message fetching error")
+      getPostgrestErrorMessage(error, "Unknown error fetching chatroom info")
     );
     return;
   }
-  chatroom.value.displayname = data.name;
+  chatroom.value.name = data.name;
   chatroom.value.description = data.description;
-}
-
-async function onUploadCroppedAvatar(blob: Blob) {
-  showAvatarCroppingModal.value = false;
-  newAvatarObjectUrl.value = null;
-  console.log(avatarUrlData);
-  const { error } = await supabase.storage
-    .from("chatroom_avatars")
-    .upload(chatroom.value.avatarPath, blob, {
-      upsert: true,
-      contentType: "image/jpeg",
-      cacheControl: "0",
-
-      // Kind of unnecessary next to max-age=0, but better be on the safe side ;)
-      headers: {
-        "cache-control": "no-cache",
-      },
-    });
-  if (error) {
-    logStorageError(error, "avatar upload");
-    operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Unknown error uploading avatar")
-    );
-    return;
-  } else {
-    operationFeedbackHandler.displaySuccess(
-      "Your avatar has been updated. You may need to reload the page."
-    );
-  }
 }
 
 onMounted(() => {
