@@ -37,7 +37,7 @@
             <p class="text-[20px]">{{ chatroom.displayname }}</p>
           </div>
           <div class="py-5 text-center">
-            {{ chatroom.description }}
+            {{ chatroom?.description || "No Description" }}
           </div>
         </div>
         <div
@@ -186,7 +186,7 @@ async function openDrawer() {
   open.value = true;
 }
 
-type chat = {
+type Chatroom = {
   id: string;
   displayname: string | null;
   description: string | null;
@@ -209,20 +209,19 @@ const avatarUrlData = supabase.storage
   .getPublicUrl(avatarPath);
 const avatarUrl = avatarUrlData.data.publicUrl;
 
-const chatroom: chat = {
+const chatroom = ref<Chatroom>({
   id: routeChatroomId.value,
-  displayname: "Chatroom 001",
-  description:
-    "This is a demo chatroom hey ho just some plain text to fil the lines",
-  avatarPath,
-  avatarUrl,
-};
+  displayname: "Loading name...",
+  description: "Loadind description...",
+  avatarPath: avatarPath,
+  avatarUrl: avatarUrl,
+});
 
 async function loadChatInfo() {
   const { data, error } = await supabase
     .from("group_chatrooms")
     .select("name, description")
-    .eq("chatroom_id", chatroom.id)
+    .eq("chatroom_id", chatroom.value.id)
     .single();
 
   if (error) {
@@ -232,8 +231,8 @@ async function loadChatInfo() {
     );
     return;
   }
-  chatroom.displayname = data.name;
-  chatroom.description = data.description;
+  chatroom.value.displayname = data.name;
+  chatroom.value.description = data.description;
 }
 
 async function onUploadCroppedAvatar(blob: Blob) {
@@ -242,7 +241,7 @@ async function onUploadCroppedAvatar(blob: Blob) {
   console.log(avatarUrlData);
   const { error } = await supabase.storage
     .from("chatroom_avatars")
-    .upload(chatroom.avatarPath, blob, {
+    .upload(chatroom.value.avatarPath, blob, {
       upsert: true,
       contentType: "image/jpeg",
       cacheControl: "0",
