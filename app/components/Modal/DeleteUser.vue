@@ -17,10 +17,8 @@
     </template>
 
     <template #footer>
-      <div class="flex gap-2">
-        <UButton variant="ghost" color="neutral" label="Cancel Deletion" @click="emit('close', false)" />
+        <UButton variant="ghost" color="neutral" label="Cancel" @click="emit('close', false)" />
         <UButton variant="ghost" color="error" label="Proceed" @click="emit('close', true)" />
-      </div>
     </template>
   </UModal>
 </template>

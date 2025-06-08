@@ -8,7 +8,7 @@
       class="mt-2"
     />
 
-    <USeparator label="Main Color" class="mt-4" />
+    <USeparator label="Main Color" class="mt-4" color="primary" />
     <UDropdownMenu
       v-model:open="open"
       :items="computedItems as DropdownMenuItem[]"
@@ -19,6 +19,7 @@
         color="neutral"
         variant="outline"
         icon="i-lucide-pipette"
+        class="p-2.5 flex flex-row justify-center"
       />
       <template #item="{ item }">
         <div

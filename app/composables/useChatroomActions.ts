@@ -4,7 +4,7 @@ import { logPostgrestError, getPostgrestErrorMessage } from '~~/errors/postgrest
 import type { TablesInsert } from '~~/database.types';
 
 type DirectChatroomData = {
-  invitedUserId: string,
+  otherUserId: string,
 };
 type GroupChatroomData = z.output<typeof createGroupChatroomSchema>;
 
@@ -33,7 +33,7 @@ export const useChatroomCreation = () => {
     const { error } = await supabase.from('direct_chatrooms')
       .insert({
         chatroom_id: id,
-        user2_id: chatroomData.invitedUserId
+        user2_id: chatroomData.otherUserId
       });
     if (error) {
       logPostgrestError(error, "chatroom creation");

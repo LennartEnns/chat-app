@@ -9,7 +9,7 @@
         <img 
         :src=logoColor
         alt="YapSpace" 
-        class="h-13 w-auto object-contain" />
+        class="h-13 w-auto object-contain">
       </UButton>
 
       <ThemeSwitch class="ml-4" />

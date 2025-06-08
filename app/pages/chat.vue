@@ -30,7 +30,7 @@
         <div
           v-for="(message, index) in userMessages"
           :key="index"
-          :class="`message user ${themedUserMessageColor} whitespace-pre-line break-all`"
+          :class="`message user ${themedUserMessageColor} whitespace-pre-line wrap-anywhere`"
         >
           <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
           <div class="message-content">
@@ -48,7 +48,7 @@
           placeholder="Write a message..."
           autoresize
           :rows="2"
-          :maxrows="10"
+          :maxrows="7"
         />
         <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
           ><Icon name="ic:baseline-send"

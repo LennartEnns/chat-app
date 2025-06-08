@@ -17,6 +17,7 @@
   --color-defaultPrimary-800: #6a50a7;
   --color-defaultPrimary-900: #5b448c;
   --color-defaultPrimary-950: #3c2e5e;
+
   /* --color-defaultNeutral: #ebebf2; */
   /* neutral color variations */
   --color-defaultNeutral-50: #f4f4f7;
@@ -31,6 +32,7 @@
   --color-defaultNeutral-900: #48485c;
   --color-defaultNeutral-950: #30303e;
 }
+
 .glassBG {
   background-color: color-mix(in srgb, var(--ui-bg) 30%, transparent);
 }

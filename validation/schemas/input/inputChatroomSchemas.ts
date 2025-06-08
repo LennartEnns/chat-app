@@ -4,7 +4,7 @@ import type { UserSearchResult } from '~/types/userSearch';
 import type { TablesInsert } from '~~/database.types';
 
 export const createDirectChatroomSchema = z.object({
-  invitedUser: z.custom<UserSearchResult>((val) => !!val, 'You must specify a user'),
+  otherUser: z.custom<UserSearchResult>((val) => !!val, 'You must specify a user'),
 });
 
 export const createGroupChatroomSchema = z.object({
