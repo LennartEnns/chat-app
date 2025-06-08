@@ -2,49 +2,60 @@
   <UApp>
     <NuxtLayout name="logged-in">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
-        <div class="flex flex-col items-center p-5">
+        <div class="flex flex-col items-center p-5 overflow-hidden">
           <div class="pt-10 pb-5">
-            <div class="px-20">
-              <UAvatar
-                class="border-2 border-defaultNeutral-700"
-                src="https://github.com/benjamincanac.png"
-                icon="i-lucide-user"
-                :ui="{ root: 'size-fit' }"
-              />
-              <div>
-                <UIcon name="i-lucide-camera" size="xx-large" />
-                Edit Picture
-                <input
-                  type="file"
-                  style="
-                    position: absolute;
-                    width: 10%;
-                    height: 10%;
-                    opacity: 0;
-                  "
-                  accept="image/*"
-                  @change="uploadAvatar"
+            <div v-if="chatroom.avatarUrl">
+              <div class="relative h-70 w-70 md:h-50 md:w-50">
+                <UAvatar
+                  class="border-2 border-defaultNeutral-700 size-full"
+                  :src="chatroom.avatarUrl"
                 />
+                <div class="absolute bottom-0 right-0">
+                  <UButton
+                    icon="i-lucide-image-up"
+                    class="relative overflow-hidden size-fit"
+                  >
+                    <input
+                      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      type="file"
+                      accept="image/*"
+                      @change="uploadAvatar"
+                    />
+                  </UButton>
+                </div>
               </div>
             </div>
-            <AvatarUploadCropper
-              v-if="newAvatarObjectUrl"
-              :image-url="newAvatarObjectUrl"
-              @upload="onUploadCroppedAvatar"
-            />
+            <UModal
+              v-model:open="showAvatarCroppingModal"
+              title="Crop Avatar"
+              :ui="{
+                header: 'justify-center',
+              }"
+            >
+              <template #body>
+                <AvatarUploadCropper
+                  v-if="newAvatarObjectUrl"
+                  :image-url="newAvatarObjectUrl"
+                  @upload="onUploadCroppedAvatar"
+                />
+              </template>
+            </UModal>
           </div>
           <div class="py-5">
-            <p class="text-[20px]">{{ chatroom.displayname }}</p>
+            <p class="text-[40px]">{{ chatroom.displayname }}</p>
           </div>
-          <div class="py-5 text-center">
-            {{ chatroom?.description || "No Description" }}
+          <div class="py-5 text-center text-neutral-700 dark:text-white">
+            <p class="font-bold pb-5">Description:</p>
+            <p class="line-clamp-10 w-full text-justify">
+              {{ chatroom?.description || "No Description" }}
+            </p>
           </div>
         </div>
         <div
           class="flex flex-col items-center col-span-2 px-5 relative md:border border-defaultNeutral-700 md:border-t-0 md:border-b-0 md:border-r-0 lg:border-t-0 lg:border-b-0 lg:border-r"
         >
           <div class="pb-5 text-neutral-700 dark:text-white">
-            <p>Members</p>
+            <p class="font-bold">Members</p>
           </div>
           <div class="flex flex-wrap justify-center gap-3">
             <div
@@ -106,7 +117,7 @@
           <template #body>
             <div class="flex flex-col items-center px-5">
               <div class="pb-5 text-neutral-700 dark:text-white">
-                <p>Invitations</p>
+                <p class="font-bold">Invitations</p>
               </div>
               <div class="pb-5">
                 <div
@@ -131,7 +142,7 @@
         </UDrawer>
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
           <div class="pb-5 text-neutral-700 pt-5 md:pt-0 dark:text-white">
-            <p>Invitations</p>
+            <p class="font-bold">Invitations</p>
           </div>
           <div class="pb-5">
             <div
@@ -202,17 +213,28 @@ async function uploadAvatar(event: Event) {
 }
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
-const avatarUrlData = supabase.storage
-  .from("chatroom_avatars")
-  .getPublicUrl(avatarPath);
-const avatarUrl = avatarUrlData.data.publicUrl;
+
+async function getAvatarUrl() {
+  const { data, error } = await supabase.storage
+    .from("chatroom_avatars")
+    .createSignedUrl(avatarPath, 60);
+
+  if (error) {
+    logStorageError(error, "signed avatar url");
+    operationFeedbackHandler.displayError(
+      getStorageErrorMessage(error, "Error creating signed avatar Url")
+    );
+    return;
+  }
+  chatroom.value.avatarUrl = data.signedUrl;
+}
 
 const chatroom = ref<Chatroom>({
   id: routeChatroomId.value,
   displayname: "Loading name...",
   description: "Loadind description...",
   avatarPath: avatarPath,
-  avatarUrl: avatarUrl,
+  avatarUrl: "",
 });
 
 async function loadChatInfo() {
@@ -236,7 +258,6 @@ async function loadChatInfo() {
 async function onUploadCroppedAvatar(blob: Blob) {
   showAvatarCroppingModal.value = false;
   newAvatarObjectUrl.value = null;
-  console.log(avatarUrlData);
   const { error } = await supabase.storage
     .from("chatroom_avatars")
     .upload(chatroom.value.avatarPath, blob, {
@@ -244,7 +265,6 @@ async function onUploadCroppedAvatar(blob: Blob) {
       contentType: "image/jpeg",
       cacheControl: "0",
 
-      // Kind of unnecessary next to max-age=0, but better be on the safe side ;)
       headers: {
         "cache-control": "no-cache",
       },
@@ -264,6 +284,7 @@ async function onUploadCroppedAvatar(blob: Blob) {
 
 onMounted(() => {
   loadChatInfo();
+  getAvatarUrl();
 });
 </script>
 
