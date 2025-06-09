@@ -1,8 +1,10 @@
 .mainContainer {
+  overflow-y: auto;
   margin-top: 10px;
   margin-bottom: 0.1rem;
   margin-left: 2.7rem;
   margin-right: 2.7rem;
+  padding-bottom: 3rem;
 }
 
 .newMessagesContainer {
@@ -73,6 +75,17 @@
   color: color-mix(in srgb, var(--ui-bg) 85%, white);
   filter: invert(40%);
 }
+.headline-direct {
+  margin-top: 2rem;
+  text-align: center;
+  text-justify: auto;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: lighter;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--ui-bg) 85%, white);
+  filter: invert(40%);
+}
 .separator-dark-mobile {
   align-items: center;
   padding-left: 4rem;
@@ -99,8 +112,7 @@
   grid-template-rows: 1fr;
   align-items: center;
 }
-
-.avatars {
+.avatars-direct {
   grid-column: 1;
   grid-row: 1;
   justify-self: start;
@@ -108,9 +120,37 @@
   margin-left: -1rem;
   z-index: 2;
 }
-
+.avatars-group {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  margin-top: 1.4rem;
+  margin-left: -1rem;
+  z-index: 2;
+}
+.count-new-messages {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  margin-top: 1rem;
+  margin-right: 0.5rem;
+  z-index: 3;
+}
 .button-layer {
   grid-column: 1;
   grid-row: 1;
   z-index: 1;
+}
+.first-message-container {
+  margin-top: 1rem;
+  margin-left: 5rem;
+  margin-right: 4rem;
+}
+.subsequent-message-container {
+  margin-top: 0rem;
+  margin-left: 5rem;
+  margin-right: 4rem;
+}
+.custom-button-text {
+  color: var(--ui-primary) !important;
 }
