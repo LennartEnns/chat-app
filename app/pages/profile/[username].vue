@@ -293,7 +293,10 @@ async function loadUserProfile(username: string) {
     if(!data){
       showError({
         statusCode: 404,
-        statusMessage: "The user you searched for was not found",
+        message: "The user you searched for was not found",
+        data: {
+          headline: 'Who\'s that?',
+        },
       });
       return;
     }

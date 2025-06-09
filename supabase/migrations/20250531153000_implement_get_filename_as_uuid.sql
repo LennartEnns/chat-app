@@ -1,4 +1,4 @@
-create function public.get_filename_as_uuid(filename_with_extension text)
+create function utils.get_filename_as_uuid(filename_with_extension text)
 returns uuid
 language plpgsql
 security definer set search_path = ''
@@ -12,4 +12,3 @@ exception when others then
   return null;
 end;
 $$;
-revoke all on function public.get_filename_as_uuid(text) from authenticated, anon;

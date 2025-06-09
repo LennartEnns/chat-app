@@ -30,19 +30,39 @@
 import type { CommandPaletteItem } from '@nuxt/ui';
 import type { UserSearchResult, UserCommandPaletteItem } from '~/types/userSearch';
 
-const { excludeIds = [] } = defineProps<{
-  excludeIds?: string[]
+const {
+  searchTerm,
+  groups,
+  loading,
+  excludeIds: searchExcludeIds,
+  excludeGroupId: searchExcludeGroupId,
+  excludeHasInvitationsTo: searchExcludeInvitationsTo,
+} = useUserSearch();
+
+const { excludeIds = [], excludeGroupId = null, excludeHasInvitationsTo = null } = defineProps<{
+  excludeIds?: string[],
+  excludeGroupId?: string,
+  excludeHasInvitationsTo?: string,
 }>();
 
 const emit = defineEmits<{ close: [UserSearchResult | null] }>()
 const modalOpen = ref(false);
 
-const { searchTerm, groups, loading, excludeIds: searchExcludeIds } = useUserSearch();
 watch(() => excludeIds, (exclude) => {
   searchExcludeIds.value = exclude;
 }, {
   immediate: true,
-})
+});
+watch(() => excludeGroupId, (excludeId) => {
+  searchExcludeGroupId.value = excludeId;
+}, {
+  immediate: true,
+});
+watch(() => excludeHasInvitationsTo, (excludeId) => {
+  searchExcludeInvitationsTo.value = excludeId;
+}, {
+  immediate: true,
+});
 
 async function onModelUpdate(value: CommandPaletteItem) {
   modalOpen.value = false;

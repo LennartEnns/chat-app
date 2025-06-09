@@ -36,14 +36,17 @@ export type Database = {
     Tables: {
       chatrooms: {
         Row: {
+          created_at: string
           id: string
           type: Database["public"]["Enums"]["chatroom_type"]
         }
         Insert: {
+          created_at?: string
           id?: string
           type: Database["public"]["Enums"]["chatroom_type"]
         }
         Update: {
+          created_at?: string
           id?: string
           type?: Database["public"]["Enums"]["chatroom_type"]
         }
@@ -134,6 +137,13 @@ export type Database = {
             referencedRelation: "group_chatrooms"
             referencedColumns: ["chatroom_id"]
           },
+          {
+            foreignKeyName: "group_invitations_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "group_chatrooms_extended"
+            referencedColumns: ["chatroom_id"]
+          },
         ]
       }
       messages: {
@@ -213,24 +223,49 @@ export type Database = {
             referencedRelation: "group_chatrooms"
             referencedColumns: ["chatroom_id"]
           },
+          {
+            foreignKeyName: "user_to_group_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "group_chatrooms_extended"
+            referencedColumns: ["chatroom_id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      group_chatrooms_extended: {
+        Row: {
+          chatroom_id: string | null
+          current_user_role: Database["public"]["Enums"]["chatroom_role"] | null
+          description: string | null
+          last_activity: string | null
+          name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chatrooms_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: true
+            referencedRelation: "chatrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      get_filename_as_uuid: {
-        Args: { filename_with_extension: string }
-        Returns: string
-      }
-      get_role_in_chatroom: {
-        Args: { uid: string; cid: string }
-        Returns: Database["public"]["Enums"]["chatroom_role"]
-      }
-      get_role_in_invitation: {
-        Args: { uid: string; cid: string }
-        Returns: Database["public"]["Enums"]["chatroom_role"]
+      search_users: {
+        Args: {
+          p_term: string
+          p_excluded_ids?: string[]
+          p_exclude_group_id?: string
+          p_exclude_invitations_to_group?: string
+        }
+        Returns: {
+          user_id: string
+          username: string
+          displayname: string
+        }[]
       }
     }
     Enums: {

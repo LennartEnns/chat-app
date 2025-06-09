@@ -16,7 +16,6 @@ begin
   return new;
 end;
 $$;
-revoke all on function prevent_storage_object_relocation() from authenticated, anon;
 
 create trigger no_bucket_or_name_change
 before update on storage.objects

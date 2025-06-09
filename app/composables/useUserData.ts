@@ -11,15 +11,11 @@ export interface UserData {
 };
 
 export function useUserData(): Reactive<UserData> {
-  const supabase = useSupabaseClient();
   const user = useSupabaseUser();
 
   const profileData = user.value?.user_metadata;
-  const avatarPath = `public/${user.value?.id || ''}.jpg`;
-  const avatarUrlData = supabase.storage
-    .from("avatars")
-    .getPublicUrl(avatarPath);
-  const avatarUrl = avatarUrlData.data.publicUrl;
+  const avatarPath = getAvatarPath(user.value?.id || '');
+  const avatarUrl = getAvatarUrl(user.value?.id || '');
 
   const userData = reactive<UserData>({
     id: user.value?.id ?? '',
