@@ -1,4 +1,3 @@
-
 <template>
   <NuxtLayout name="chat">
     <div :class="`mainContainer ${themedGlassContainer}`">

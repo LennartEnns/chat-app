@@ -1,22 +1,7 @@
 <template>
   <NuxtLayout name="logged-in">
-    <div class="flex justify-center align-middle">
+    <div class="flex flex-col justify-center items-center pt-5">
       <div class="glassContainer w-[41rem] max-w-[90%] md:max-w-[70%]">
-        <UModal
-          v-model:open="showAvatarCroppingModal"
-          title="Crop Avatar"
-          :ui="{
-            header: 'justify-center',
-          }"
-        >
-          <template #body>
-            <AvatarUploadCropper
-              v-if="newAvatarObjectUrl"
-              :image-url="newAvatarObjectUrl"
-              @upload="onUploadCroppedAvatar"
-            />
-          </template>
-        </UModal>
         <UCard
           class="ring-0 bg-transparent h-full"
           :ui="{ header: 'border-none' }"
@@ -28,51 +13,23 @@
           </template>
 
           <!-- Loading state -->
-          <div v-if="loading" class="flex justify-center items-center py-8">
-            <UIcon name="i-lucide-loader-2" class="animate-spin" size="2xl" />
-            <span class="ml-2">Loading profile...</span>
+          <div v-if="loading" class="flex flex-col gap-y-10">
+            <USkeleton class="w-32 h-32 rounded-full self-center" />
+            <USkeleton class="h-3 w-[80%]" />
+            <USkeleton class="h-3 w-[70%]" />
+            <USkeleton class="h-3 w-[100%]" />
           </div>
 
           <!-- Profile content -->
           <div v-else-if="!loading && profileData">
-            <div class="avatar">
-              <div class="avatar-container">
-                <UAvatar
-                  class="border-2"
-                  :src="
-                    isOwnProfile && !existsOwnAvatar
-                      ? undefined
-                      : profileData.avatarUrl
-                  "
-                  icon="i-lucide-user"
-                  :ui="{ root: 'size-35', icon: 'size-11/12' }"
-                />
-                <div v-if="isOwnProfile" class="avatar-overlay">
-                  <UIcon name="i-lucide-camera" size="xx-large" />
-                  Edit Picture
-                  <input
-                    type="file"
-                    style="
-                      position: absolute;
-                      width: 100%;
-                      height: 100%;
-                      opacity: 0;
-                    "
-                    accept="image/*"
-                    @change="uploadAvatar"
-                  >
-                </div>
-              </div>
-              <div :class="`mt-4 ${themedTextsColor}`">
-                {{ profileData.username }}
-              </div>
-              <UButton
-                v-if="isOwnProfile && existsOwnAvatar"
-                label="Clear Avatar"
-                variant="ghost"
-                class="cursor-pointer mt-1"
-                color="error"
-                @click="clearAvatar"
+            <div class="flex flex-col items-center">
+              <EditableAvatar
+                :src="profileData.avatarUrl"
+                bucket-name="avatars"
+                :filepath="userData.avatarPath"
+                default-icon="i-lucide-user"
+                :editable="isOwnProfile"
+                :clearable="isOwnProfile"
               />
             </div>
             <div class="profile-container">
@@ -144,7 +101,7 @@
                 >
                   <div class="self-center">Description</div>
                   <HelpTooltip
-                    text="Tell other users about you!"
+                    :text="isOwnProfile ? 'Tell other users about you!' : 'Some info about the user'"
                     class="self-center"
                   />
                   <div class="grow" />
@@ -224,14 +181,8 @@
 import { userLimits } from "~~/validation/commonLimits";
 import { displayNameSchema } from "~~/validation/schemas/input/inputUserSchemas";
 import type { UserData } from "~/composables/useUserData";
-import {
-  getStorageErrorMessage,
-  logStorageError,
-} from "~~/errors/storageErrors";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
-import {
-  logPostgrestError,
-} from "~~/errors/postgrestErrors";
+import { logPostgrestError } from "~~/errors/postgrestErrors";
 
 type ProfileUserData = Pick<
   UserData,
@@ -250,20 +201,13 @@ const routeUsername = computed(() => {
   return params.username as string;
 });
 const isOwnProfile = computed(() => routeUsername.value === userData.username);
-const existsOwnAvatar = ref(false);
-const newAvatarObjectUrl = ref<string | null>(null);
-const showAvatarCroppingModal = ref(false);
 
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
 const profileTitle = computed(() =>
   loading.value
     ? "Loading..."
-    : isOwnProfile.value
-    ? "Your Profile"
-    : `${profileData.value?.username ?? ""}'${
-        profileData.value?.username.endsWith("s") ? "" : "s"
-      } Profile`
+    : (profileData.value?.username ?? 'User Profile')
 );
 
 const isEditingName = ref(false);
@@ -317,7 +261,7 @@ const showDescriptionLengthIndicator = computed(
 async function loadUserProfile(username: string) {
   loading.value = true;
 
-  // If it's the current user, get data from users metadata
+  // If it's the current user, get data from user's metadata
   if (isOwnProfile.value) {
     watch(
       userData,
@@ -348,8 +292,8 @@ async function loadUserProfile(username: string) {
 
     if(!data){
       showError({
-          statusCode: 404,
-          statusMessage: "The user you searched for was not found",
+        statusCode: 404,
+        statusMessage: "The user you searched for was not found",
       });
       return;
     }
@@ -381,52 +325,6 @@ async function updateProfileData(
   }
 }
 
-async function uploadAvatar(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (file) {
-    newAvatarObjectUrl.value = URL.createObjectURL(file);
-    showAvatarCroppingModal.value = true;
-  }
-}
-async function onUploadCroppedAvatar(blob: Blob) {
-  showAvatarCroppingModal.value = false;
-  newAvatarObjectUrl.value = null;
-  const { error } = await supabase.storage
-    .from("avatars")
-    .upload(userData.avatarPath, blob, {
-      upsert: true,
-      cacheControl: "0",
-
-      // Kind of unnecessary next to max-age=0, but better be on the safe side ;)
-      headers: {
-        "cache-control": "no-cache",
-      },
-    });
-  if (error) {
-    logStorageError(error, "avatar upload");
-    operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Unknown error uploading avatar")
-    );
-    return;
-  } else {
-    existsOwnAvatar.value = true;
-    operationFeedbackHandler.displaySuccess(
-      "Your avatar has been updated. You may need to reload the page."
-    );
-  }
-}
-async function clearAvatar() {
-  const { error } = await supabase.storage
-    .from("avatars")
-    .remove([userData.avatarPath]);
-  if (error) {
-    operationFeedbackHandler.displayError("Could not clear your avatar.");
-  } else {
-    existsOwnAvatar.value = false;
-  }
-}
-
 async function toggleEditDisplayName() {
   isEditingName.value = !isEditingName.value;
   if (isEditingName.value) newDisplayName.value = userData.displayname || "";
@@ -454,14 +352,6 @@ async function attachDisplayNameInputEnterHandler() {
       if (e.code === "Enter") saveDisplayName();
     });
 }
-
-onNuxtReady(async () => {
-  if (!isOwnProfile.value) return; // Value only needed on the own profile page
-  const { data } = await supabase.storage
-    .from("avatars")
-    .exists(userData.avatarPath);
-  existsOwnAvatar.value = data;
-});
 
 onMounted(() => {
   loadUserProfile(routeUsername.value);
