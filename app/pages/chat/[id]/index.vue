@@ -1,6 +1,5 @@
 <template>
   <NuxtLayout name="chat">
-    <!--Messaging column-->
     <div class="align-column">
       <UCard class="profile-bar" variant="subtle">
         <div class="flex items-center gap-2">
@@ -9,7 +8,6 @@
         </div>
       </UCard>
       <div ref="messagesContainer" class="messages">
-        <!--example messages-->
         <div :class="`message partner ${themedPartnerMessageColor}`">
           <UAvatar
             class="justify-self-center"
@@ -25,6 +23,12 @@
               use the database!
             </p>
             <span class="message-time">12:48</span>
+            <UButton
+              icon="i-heroicons-ellipsis-horizontal"
+              variant="ghost"
+              color="gray"
+              class="message-options-button"
+            />
           </div>
         </div>
         <div
@@ -36,10 +40,15 @@
           <div class="message-content">
             <p>{{ message.text }}</p>
             <span class="message-time">{{ message.timestamp }}</span>
+            <UButton
+              icon="i-heroicons-ellipsis-horizontal"
+              variant="ghost"
+              color="gray"
+              class="message-options-button"
+            />
           </div>
         </div>
       </div>
-      <!--Text Input for new messages-->
       <div class="write">
         <UTextarea
           v-model="newMessage"
