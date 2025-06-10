@@ -324,6 +324,32 @@ export type Database = {
         }
         Relationships: []
       }
+      group_chatroom_members: {
+        Row: {
+          chatroom_id: string | null
+          description: string | null
+          displayname: string | null
+          role: Database["public"]["Enums"]["chatroom_role"] | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_to_group_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "group_chatrooms"
+            referencedColumns: ["chatroom_id"]
+          },
+          {
+            foreignKeyName: "user_to_group_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "group_chatrooms_last_activity_current_role"
+            referencedColumns: ["chatroom_id"]
+          },
+        ]
+      }
       group_chatrooms_last_activity_current_role: {
         Row: {
           chatroom_id: string | null

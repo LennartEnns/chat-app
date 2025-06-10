@@ -61,32 +61,22 @@
           </div>
           <div class="flex flex-wrap justify-center gap-3">
             <div
+              v-for="(member, index) in chatMembers"
+              :key="index"
               class="ring-0 glassContainer text-neutral-700 dark:text-white member"
             >
               <div class="flex max-h-fit flex-col items-center">
                 <UAvatar class="mb-1" src="https://github.com/nuxt.png" />
-                <UBadge size="xs" class="font-bold rounded-full">Member</UBadge>
+                <UBadge size="xs" class="font-bold rounded-full">{{
+                  member.role
+                }}</UBadge>
               </div>
-              <div class="flex flex-col justify-center px-[0.6rem]">
-                <p class="truncate w-full flex font-bold">Name Lastname</p>
-                <p class="line-clamp-2 w-full leading-none">
-                  User messages are now saved to the database and loaded on
-                  page-reload.
+              <div class="flex flex-col px-[0.6rem]">
+                <p class="truncate w-full flex font-bold">
+                  {{ member.displayname }}
                 </p>
-              </div>
-            </div>
-            <div
-              class="ring-0 glassContainer text-neutral-700 dark:text-white member"
-            >
-              <div class="flex max-h-fit flex-col items-center">
-                <UAvatar class="mb-1" src="https://github.com/nuxt.png" />
-                <UBadge size="xs" class="font-bold rounded-full">Member</UBadge>
-              </div>
-              <div class="flex flex-col justify-center px-[0.6rem]">
-                <p class="truncate w-full flex font-bold">Name Lastname</p>
                 <p class="line-clamp-2 w-full leading-none">
-                  User messages are now saved to the database and loaded on
-                  page-reload.
+                  {{ member.description }}
                 </p>
               </div>
             </div>
@@ -181,6 +171,8 @@ import {
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
 
+import type { Tables } from "~~/database.types";
+
 const { isLight } = useSSRSafeTheme();
 
 const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -188,6 +180,8 @@ const open = ref(false);
 const newAvatarObjectUrl = ref<string | null>(null);
 const showAvatarCroppingModal = ref(false);
 const supabase = useSupabaseClient();
+
+const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
 
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -249,9 +243,9 @@ async function loadChatInfo() {
     .single();
 
   if (error) {
-    logPostgrestError(error, "message fetching");
+    logPostgrestError(error, "chat-info fetching");
     operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message fetching error")
+      getPostgrestErrorMessage(error, "Unknown chat-info fetching error")
     );
     return;
   }
@@ -286,8 +280,28 @@ async function onUploadCroppedAvatar(blob: Blob) {
   }
 }
 
+async function loadChatMembers() {
+  const { data, error } = await supabase
+    .from("group_chatroom_members")
+    .select("*")
+    .eq("chatroom_id", chatroom.value.id);
+
+  if (error) {
+    logPostgrestError(error, "members fetching");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown members fetching error")
+    );
+    return;
+  }
+  data.forEach((element) => {
+    chatMembers.value.push(element);
+  });
+  console.log(chatMembers.value);
+}
+
 onMounted(() => {
   loadChatInfo();
+  loadChatMembers();
   getAvatarUrl();
 });
 </script>
