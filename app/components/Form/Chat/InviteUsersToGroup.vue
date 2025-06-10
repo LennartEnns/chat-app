@@ -11,7 +11,11 @@
     </UFormField>
 
     <UFormField name="invitations" required>
-      <ChatroomGroupInvitationsCreator v-model="invitations" :allowed-roles="allowedInvRoles" :existing-group-id="state.group?.chatroom_id" />
+      <ChatroomGroupInvitationsCreator
+        v-model="invitations"
+        :allowed-roles="allowedInvRoles"
+        :existing-group-id="state.group?.chatroom_id"
+      />
     </UFormField>
   </UForm>
 </template>
@@ -41,11 +45,15 @@ const state = reactive<Partial<Schema>>({
 });
 watch(invitations.value, (invs) => {
   // Type conversion is justified by this check!
-  if (invs.length === 0) return;
+  if (invs.length === 0) {
+    state.invitations = undefined;
+    return;
+  };
 
   state.invitations = invs.map((inv) => ({
     invitee_id: inv.user_id,
     as_role: inv.asRole,
+    isInvalid: inv.alreadyInGroup || inv.alreadyInvited,
   })) as Schema['invitations'];
 }, {
   immediate: true,

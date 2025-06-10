@@ -6,7 +6,7 @@ type CachedSignedUrl = {
 const EXPIRES_IN = 60 * 60; // Number of seconds before a signed URL expires
 const EXPIRATION_BUFFER = 60; // Safety margin in seconds due to potential race condition
 
-export const useCachedSignedImageUrl = (bucket: string, path: string) => {
+export const useCachedSignedImageUrl = (bucket: string, path: string, loadImmediately = false) => {
   const supabase = useSupabaseClient();
   const imageUrl = ref<string | undefined>(undefined);
   const storageKey = `signed-url:${bucket}:${path}`;
@@ -44,7 +44,11 @@ export const useCachedSignedImageUrl = (bucket: string, path: string) => {
     }
   }
 
-  onMounted(loadSignedUrl);
+  if (loadImmediately) {
+    loadSignedUrl();
+  } else {
+    onMounted(loadSignedUrl);
+  }
 
   return imageUrl;
 }

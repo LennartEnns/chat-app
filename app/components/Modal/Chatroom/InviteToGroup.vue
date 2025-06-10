@@ -10,7 +10,7 @@
         }"
       >
         <template #header>
-          <p class="font-bold">Invite Users</p>
+          <p class="font-bold">Create Invitations</p>
         </template>
 
         <FormChatInviteUsersToGroup

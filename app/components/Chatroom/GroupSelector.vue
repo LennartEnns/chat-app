@@ -2,13 +2,16 @@
   <div>
     <UModal v-model:open="searchModalOpen">
        <UButton
-          label="Search Groups"
           color="neutral"
           variant="subtle"
-          icon="i-lucide-search"
+          icon="i-lucide-users-round"
           class="w-full rounded-b-none"
           @click="onSearchModalOpen"
-        />
+        >
+          <span>Search Groups</span>
+          <div class="flex-1" />
+          <UIcon name="i-lucide-chevron-right" size="xl" />
+        </UButton>
       <template #content>
         <UCommandPalette
           v-model:search-term="searchTerm"
@@ -50,7 +53,7 @@
         class="flex flex-row items-center justify-start gap-3"
       >
         <UAvatar
-          :src="undefined"
+          :src="selectedGroupAvatarUrl"
           icon="i-lucide-user"
           size="sm"
         />
@@ -76,6 +79,9 @@ import { logPostgrestError } from '~~/errors/postgrestErrors';
 const selectedGroup = defineModel<SelectedGroup | undefined>({
   required: true,
 });
+const selectedGroupAvatarUrl = computed(() => selectedGroup.value?.chatroom_id ?
+  useCachedSignedImageUrl('chatroom_avatars', getGroupAvatarPath(selectedGroup.value.chatroom_id), true).value :
+  undefined);
 
 const props = defineProps<{
   // Only display groups where the current user has one of these roles
@@ -96,7 +102,7 @@ const groupSearchItems = computed<CommandPaletteItem[]>(() => allGroups.value
     id: group.chatroom_id,
     label: group.name,
     avatar: {
-      src: undefined,
+      src: useCachedSignedImageUrl('chatroom_avatars', getGroupAvatarPath(group.chatroom_id), true).value,
       icon: "i-lucide-user",
       ui: {
           icon: "size-11/12",
