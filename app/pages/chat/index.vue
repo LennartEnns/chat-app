@@ -235,6 +235,10 @@ async function getGroupChatroomName(chatroom_id: string): Promise<string> {
 
 async function getOtherUsers(element:{chatroom_id: string;}): Promise<UserData[]>{
   const { data, error } = await supabase.from("user_to_group").select("user_id").eq("chatroom_id", element.chatroom_id);
+const previewQuery = supabase
+  .from("chatrooms_preview")
+  .select("*")
+  .order("last_activity", { ascending: false });
 
   if(error){
     logPostgrestError(error, "message fetching");
@@ -257,36 +261,29 @@ async function getOtherUsers(element:{chatroom_id: string;}): Promise<UserData[]
   }
   return users;
 }
+const chatroomList = ref<Awaited<typeof previewQuery>["data"]>([]);
 
 async function getUserData(user_id: string): Promise<UserData | null>{
   const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user_id);
+async function getChatroomList(user_id: string): Promise<UserData | null> {
+  const { data, error } = await previewQuery;
 
-  if(error){
+  if (error) {
     logPostgrestError(error, "message fetching");
     return null;
   }
   if (!data || data.length === 0) {
-    console.log("No data found");
+    console.log("No chatrooms found for user_id:" + user_id);
     return null;
   }
-  const userData: UserData[] = [];
-  for(const element of data){
-    const { avatarPath, avatarUrl } = generateAvatarUrl(element.user_id);
-    userData.push({
-      ...element,
-      avatarPath,
-      avatarUrl
-    })
-  }
-  if(userData[0] != undefined){
-    return userData[0];
-  } else return null;
+
+  return data;
 }
 
-await Promise.all([
-  getGroupChatroomData(),
-  getDirectChatroomData()
-]);
+// await getChatroomList(userData.id).forEach((element) => {
+//   console.log(element.name);
+// });
+const chatrooms = ref(await getChatroomList(userData.id));
 </script>
 
 <style>
