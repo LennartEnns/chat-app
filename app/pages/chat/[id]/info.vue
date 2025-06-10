@@ -12,9 +12,9 @@
             :clearable="false"
           />
           <div class="py-5">
-            <p class="text-[20px]">{{ chatroom.name }}</p>
+            <p class="text-xl text-center text-black dark:text-white">{{ chatroom.name }}</p>
           </div>
-          <div class="py-5 text-center">
+          <div class="py-5 text-center text-black dark:text-white">
             {{ chatroom?.description || "No Description" }}
           </div>
         </div>
