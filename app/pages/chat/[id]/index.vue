@@ -23,11 +23,19 @@
               use the database!
             </p>
             <span class="message-time">12:48</span>
-            <UButton
-              icon="i-heroicons-ellipsis-horizontal"
-              variant="ghost"
-              class="message-options-button"
-            />
+            <UDropdownMenu
+              class="drop"
+              :items="items"
+              :ui="{
+                content: 'w-48',
+              }"
+            >
+              <UButton
+                icon="i-heroicons-ellipsis-horizontal"
+                variant="ghost"
+                class="message-options-button"
+              />
+            </UDropdownMenu>
           </div>
         </div>
         <div
@@ -39,11 +47,20 @@
           <div class="message-content">
             <p>{{ message.text }}</p>
             <span class="message-time">{{ message.timestamp }}</span>
-            <UButton
-              icon="i-heroicons-ellipsis-horizontal"
-              variant="ghost"
-              class="message-options-button"
-            />
+
+            <UDropdownMenu
+              class="drop"
+              :items="items"
+              :ui="{
+                content: 'w-48',
+              }"
+            >
+              <UButton
+                icon="i-heroicons-ellipsis-horizontal"
+                variant="ghost"
+                class="message-options-button"
+              />
+            </UDropdownMenu>
           </div>
         </div>
       </div>
@@ -70,6 +87,7 @@ import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
+import type { DropdownMenuItem } from "@nuxt/ui";
 
 useFirstLoginDetector();
 const { isLight } = useSSRSafeTheme();
@@ -90,6 +108,17 @@ const themedUserMessageColor = computed(() =>
 const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
+
+const items = ref<DropdownMenuItem[]>([
+  {
+    label: "Delete",
+    icon: "i-lucide-trash",
+  },
+  {
+    label: "Edit",
+    icon: "i-lucide-edit",
+  },
+]);
 
 // messages and writing
 type DisplayedMessage = {
