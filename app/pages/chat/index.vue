@@ -291,6 +291,21 @@ async function getChatroomList(user_id: string): Promise<UserData | null> {
 //   console.log(element.name);
 // });
 const chatrooms = ref(await getChatroomList(userData.id));
+const chatroomsWithAvatarUrl = computed(() =>
+  chatrooms.value?.map((chatroom) => {
+    const { avatarUrl } = generateAvatarUrl(
+      chatroom.type!,
+      chatroom.id!,
+      chatroom.other_user_id
+    );
+    return {
+      ...chatroom,
+      avatarUrl,
+    };
+  })
+);
+
+console.log(chatroomsWithAvatarUrl.value[0].avatarUrl);
 </script>
 
 <style>
