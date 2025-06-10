@@ -174,7 +174,7 @@ const colorItems: ColorItem[] = [
   flex-grow: 1;
 }
 .bioInput * {
-  border-radius: 5px 0px 0px 5px;
+  border-radius: 0.3rem 0px 0px 0.3rem;
   /* border: 1px solid red; */
 }
 .saveBioBtn {
