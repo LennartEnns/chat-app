@@ -43,7 +43,7 @@
           </div>
           <div class="py-5">
             <p class="text-[40px] font-bold text-neutral-700 dark:text-white">
-              {{ chatroom.displayname }}
+              {{ chatroom.name }}
             </p>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
@@ -108,9 +108,14 @@
               </div>
             </div>
             <div class="hidden md:block">
-              <UButton class="flex size-fit" size="xl" icon="i-lucide-plus"
-                >Invite member</UButton
+              <UButton
+                class="flex size-fit"
+                size="xl"
+                icon="i-lucide-plus"
+                @click="onInviteUser"
               >
+                Invite Member
+              </UButton>
             </div>
           </div>
         </div>
@@ -184,6 +189,7 @@ import {
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
 
+import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import type { Tables } from "~~/database.types";
 
 const { isLight } = useSSRSafeTheme();
@@ -193,6 +199,9 @@ const open = ref(false);
 const newAvatarObjectUrl = ref<string | null>(null);
 const showAvatarCroppingModal = ref(false);
 const supabase = useSupabaseClient();
+
+const overlay = useOverlay();
+const inviteModal = overlay.create(InviteToGroup);
 
 const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
 
@@ -206,10 +215,10 @@ async function openDrawer() {
   open.value = true;
 }
 
-type Chatroom = {
-  id: string;
-  displayname: string | null;
-  description: string | null;
+type Chatroom = Omit<
+  Tables<"group_chatrooms_last_activity_current_role">,
+  "last_activity"
+> & {
   avatarPath: string;
   avatarUrl: string;
 };
@@ -241,9 +250,10 @@ async function getChatroomAvatarUrl() {
 }
 
 const chatroom = ref<Chatroom>({
-  id: routeChatroomId.value,
-  displayname: "Loading name...",
-  description: "Loadind description...",
+  chatroom_id: routeChatroomId.value,
+  name: "Loading name...",
+  description: "Loading description...",
+  current_user_role: "member",
   avatarPath: avatarPath,
   avatarUrl: "",
 });
@@ -252,7 +262,7 @@ async function loadChatInfo() {
   const { data, error } = await supabase
     .from("group_chatrooms")
     .select("name, description")
-    .eq("chatroom_id", chatroom.value.id)
+    .eq("chatroom_id", chatroom.value.chatroom_id!)
     .single();
 
   if (error) {
@@ -262,7 +272,7 @@ async function loadChatInfo() {
     );
     return;
   }
-  chatroom.value.displayname = data.name;
+  chatroom.value.name = data.name;
   chatroom.value.description = data.description;
 }
 
@@ -297,7 +307,7 @@ async function loadChatMembers() {
   const { data, error } = await supabase
     .from("group_chatroom_members")
     .select("*")
-    .eq("chatroom_id", chatroom.value.id);
+    .eq("chatroom_id", chatroom.value.chatroom_id!);
 
   if (error) {
     logPostgrestError(error, "members fetching");
@@ -308,6 +318,16 @@ async function loadChatMembers() {
   }
   data.forEach((element) => {
     chatMembers.value.push(element);
+  });
+}
+
+async function onInviteUser() {
+  inviteModal.open({
+    presetGroup: {
+      chatroom_id: chatroom.value.chatroom_id!,
+      name: chatroom.value.name,
+      current_user_role: chatroom.value.current_user_role,
+    },
   });
 }
 
