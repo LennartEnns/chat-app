@@ -19,7 +19,7 @@
         @update:model-value="onModelUpdate"
         @update:open="onOpenUpdate">
         <template #empty>
-          No users
+          Enter a search term
         </template>
       </UCommandPalette>
     </template>
