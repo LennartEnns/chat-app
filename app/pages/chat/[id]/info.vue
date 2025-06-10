@@ -131,17 +131,24 @@
               </div>
               <div class="pb-5">
                 <div
+                  v-for="(invitation, index) in chatInvitations"
+                  :key="index"
                   class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
                 >
                   <UAvatar
                     class="justify-self-center"
-                    src="https://github.com/nuxt.png"
+                    icon="i-lucide-user"
+                    :src="
+                      (invitation.invitee_id &&
+                        getAvatarUrl(invitation.invitee_id)) ||
+                      undefined
+                    "
                   />
                   <div
                     class="flex flex-col items-center justify-center truncate px-[0.6rem]"
                   >
                     <div class="truncate w-full text-center">
-                      Peterskotstube wrkegjtlwkjertlwkejrce
+                      {{ invitation.invitee_id }}
                     </div>
                   </div>
                   <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
@@ -156,17 +163,24 @@
           </div>
           <div class="pb-5">
             <div
+              v-for="(invitation, index) in chatInvitations"
+              :key="index"
               class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
             >
               <UAvatar
                 class="justify-self-center"
-                src="https://github.com/nuxt.png"
+                icon="i-lucide-user"
+                :src="
+                  (invitation.invitee_id &&
+                    getAvatarUrl(invitation.invitee_id)) ||
+                  undefined
+                "
               />
               <div
                 class="flex flex-col items-center justify-center truncate px-[0.6rem]"
               >
                 <div class="truncate w-full text-center">
-                  Peterskotstube wrkegjtlwkjertlwkejrce
+                  {{ invitation.invitee_id }}
                 </div>
               </div>
               <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
@@ -204,6 +218,7 @@ const overlay = useOverlay();
 const inviteModal = overlay.create(InviteToGroup);
 
 const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
+const chatInvitations = ref<Tables<"group_invitations">[]>([]);
 
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -321,6 +336,24 @@ async function loadChatMembers() {
   });
 }
 
+async function loadChatInvitations() {
+  const { data, error } = await supabase
+    .from("group_invitations")
+    .select("*")
+    .eq("chatroom_id", chatroom.value.chatroom_id!);
+
+  if (error) {
+    logPostgrestError(error, "invitations fetching");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown invitations fetching error")
+    );
+    return;
+  }
+  data.forEach((element) => {
+    chatInvitations.value.push(element);
+  });
+}
+
 async function onInviteUser() {
   inviteModal.open({
     presetGroup: {
@@ -334,6 +367,7 @@ async function onInviteUser() {
 onMounted(() => {
   loadChatInfo();
   loadChatMembers();
+  loadChatInvitations();
   getChatroomAvatarUrl();
 });
 </script>
