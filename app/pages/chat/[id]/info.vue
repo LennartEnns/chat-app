@@ -65,17 +65,26 @@
               :key="index"
               class="ring-0 glassContainer text-neutral-700 dark:text-white member"
             >
-              <div class="flex max-h-fit flex-col items-center">
-                <UAvatar class="mb-1" src="https://github.com/nuxt.png" />
-                <UBadge size="xs" class="font-bold rounded-full">{{
-                  member.role
-                }}</UBadge>
+              <div class="flex flex-col items-center w-max">
+                <UAvatar
+                  class="mb-1 w-full h-11"
+                  src="https://github.com/nuxt.png"
+                />
+                <div>
+                  <UBadge
+                    class="font-bold rounded-full"
+                    :ui="{
+                      base: 'max-w-11 h-5 text-[10px] flex justify-center',
+                    }"
+                    >{{ member.role }}</UBadge
+                  >
+                </div>
               </div>
-              <div class="flex flex-col px-[0.6rem]">
-                <p class="truncate w-full flex font-bold">
+              <div class="flex flex-col justify-center px-[0.6rem]">
+                <p class="truncate flex font-bold">
                   {{ member.displayname }}
                 </p>
-                <p class="line-clamp-2 w-full leading-none">
+                <p class="line-clamp-2 leading-4">
                   {{ member.description }}
                 </p>
               </div>
@@ -296,7 +305,6 @@ async function loadChatMembers() {
   data.forEach((element) => {
     chatMembers.value.push(element);
   });
-  console.log(chatMembers.value);
 }
 
 onMounted(() => {
