@@ -29,7 +29,7 @@
           }"
           @update:open="onOpenUpdate">
           <template #empty>
-            No groups
+            Enter a search term
           </template>
           <template #item-trailing="{ index }">
             <div class="flex flex-row items-center justify-end">
