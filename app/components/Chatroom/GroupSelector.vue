@@ -124,7 +124,7 @@ const groupCPGroups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => 
 async function loadGroups() {
   loadingGroups.value = true;
   const { data, error } = await supabase
-    .from('group_chatrooms_extended')
+    .from('group_chatrooms_last_activity_current_role')
     .select('chatroom_id, name, current_user_role')
     .in('current_user_role', props.allowedCurrentUserRoles)
     .order('last_activity', {
