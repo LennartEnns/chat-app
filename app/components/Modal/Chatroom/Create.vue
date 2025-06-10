@@ -14,6 +14,7 @@
           <UTabs
             v-model="chatroomType"
             :items="chatroomTypeTabItems"
+            :content="false"
             class="mt-2 w-full"
           />
         </template>
