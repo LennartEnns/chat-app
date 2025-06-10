@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <NuxtLayout name="logged-in">
+    <NuxtLayout name="logged-in" :class="`${isLight ? 'base' : false}`">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
         <div class="flex flex-col items-center p-5 overflow-hidden">
           <div class="pt-10 pb-5">
@@ -180,6 +180,8 @@ import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
+
+const { isLight } = useSSRSafeTheme();
 
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const open = ref(false);
