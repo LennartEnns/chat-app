@@ -204,20 +204,23 @@ async function getDirectChatroomData(){
         }
       } catch (err) {
         console.error(`Error processing chatroom ${element.chatroom_id}:`, err);
+function generateAvatarUrl(
+  type: string,
+  id: string,
+  otherUserId: string | null
+): {
+  avatarUrl: string | undefined;
+} {
+  return type === "direct"
+    ? {
+        avatarUrl: otherUserId ? getAvatarUrl(otherUserId) : undefined,
       }
-    }
-  }
-}
-
-function generateAvatarUrl(userId: string) {
-  const avatarPath = `public/${userId}.jpg`;
-  const avatarUrlData = supabase.storage
-    .from("avatars")
-    .getPublicUrl(avatarPath);
-  return {
-    avatarPath,
-    avatarUrl: avatarUrlData.data.publicUrl
-  };
+    : {
+        avatarUrl: useCachedSignedImageUrl(
+          "chatroom_avatars",
+          getGroupAvatarPath(id)
+        ).value,
+      };
 }
 
 async function getGroupChatroomName(chatroom_id: string): Promise<string> {
