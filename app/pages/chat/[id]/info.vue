@@ -144,7 +144,7 @@
         </UDrawer>
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
           <div class="pb-5 text-neutral-700 pt-5 md:pt-0 dark:text-white">
-            <p class="font-bold">Invitations</p>
+            <p class="font-bold flex justify-center">Invitations</p>
           </div>
           <div class="pb-5">
             <div
