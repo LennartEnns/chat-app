@@ -68,7 +68,11 @@
               <div class="flex flex-col items-center w-max">
                 <UAvatar
                   class="mb-1 w-full h-11"
-                  src="https://github.com/nuxt.png"
+                  icon="i-lucide-user"
+                  :src="
+                    (member.user_id && getAvatarUrl(member.user_id)) ||
+                    undefined
+                  "
                 />
                 <div>
                   <UBadge
@@ -221,7 +225,7 @@ async function uploadAvatar(event: Event) {
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
 
-async function getAvatarUrl() {
+async function getChatroomAvatarUrl() {
   const { data, error } = await supabase.storage
     .from("chatroom_avatars")
     .createSignedUrl(avatarPath, 60);
@@ -310,7 +314,7 @@ async function loadChatMembers() {
 onMounted(() => {
   loadChatInfo();
   loadChatMembers();
-  getAvatarUrl();
+  getChatroomAvatarUrl();
 });
 </script>
 
