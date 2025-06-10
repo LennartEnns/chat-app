@@ -10,6 +10,10 @@
         <div v-if="isMobile">
           <h1 class="headlineChat-mobile">New Messages</h1>
           <USeparator :class="`${themedSeparatorMobile}`" color="primary" />
+      <ChatroomPreview
+        v-for="chatroom in chatroomsWithAvatarUrl"
+        :name="chatroom.name"
+      ></ChatroomPreview>
 
           <!-- Direct -->
           <h1 class="headline-direct"> Direct Chats </h1>
