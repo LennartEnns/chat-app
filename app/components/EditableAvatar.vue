@@ -5,7 +5,7 @@
         class="border-2"
         :src="srcModified"
         :icon="defaultIcon"
-        :ui="{ root: 'size-35', icon: 'size-11/12' }"
+        :ui="{ root: 'size-26 md:size-32', icon: 'size-9/12' }"
       />
       <div v-if="editable" class="avatar-overlay">
         <UIcon name="i-lucide-camera" size="xx-large" />

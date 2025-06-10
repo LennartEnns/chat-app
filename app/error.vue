@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-dvh flex items-center justify-center space-y-3 flex-col text-white font-sans landing-background px-4">
-    <h2 :class="`headline-space-text ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">Looks like you're lost in space</h2>
+    <h2 :class="`headline-space-text ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">{{ (error as CustomNuxtError).data?.headline ?? 'Looks like you\'re lost in space' }}</h2>
     <h2 :class="`headline-error-message ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">{{ error.message }}</h2>
     <div class="status-code-container">
       <h1 :class="`headline-status-code ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">{{ error.statusCode }}</h1>
@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts">
-
 import type { NuxtError } from '#app';
 import colors from 'tailwindcss/colors';
 
@@ -32,8 +31,13 @@ const { data } = await supabase.auth.getSession();
 const authenticated = data.session?.user.role;
 const primaryColor = useCookie("uiPrimary").value;
 
+type CustomNuxtError = NuxtError & {
+  data: {
+    headline?: string,
+  }
+}
 defineProps<{
-  error: NuxtError
+  error: NuxtError,
 }>();
 
 const themedUserColor = computed(() =>

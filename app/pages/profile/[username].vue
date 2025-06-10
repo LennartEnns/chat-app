@@ -4,12 +4,12 @@
       <div class="glassContainer w-[41rem] max-w-[90%] md:max-w-[70%]">
         <UCard
           class="ring-0 bg-transparent h-full"
-          :ui="{ header: 'border-none' }"
+          :ui="{ header: 'border-none', body: 'pt-2 sm:pt-2' }"
         >
           <template #header>
-            <p class="font-bold text-black dark:text-white text-xl text-center">
+            <div class="font-bold text-black dark:text-white text-xl text-center">
               {{ profileTitle }}
-            </p>
+            </div>
           </template>
 
           <!-- Loading state -->
@@ -32,7 +32,11 @@
                 :clearable="isOwnProfile"
               />
             </div>
-            <div class="profile-container">
+            <div v-if="!isOwnProfile" class="w-full flex flex-row items-center justify-center gap-4 md:gap-6 mt-4">
+              <UButton label="Chat" icon="i-lucide-message-circle" @click="onChatWithUser" />
+              <UButton label="Invite" icon="i-lucide-user-round-plus" @click="onInviteUser" />
+            </div>
+            <div class="profile-container mt-2 md:mt-0">
               <div class="section-container">
                 <div :class="`flex mb-2 text-md ${themedSectionLabelClasses}`">
                   <div class="self-center">Display Name</div>
@@ -183,10 +187,11 @@ import { displayNameSchema } from "~~/validation/schemas/input/inputUserSchemas"
 import type { UserData } from "~/composables/useUserData";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
+import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 
 type ProfileUserData = Pick<
   UserData,
-  "avatarUrl" | "avatarPath" | "username" | "displayname" | "description"
+  "avatarUrl" | "avatarPath" | "username" | "displayname" | "description" | "id"
 >;
 
 const route = useRoute();
@@ -194,6 +199,8 @@ const supabase = useSupabaseClient();
 const userData = useUserData();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const { isLight } = useSSRSafeTheme();
+const overlay = useOverlay();
+const inviteModal = overlay.create(InviteToGroup);
 
 // get username from url
 const routeUsername = computed(() => {
@@ -272,6 +279,7 @@ async function loadUserProfile(username: string) {
           username: newUserData.username,
           displayname: newUserData.displayname,
           description: newUserData.description,
+          id: newUserData.id,
         };
       },
       {
@@ -293,7 +301,10 @@ async function loadUserProfile(username: string) {
     if(!data){
       showError({
         statusCode: 404,
-        statusMessage: "The user you searched for was not found",
+        message: "The user you searched for was not found",
+        data: {
+          headline: 'Who\'s that?',
+        },
       });
       return;
     }
@@ -302,8 +313,10 @@ async function loadUserProfile(username: string) {
     const avatarUrl = getAvatarUrl(data.user_id);
 
     profileData.value = {
-      ...data,
+      id: data.user_id,
       username,
+      displayname: data.displayname,
+      description: data.description,
       avatarPath,
       avatarUrl,
     };
@@ -353,6 +366,17 @@ async function attachDisplayNameInputEnterHandler() {
     });
 }
 
+async function onInviteUser() {
+  if (!profileData.value) return;
+  inviteModal.open({
+    presetInvitations: [{
+      user_id: profileData.value.id,
+      username: profileData.value.username,
+      displayname: profileData.value.displayname,
+      asRole: 'member',
+    }],
+  });
+}
 onMounted(() => {
   loadUserProfile(routeUsername.value);
 });

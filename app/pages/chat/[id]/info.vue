@@ -4,9 +4,9 @@
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
         <div class="flex flex-col items-center p-5">
           <EditableAvatar 
-            :src="'https://github.com/nuxt.png'"
+            :src="avatarUrl"
             bucket-name="chatroom_avatars"
-            :filepath="chatroom.avatarPath"
+            :filepath="avatarPath"
             default-icon="i-lucide-users-round"
             :editable="false"
             :clearable="false"
@@ -63,7 +63,7 @@
                   <UButton
                     class="flex size-fit mb-3"
                     label="Invitations"
-                    trailing-icon="i-lucide-chevron-left"
+                    leading-icon="i-lucide-chevron-left"
                     color="primary"
                     @click="invitationsDrawerOpen = true"
                   />
@@ -108,7 +108,7 @@
             </div>
           </template>
         </UDrawer>
-        <div class="flex flex-col items-center px-5 lg:block md:hidden">
+        <div class="flex flex-col items-center px-5 md:hidden lg:block">
           <div class="pb-5 text-neutral-700 pt-5 md:pt-0 dark:text-white">
             <p>Invitations</p>
           </div>
@@ -137,14 +137,10 @@
 </template>
 
 <script setup lang="ts">
-import {
-  getPostgrestErrorMessage,
-  logPostgrestError,
-} from "~~/errors/postgrestErrors";
+import { logPostgrestError } from "~~/errors/postgrestErrors";
 import type { Tables } from "~~/database.types";
 
 const supabase = useSupabaseClient();
-const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
 
 const invitationsDrawerOpen = ref(false);
@@ -154,23 +150,15 @@ const routeChatroomId = computed(() => {
   return params.id as string;
 });
 
-type Chatroom = Tables<'group_chatrooms'> & {
-  avatarPath: string;
-  avatarUrl: string;
-};
+type GroupChatroom = Tables<'group_chatrooms'>;
 
-const avatarPath = `${routeChatroomId.value}.jpg`;
-const avatarUrlData = supabase.storage
-  .from("chatroom_avatars")
-  .getPublicUrl(avatarPath);
-const avatarUrl = avatarUrlData.data.publicUrl;
+const avatarPath = getGroupAvatarPath(routeChatroomId.value);
+const avatarUrl = useCachedSignedImageUrl('chatroom_avatars', avatarPath);
 
-const chatroom = ref<Chatroom>({
+const chatroom = ref<GroupChatroom>({
   chatroom_id: routeChatroomId.value,
   name: "Loading name...",
-  description: "Loadind description...",
-  avatarPath: avatarPath,
-  avatarUrl: avatarUrl,
+  description: "Loading description...",
 });
 
 async function loadChatInfo() {
@@ -182,9 +170,15 @@ async function loadChatInfo() {
 
   if (error) {
     logPostgrestError(error, "info fetching");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown error fetching chatroom info")
-    );
+  }
+  if (!data) {
+    showError({
+      statusCode: 404,
+      message: "The chatroom you searched for was not found",
+      data: {
+        headline: 'No Yapping Here!',
+      },
+    });
     return;
   }
   chatroom.value.name = data.name;

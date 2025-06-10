@@ -15,12 +15,13 @@ import {
 export function useUserSearch() {
     const supabase = useSupabaseClient();
     const operationFeedbackHandler = useOperationFeedbackHandler();
-    const userData = useUserData();
     const excludeIds = ref<string[]>([]);
+    const excludeGroupId = ref<string | null>(null);
+    const excludeHasInvitationsTo = ref<string | null>(null);
 
     const unknownErrorMessage = "Unknown error during data retrieval";
     const minTimeBetweenSearches = 500; // ms
-    const userSelectLimit = 5;
+    const userSelectLimit = 5; // Should match the limit inside the search_users sql function
 
     const searchTerm = ref("");
     // Smallest subterm (substring in the current term)
@@ -43,18 +44,14 @@ export function useUserSearch() {
             ignoreFilter: !lastRedundantSubterm.value,
         },
     ]);
-
+    
     async function searchUsersInDatabase(term: string) {
-        let usersQuery = supabase
-            .from("profiles")
-            .select("user_id, username, displayname")
-            .neq("username", userData.username)
-            .or(`username.ilike.%${term}%, displayname.ilike.%${term}%`)
-            .order("username")
-            .limit(userSelectLimit);
-        if (excludeIds.value.length > 0) {
-            usersQuery = usersQuery.not('user_id', 'in', `(${excludeIds.value.join(',')})`)
-        }
+        const usersQuery = supabase.rpc('search_users', {
+            p_term: term,
+            p_excluded_ids: excludeIds.value.length === 0 ? undefined : excludeIds.value,
+            p_exclude_group_id: excludeGroupId.value ?? undefined,
+            p_exclude_invitations_to_group: excludeHasInvitationsTo.value ?? undefined,
+        })
 
         const { data, error } = await usersQuery;
         loading.value = false;
@@ -72,11 +69,11 @@ export function useUserSearch() {
         }
 
         users.value = (data || [])
+            // @ts-expect-error ignore deep type instantiation warning
             .map((user) => ({
                 id: user.user_id,
                 label: user.displayname ?? user.username,
                 suffix: user.username,
-                // @ts-expect-error ignore deep type instantiation warning
                 avatar: {
                     src: getAvatarUrl(user.user_id),
                     icon: "i-lucide-user",
@@ -134,6 +131,8 @@ export function useUserSearch() {
         searchTerm,
         groups,
         loading,
-        excludeIds
+        excludeIds,
+        excludeGroupId,
+        excludeHasInvitationsTo,
     };
 }

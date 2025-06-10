@@ -11,7 +11,7 @@ type GroupChatroomData = z.output<typeof createGroupChatroomSchema>;
 /**
  * Central composable for reusable chatroom client actions
  */
-export const useChatroomCreation = () => {
+export const useChatroomActions = () => {
   const supabase = useSupabaseClient();
   const operationFeedbackHandler = useOperationFeedbackHandler();
 
@@ -23,9 +23,11 @@ export const useChatroomCreation = () => {
       operationFeedbackHandler.displayError(
           getPostgrestErrorMessage(invitationError, 'Unknown error inviting users'),
       );
+      return false;
     }
     const nUsers = invitations.length;
     operationFeedbackHandler.displaySuccess(`${nUsers > 1 ? `${nUsers} users have` : 'User has'} been invited`);
+    return true;
   }
 
   async function createDirectChatroom(chatroomData: DirectChatroomData) {

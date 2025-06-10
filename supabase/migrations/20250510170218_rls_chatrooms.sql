@@ -4,7 +4,7 @@ alter table chatrooms enable row level security;
 create policy "Members can view their chatrooms"
 on chatrooms for select to authenticated
 using (
-  get_role_in_chatroom((select auth.uid()), id) is not null
+  utils.get_role_in_chatroom((select auth.uid()), id) is not null
 );
 
 -- Users can only view, not manipulate directly
