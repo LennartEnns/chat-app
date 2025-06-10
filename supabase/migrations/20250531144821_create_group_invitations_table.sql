@@ -14,7 +14,7 @@ alter table group_invitations enable row level security;
 create policy "Mods/Admins can see group invitations to their chatroom"
 on group_invitations for select to authenticated
 using (
-  get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) in ('mod', 'admin')
+  utils.get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) in ('mod', 'admin')
 );
 
 create policy "Invitees can see their group invitations"
@@ -28,15 +28,15 @@ on group_invitations for insert to authenticated
 with check (
   (
     (
-      get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'mod'
+      utils.get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'mod'
       and group_invitations.as_role in ('member', 'viewer')
     )
     or
     (
-      get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'admin'
+      utils.get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'admin'
     )
     -- Invited user must not be a member
-  ) and get_role_in_chatroom(group_invitations.invitee_id, group_invitations.chatroom_id) is null
+  ) and utils.get_role_in_chatroom(group_invitations.invitee_id, group_invitations.chatroom_id) is null
 );
 
 -- Allow only inserts of invitee_id, chatroom_id and as_role
@@ -53,15 +53,15 @@ to authenticated;
 create policy "Admins/Mods can delete group invitations where they are the invitor"
 on group_invitations for delete to authenticated
 using (
-  get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) in ('admin', 'mod')
+  utils.get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) in ('admin', 'mod')
   and group_invitations.invitor_id = (select auth.uid())
 );
 
 create policy "Admins can delete group invitations where the invitor is a non-admin"
 on group_invitations for delete to authenticated
 using (
-  get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'admin'
-  and get_role_in_chatroom(group_invitations.invitor_id, group_invitations.chatroom_id) != 'admin'
+  utils.get_role_in_chatroom((select auth.uid()), group_invitations.chatroom_id) = 'admin'
+  and utils.get_role_in_chatroom(group_invitations.invitor_id, group_invitations.chatroom_id) != 'admin'
 );
 
 create policy "Invitees can delete their group invitations manually to reject them"

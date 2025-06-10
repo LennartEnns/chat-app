@@ -1,81 +1,42 @@
 <template>
   <NuxtLayout name="logged-in">
-    <div class="flex justify-center align-middle">
+    <div class="flex flex-col justify-center items-center pt-5">
       <div class="glassContainer w-[41rem] max-w-[90%] md:max-w-[70%]">
-        <UModal
-          v-model:open="showAvatarCroppingModal"
-          title="Crop Avatar"
-          :ui="{
-            header: 'justify-center',
-          }"
-        >
-          <template #body>
-            <AvatarUploadCropper
-              v-if="newAvatarObjectUrl"
-              :image-url="newAvatarObjectUrl"
-              @upload="onUploadCroppedAvatar"
-            />
-          </template>
-        </UModal>
         <UCard
           class="ring-0 bg-transparent h-full"
-          :ui="{ header: 'border-none' }"
+          :ui="{ header: 'border-none', body: 'pt-2 sm:pt-2' }"
         >
           <template #header>
-            <p class="font-bold text-black dark:text-white text-xl text-center">
+            <div class="font-bold text-black dark:text-white text-xl text-center">
               {{ profileTitle }}
-            </p>
+            </div>
           </template>
 
           <!-- Loading state -->
-          <div v-if="loading" class="flex justify-center items-center py-8">
-            <UIcon name="i-lucide-loader-2" class="animate-spin" size="2xl" />
-            <span class="ml-2">Loading profile...</span>
+          <div v-if="loading" class="flex flex-col gap-y-10">
+            <USkeleton class="w-32 h-32 rounded-full self-center" />
+            <USkeleton class="h-3 w-[80%]" />
+            <USkeleton class="h-3 w-[70%]" />
+            <USkeleton class="h-3 w-[100%]" />
           </div>
 
           <!-- Profile content -->
           <div v-else-if="!loading && profileData">
-            <div class="avatar">
-              <div class="avatar-container">
-                <UAvatar
-                  class="border-2"
-                  :src="
-                    isOwnProfile && !existsOwnAvatar
-                      ? undefined
-                      : profileData.avatarUrl
-                  "
-                  icon="i-lucide-user"
-                  :ui="{ root: 'size-35', icon: 'size-11/12' }"
-                />
-                <div v-if="isOwnProfile" class="avatar-overlay">
-                  <UIcon name="i-lucide-camera" size="xx-large" />
-                  Edit Picture
-                  <input
-                    type="file"
-                    style="
-                      position: absolute;
-                      width: 100%;
-                      height: 100%;
-                      opacity: 0;
-                    "
-                    accept="image/*"
-                    @change="uploadAvatar"
-                  >
-                </div>
-              </div>
-              <div :class="`mt-4 ${themedTextsColor}`">
-                {{ profileData.username }}
-              </div>
-              <UButton
-                v-if="isOwnProfile && existsOwnAvatar"
-                label="Clear Avatar"
-                variant="ghost"
-                class="cursor-pointer mt-1"
-                color="error"
-                @click="clearAvatar"
+            <div class="flex flex-col items-center">
+              <EditableAvatar
+                :src="profileData.avatarUrl"
+                bucket-name="avatars"
+                :filepath="userData.avatarPath"
+                default-icon="i-lucide-user"
+                :editable="isOwnProfile"
+                :clearable="isOwnProfile"
               />
             </div>
-            <div class="profile-container">
+            <div v-if="!isOwnProfile" class="w-full flex flex-row items-center justify-center gap-4 md:gap-6 mt-4">
+              <UButton label="Chat" icon="i-lucide-message-circle" :loading="loadingDirectChatroom" loading-icon="i-lucide-loader" @click="onChatWithUser" />
+              <UButton label="Invite" icon="i-lucide-user-round-plus" @click="onInviteUser" />
+            </div>
+            <div class="profile-container mt-2 md:mt-0">
               <div class="section-container">
                 <div :class="`flex mb-2 text-md ${themedSectionLabelClasses}`">
                   <div class="self-center">Display Name</div>
@@ -144,7 +105,7 @@
                 >
                   <div class="self-center">Description</div>
                   <HelpTooltip
-                    text="Tell other users about you!"
+                    :text="isOwnProfile ? 'Tell other users about you!' : 'Some info about the user'"
                     class="self-center"
                   />
                   <div class="grow" />
@@ -224,18 +185,14 @@
 import { userLimits } from "~~/validation/commonLimits";
 import { displayNameSchema } from "~~/validation/schemas/input/inputUserSchemas";
 import type { UserData } from "~/composables/useUserData";
-import {
-  getStorageErrorMessage,
-  logStorageError,
-} from "~~/errors/storageErrors";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
-import {
-  logPostgrestError,
-} from "~~/errors/postgrestErrors";
+import { logPostgrestError } from "~~/errors/postgrestErrors";
+import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
+import type { NonEmptyArray } from "~/types/tsUtils/helperTypes";
 
 type ProfileUserData = Pick<
   UserData,
-  "avatarUrl" | "avatarPath" | "username" | "displayname" | "description"
+  "avatarUrl" | "avatarPath" | "username" | "displayname" | "description" | "id"
 >;
 
 const route = useRoute();
@@ -243,6 +200,10 @@ const supabase = useSupabaseClient();
 const userData = useUserData();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const { isLight } = useSSRSafeTheme();
+const { createDirectChatroom } = useChatroomActions();
+
+const overlay = useOverlay();
+const inviteModal = overlay.create(InviteToGroup);
 
 // get username from url
 const routeUsername = computed(() => {
@@ -250,22 +211,16 @@ const routeUsername = computed(() => {
   return params.username as string;
 });
 const isOwnProfile = computed(() => routeUsername.value === userData.username);
-const existsOwnAvatar = ref(false);
-const newAvatarObjectUrl = ref<string | null>(null);
-const showAvatarCroppingModal = ref(false);
 
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
 const profileTitle = computed(() =>
   loading.value
     ? "Loading..."
-    : isOwnProfile.value
-    ? "Your Profile"
-    : `${profileData.value?.username ?? ""}'${
-        profileData.value?.username.endsWith("s") ? "" : "s"
-      } Profile`
+    : (profileData.value?.username ?? 'User Profile')
 );
 
+const loadingDirectChatroom = ref(false);
 const isEditingName = ref(false);
 const newDisplayName = ref("");
 const displayNameChanged = computed(
@@ -317,7 +272,7 @@ const showDescriptionLengthIndicator = computed(
 async function loadUserProfile(username: string) {
   loading.value = true;
 
-  // If it's the current user, get data from users metadata
+  // If it's the current user, get data from user's metadata
   if (isOwnProfile.value) {
     watch(
       userData,
@@ -328,6 +283,7 @@ async function loadUserProfile(username: string) {
           username: newUserData.username,
           displayname: newUserData.displayname,
           description: newUserData.description,
+          id: newUserData.id,
         };
       },
       {
@@ -348,8 +304,11 @@ async function loadUserProfile(username: string) {
 
     if(!data){
       showError({
-          statusCode: 404,
-          statusMessage: "The user you searched for was not found",
+        statusCode: 404,
+        message: "The user you searched for was not found",
+        data: {
+          headline: 'Who\'s that?',
+        },
       });
       return;
     }
@@ -358,8 +317,10 @@ async function loadUserProfile(username: string) {
     const avatarUrl = getAvatarUrl(data.user_id);
 
     profileData.value = {
-      ...data,
+      id: data.user_id,
       username,
+      displayname: data.displayname,
+      description: data.description,
       avatarPath,
       avatarUrl,
     };
@@ -378,52 +339,6 @@ async function updateProfileData(
     );
   } else {
     operationFeedbackHandler.displaySuccess("Updated profile.");
-  }
-}
-
-async function uploadAvatar(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (file) {
-    newAvatarObjectUrl.value = URL.createObjectURL(file);
-    showAvatarCroppingModal.value = true;
-  }
-}
-async function onUploadCroppedAvatar(blob: Blob) {
-  showAvatarCroppingModal.value = false;
-  newAvatarObjectUrl.value = null;
-  const { error } = await supabase.storage
-    .from("avatars")
-    .upload(userData.avatarPath, blob, {
-      upsert: true,
-      cacheControl: "0",
-
-      // Kind of unnecessary next to max-age=0, but better be on the safe side ;)
-      headers: {
-        "cache-control": "no-cache",
-      },
-    });
-  if (error) {
-    logStorageError(error, "avatar upload");
-    operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Unknown error uploading avatar")
-    );
-    return;
-  } else {
-    existsOwnAvatar.value = true;
-    operationFeedbackHandler.displaySuccess(
-      "Your avatar has been updated. You may need to reload the page."
-    );
-  }
-}
-async function clearAvatar() {
-  const { error } = await supabase.storage
-    .from("avatars")
-    .remove([userData.avatarPath]);
-  if (error) {
-    operationFeedbackHandler.displayError("Could not clear your avatar.");
-  } else {
-    existsOwnAvatar.value = false;
   }
 }
 
@@ -455,13 +370,52 @@ async function attachDisplayNameInputEnterHandler() {
     });
 }
 
-onNuxtReady(async () => {
-  if (!isOwnProfile.value) return; // Value only needed on the own profile page
-  const { data } = await supabase.storage
-    .from("avatars")
-    .exists(userData.avatarPath);
-  existsOwnAvatar.value = data;
-});
+async function onInviteUser() {
+  if (!profileData.value) return;
+  inviteModal.open({
+    presetInvitations: [{
+      user_id: profileData.value.id,
+      username: profileData.value.username,
+      displayname: profileData.value.displayname,
+      asRole: 'member',
+      alreadyInGroup: false,
+      alreadyInvited: false,
+    }],
+  });
+}
+async function onChatWithUser() {
+  const myId = userData.id;
+  const otherId = profileData.value?.id;
+  if (!otherId) return;
+
+  loadingDirectChatroom.value = true;
+
+  // Look if a chat already exists
+  const { data, error } = await supabase
+    .from('direct_chatrooms')
+    .select('chatroom_id')
+    .or(`and(user1_id.eq.${myId},user2_id.eq.${otherId}),and(user1_id.eq.${otherId},user2_id.eq.${myId})`);
+
+  if (error) {
+    operationFeedbackHandler.displayError('Could not fetch the chatroom');
+    loadingDirectChatroom.value = false;
+    return;
+  }
+  if (data && data.length > 0) {
+    // Direct chatroom already exists, so open it
+    loadingDirectChatroom.value = false;
+    navigateTo(`/chat/${(data as NonEmptyArray<{ chatroom_id: string }>)[0].chatroom_id}`);
+  } else {
+    // Create chatroom first, then open it
+    const newId = await createDirectChatroom({
+      otherUserId: otherId,
+    });
+    loadingDirectChatroom.value = false;
+    if (newId) {
+      navigateTo(`/chat/${newId}`);
+    }
+  }
+}
 
 onMounted(() => {
   loadUserProfile(routeUsername.value);

@@ -58,7 +58,7 @@ type ChatroomCreationResult = {
 };
 const emit = defineEmits<{ close: [ChatroomCreationResult | null] }>();
 
-const { createDirectChatroom, createGroupChatroom } = useChatroomCreation();
+const { createDirectChatroom, createGroupChatroom } = useChatroomActions();
 
 const chatroomType = ref<Enums<'chatroom_type'>>('direct');
 const chatroomTypeTabItems = ref<TabsItem[]>([{

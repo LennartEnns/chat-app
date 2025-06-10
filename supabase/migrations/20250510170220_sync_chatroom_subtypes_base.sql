@@ -17,7 +17,6 @@ begin
   return new;
 end;
 $$;
-revoke all on function public.before_insert_group_chatroom() from authenticated, anon;
 
 create trigger auto_create_group_chatroom_base
   before insert on public.group_chatrooms

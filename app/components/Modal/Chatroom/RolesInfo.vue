@@ -8,7 +8,7 @@
         <div v-for="(roleInfo, idx1) in roleInfos" :key="idx1">
           <div class="text-md font-bold text-highlighted flex flex-row items-center gap-x-2">
             <UIcon :name="roleInfo.icon" />
-            {{ roleInfo.name }}
+            {{ roleInfo.label }}
           </div>
           <ul class="text-sm text-muted list-inside list-disc">
             <li v-for="(privilege, idx2) in roleInfo.privileges" :key="idx2">
@@ -22,15 +22,16 @@
 </template>
 
 <script lang="ts" setup>
+import chatroomRolesVis from '~/visualization/chatroomRoles';
+
 type RoleInfo = {
-  name: string,
+  label: string,
   icon: string,
   privileges: string[],
 }
 const roleInfos: RoleInfo[] = [
   {
-    name: 'Admin',
-    icon: 'i-lucide-crown',
+    ...chatroomRolesVis.admin,
     privileges: [
       'Modify all chatroom properties',
       'Invite/remove members',
@@ -38,7 +39,7 @@ const roleInfos: RoleInfo[] = [
     ], 
   },
   {
-    name: 'Mod',
+    ...chatroomRolesVis.mod,
     icon: 'i-lucide-sword',
     privileges: [
       'Invite users as Member/Viewer',
@@ -46,7 +47,7 @@ const roleInfos: RoleInfo[] = [
     ],
   },
   {
-    name: 'Member',
+    ...chatroomRolesVis.member,
     icon: 'i-lucide-user-round',
     privileges: [
       'Write messages',
@@ -54,7 +55,7 @@ const roleInfos: RoleInfo[] = [
     ],
   },
   {
-    name: 'Viewer',
+    ...chatroomRolesVis.viewer,
     icon: 'i-lucide-eye',
     privileges: [
       'View messages and chatroom info, but not participate',

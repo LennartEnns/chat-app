@@ -23,7 +23,7 @@
 
 <script lang="ts" setup>
 import type { UserSearchResult } from "~/types/userSearch";
-import CreateChatroom from "~/components/Modal/CreateChatroom.vue";
+import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 
 const overlay = useOverlay();
 const createChatroomModal = overlay.create(CreateChatroom);

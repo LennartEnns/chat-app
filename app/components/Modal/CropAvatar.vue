@@ -1,7 +1,16 @@
 <template>
-    <div class="space-y-4">
+  <UModal
+    :close="{ onClick: onCancel }"
+    title="Crop Avatar"
+    :ui="{
+      header: 'justify-center border-none',
+      body: 'p-0 sm:p-0',
+      footer: 'flex flex-row justify-center',
+    }"
+  >
+    <template #body>
       <cropper
-        :src="imageUrl"
+        :src="avatarUrl"
         :canvas="{
           minWidth: 0,
           minHeight: 0,
@@ -12,45 +21,49 @@
         :auto-zoom="true"
         @change="onCrop"
       />
-      <div class="flex justify-center">
-        <UButton variant="ghost" @click="uploadCroppedImage">
-          Upload Image
-        </UButton>
-      </div>
-    </div>
+    </template>
+
+    <template #footer>
+      <UButton icon="i-lucide-upload" label="Upload" variant="ghost" @click="onUpload" />
+    </template>
+  </UModal>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { CircleStencil, Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 
+const croppedCanvas = ref<HTMLCanvasElement | null>(null);
+
 defineProps<{
-  imageUrl: string,
-}>();
-const emit = defineEmits<{
-  upload: [Blob],
+  avatarUrl: string,
 }>();
 
-const croppedCanvas = ref<HTMLCanvasElement | null>(null);
+const emit = defineEmits<{
+  close: [Blob | null],
+}>();
 
 function onCrop({ canvas }: { canvas: HTMLCanvasElement }) {
   croppedCanvas.value = canvas;
 }
-
-async function uploadCroppedImage() {
+async function onCancel() {
+  emit('close', null);
+}
+async function onUpload() {
   if (!croppedCanvas.value) return
 
   // Convert canvas to Blob
   croppedCanvas.value.toBlob(async (blob) => {
     if (!blob) {
       console.log('Avatar upload error: No BLOB returned from canvas');
+      emit('close', null);
       return;
     }
-    emit('upload', blob);
+    emit('close', blob);
   }, 'image/jpeg');
 }
 </script>
 
-<style scoped>
+<style>
 
 </style>

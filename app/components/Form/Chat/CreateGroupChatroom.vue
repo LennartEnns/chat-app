@@ -4,6 +4,7 @@
     class="space-y-4"
     :schema="schema"
     :state="state"
+    :validate-on="['input']"
     @submit="onSubmit"
   >
     <UFormField
@@ -38,61 +39,18 @@
       />
     </UFormField>
 
-    <div>
-      <ModalSearchUser class="h-min" :exclude-ids="selectedUsers.map((user) => user.user_id)" @close="onUserSelect">
-        <UButton
-          label="Search Users"
-          color="neutral"
-          variant="subtle"
-          icon="i-lucide-search"
-          class="w-full rounded-b-none"
-        />
-      </ModalSearchUser>
-      <UFormField name="invitations">
-        <div v-if="selectedUsers.length === 0" class="text-muted border-1 border-accented rounded-lg p-2 border-t-0 rounded-t-none">
-          Select the users you want to invite
-        </div>
-        <div
-          v-else
-          ref="usersContainer"
-          class="p-1 space-y-1 border-1 border-accented rounded-lg border-t-0 rounded-t-none max-h-40 overflow-y-scroll scroll-smooth"
-        >
-          <div
-            v-for="(user, index) in selectedUsers"
-            :key="index"
-            class="flex flex-row items-center justify-start gap-2"
-          >
-            <UAvatar
-              :src="getAvatarUrl(user.user_id)"
-              icon="i-lucide-user"
-              size="sm"
-            />
-            <div class="flex flex-col sm:flex-row gap-0 sm:gap-2">
-              <span>
-                {{ user.displayname ?? user.username }}
-              </span>
-              <span v-if="user.displayname" class="text-muted">
-                {{ user.username }}
-              </span>
-            </div>
-            <div class="flex-1" />
-            <ChatroomRoleSelect v-model="user.asRole" class="min-w-36" />
-            <UButton icon="i-lucide-x" variant="ghost" color="error" @click="selectedUsers.splice(index, 1)" />
-          </div>
-        </div>
-      </UFormField>
-    </div>
+    <UFormField name="invitations">
+      <ChatroomGroupInvitationsCreator v-model="invitations" :allowed-roles="['admin', 'mod', 'member', 'viewer']" />
+    </UFormField>
   </UForm>
 </template>
 
 <script lang="ts" setup>
 import type * as z from 'zod';
-import type { UserSearchResult } from '~/types/userSearch';
 import { createGroupChatroomSchema } from '~~/validation/schemas/input/inputChatroomSchemas';
-import type { Enums } from '~~/database.types';
 import { groupChatroomLimits } from '~~/validation/commonLimits';
+import type { UserInvitation } from '~/types/groupInvitationCreation';
 
-const usersContainer = ref<HTMLElement | null>(null);
 const schema = createGroupChatroomSchema;
 type Schema = z.output<typeof schema>;
 
@@ -100,13 +58,13 @@ const emit = defineEmits<{
   submit: [data: Schema]
 }>();
 
-const selectedUsers = ref<(UserSearchResult & {asRole: Enums<'chatroom_role'>})[]>([]);
+const invitations = ref<UserInvitation[]>([]);
 const state = reactive<Partial<Omit<Schema, 'invitations'>> & Pick<Schema, 'invitations'>>({
   name: undefined,
   description: undefined,
   invitations: [],
 });
-watch(selectedUsers.value, (users) => {
+watch(invitations.value, (users) => {
   state.invitations = users.map((user) => ({
     invitee_id: user.user_id,
     as_role: user.asRole,
@@ -115,21 +73,6 @@ watch(selectedUsers.value, (users) => {
   immediate: true,
 });
 
-async function onUserSelect(result: UserSearchResult | null) {
-  if (result) {
-    // Add user
-    selectedUsers.value.push({
-      ...result,
-      asRole: 'member',
-    });
-
-    await nextTick();
-    // Scroll to bottom
-    if (usersContainer.value) {
-      usersContainer.value.scrollTo({ top: usersContainer.value.scrollHeight })
-    }
-  }
-}
 async function onSubmit() {
   const { data } = createGroupChatroomSchema.safeParse(state);
   if (data) {
