@@ -1,11 +1,11 @@
 <template>
-  <div>
-    <ModalChatroomInviteToGroup v-model:open="modalOpen" />
-  </div>
+  <NuxtLayout name="chat">
+    
+  </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
-const modalOpen = ref(true);
+
 </script>
 
 <style>

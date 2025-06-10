@@ -90,7 +90,7 @@ watch(() => props.existingGroupId, async (groupId) => {
     invitations.value.forEach((inv) => {
       inv.alreadyInGroup = false;
       inv.alreadyInvited = false;
-    })
+    });
     return;
   };
   // Look for existing invitations for the selected users

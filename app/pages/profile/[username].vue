@@ -33,7 +33,7 @@
               />
             </div>
             <div v-if="!isOwnProfile" class="w-full flex flex-row items-center justify-center gap-4 md:gap-6 mt-4">
-              <UButton label="Chat" icon="i-lucide-message-circle" @click="onChatWithUser" />
+              <UButton label="Chat" icon="i-lucide-message-circle" :loading="loadingDirectChatroom" loading-icon="i-lucide-loader" @click="onChatWithUser" />
               <UButton label="Invite" icon="i-lucide-user-round-plus" @click="onInviteUser" />
             </div>
             <div class="profile-container mt-2 md:mt-0">
@@ -188,6 +188,7 @@ import type { UserData } from "~/composables/useUserData";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
+import type { NonEmptyArray } from "~/types/tsUtils/helperTypes";
 
 type ProfileUserData = Pick<
   UserData,
@@ -199,6 +200,8 @@ const supabase = useSupabaseClient();
 const userData = useUserData();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const { isLight } = useSSRSafeTheme();
+const { createDirectChatroom } = useChatroomActions();
+
 const overlay = useOverlay();
 const inviteModal = overlay.create(InviteToGroup);
 
@@ -217,6 +220,7 @@ const profileTitle = computed(() =>
     : (profileData.value?.username ?? 'User Profile')
 );
 
+const loadingDirectChatroom = ref(false);
 const isEditingName = ref(false);
 const newDisplayName = ref("");
 const displayNameChanged = computed(
@@ -374,9 +378,45 @@ async function onInviteUser() {
       username: profileData.value.username,
       displayname: profileData.value.displayname,
       asRole: 'member',
+      alreadyInGroup: false,
+      alreadyInvited: false,
     }],
   });
 }
+async function onChatWithUser() {
+  const myId = userData.id;
+  const otherId = profileData.value?.id;
+  if (!otherId) return;
+
+  loadingDirectChatroom.value = true;
+
+  // Look if a chat already exists
+  const { data, error } = await supabase
+    .from('direct_chatrooms')
+    .select('chatroom_id')
+    .or(`and(user1_id.eq.${myId},user2_id.eq.${otherId}),and(user1_id.eq.${otherId},user2_id.eq.${myId})`);
+
+  if (error) {
+    operationFeedbackHandler.displayError('Could not fetch the chatroom');
+    loadingDirectChatroom.value = false;
+    return;
+  }
+  if (data && data.length > 0) {
+    // Direct chatroom already exists, so open it
+    loadingDirectChatroom.value = false;
+    navigateTo(`/chat/${(data as NonEmptyArray<{ chatroom_id: string }>)[0].chatroom_id}`);
+  } else {
+    // Create chatroom first, then open it
+    const newId = await createDirectChatroom({
+      otherUserId: otherId,
+    });
+    loadingDirectChatroom.value = false;
+    if (newId) {
+      navigateTo(`/chat/${newId}`);
+    }
+  }
+}
+
 onMounted(() => {
   loadUserProfile(routeUsername.value);
 });
