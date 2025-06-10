@@ -9,6 +9,7 @@
       <ChatroomPreview
         v-for="chatroom in chatroomsWithAvatarUrl"
         :name="chatroom.name"
+        :avatar-url="chatroom.avatarUrl"
       ></ChatroomPreview>
 
       <!-- Container for Mobile -->
@@ -187,7 +188,8 @@ function generateAvatarUrl(
     : {
         avatarUrl: useCachedSignedImageUrl(
           "chatroom_avatars",
-          getGroupAvatarPath(id)
+          getGroupAvatarPath(id),
+          true
         ).value,
       };
 }
