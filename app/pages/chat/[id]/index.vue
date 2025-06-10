@@ -26,7 +26,6 @@
             <UButton
               icon="i-heroicons-ellipsis-horizontal"
               variant="ghost"
-              color="gray"
               class="message-options-button"
             />
           </div>
@@ -43,7 +42,6 @@
             <UButton
               icon="i-heroicons-ellipsis-horizontal"
               variant="ghost"
-              color="gray"
               class="message-options-button"
             />
           </div>
