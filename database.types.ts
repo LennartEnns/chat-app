@@ -250,7 +250,7 @@ export type Database = {
         Insert: {
           chatroom_id: string
           role: Database["public"]["Enums"]["chatroom_role"]
-          user_id: string
+          user_id?: string
         }
         Update: {
           chatroom_id?: string
