@@ -40,7 +40,7 @@
     </UFormField>
 
     <UFormField name="invitations">
-      <ChatroomGroupInvitationsCreator v-model="invitations" :allowed-roles="['admin', 'mod', 'member', 'viewer']" />
+      <ChatroomInvitationGroupInvitationsCreator v-model="invitations" :allowed-roles="['admin', 'mod', 'member', 'viewer']" />
     </UFormField>
   </UForm>
 </template>
@@ -49,7 +49,7 @@
 import type * as z from 'zod';
 import { createGroupChatroomSchema } from '~~/validation/schemas/input/inputChatroomSchemas';
 import { groupChatroomLimits } from '~~/validation/commonLimits';
-import type { UserInvitation } from '~/types/groupInvitationCreation';
+import type { UserInvitation } from '~/types/invitations/groupInvitationCreation';
 
 const schema = createGroupChatroomSchema;
 type Schema = z.output<typeof schema>;

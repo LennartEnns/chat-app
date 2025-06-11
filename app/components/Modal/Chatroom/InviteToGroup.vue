@@ -40,7 +40,7 @@
 
 <script lang="ts" setup>
 import type * as z from 'zod';
-import type { SelectedGroup, UserInvitation } from '~/types/groupInvitationCreation';
+import type { SelectedGroup, UserInvitation } from '~/types/invitations/groupInvitationCreation';
 import type { inviteUsersToGroupSchema } from '~~/validation/schemas/input/inputChatroomSchemas';
 
 const { inviteUsers } = useChatroomActions();
@@ -57,10 +57,13 @@ async function onCancel() {
   emit("close");
 }
 async function onInvite(invitationData: z.output<typeof inviteUsersToGroupSchema>) {
-  const success = await inviteUsers(invitationData.invitations.map((inv) => ({
-    chatroom_id: invitationData.group.chatroom_id,
-    ...inv,
-  })));
+  const success = await inviteUsers(invitationData.invitations.map((inv) => {
+    const { isInvalid, ...invDb } = inv;
+    return {
+      chatroom_id: invitationData.group.chatroom_id,
+    ...invDb,
+    }
+  }));
 
   if (success) {
     emit("close");
