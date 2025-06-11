@@ -70,3 +70,14 @@ select
   ) as current_user_role -- Role of current user in group
 from public.group_chatrooms gc
 join public.chatrooms_with_last_activity cwla on cwla.id = gc.chatroom_id;
+
+create or replace view public.group_chatroom_members as
+select
+  user_to_group.chatroom_id,
+  pf.user_id,
+  user_to_group.role,
+  pf.username,
+  pf.displayname,
+  pf.description
+from public.profiles pf
+join public.user_to_group on pf.user_id = user_to_group.user_id;

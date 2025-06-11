@@ -16,8 +16,7 @@
     >
       <UButton
         label="Change color"
-        color="neutral"
-        variant="outline"
+        variant="subtle"
         icon="i-lucide-pipette"
         class="p-2.5 flex flex-row justify-center"
       />
@@ -28,7 +27,7 @@
             'shine-effect': item.isCurrent,
             'shine-effect-background-light': isLight,
             'shine-effect-background-dark': !isLight,
-            }"
+          }"
         >
           <div class="w-4 h-4 rounded" :class="item.colorClass" />
           <span
@@ -175,7 +174,7 @@ const colorItems: ColorItem[] = [
   flex-grow: 1;
 }
 .bioInput * {
-  border-radius: 5px 0px 0px 5px;
+  border-radius: 0.3rem 0px 0px 0.3rem;
   /* border: 1px solid red; */
 }
 .saveBioBtn {

@@ -16,7 +16,7 @@
       variant="link"
       class="mt-1 md:mt-2 w-full"
       :ui="{
-        trigger: 'grow'
+        trigger: 'grow',
       }"
       @update:model-value="onTabSelected"
     >
@@ -28,6 +28,19 @@
           icon="i-lucide-message-circle-plus"
           @click="onCreateChat"
         />
+        <div
+          class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
+        >
+          <ChatroomPreview
+            class="mb-2 glassBG brightness-130"
+            v-for="(chatroom, index) in chatroomsWithAvatarUrl"
+            :key="index"
+            :name="chatroom.name"
+            :avatar-url="chatroom.avatarUrl"
+            :id="chatroom.id"
+            :lastMsg="chatroom.last_message"
+          ></ChatroomPreview>
+        </div>
       </template>
       <template #invitations>
         <ChatroomInvitationList
@@ -90,16 +103,15 @@ const {
 
 const tabItems = [
   {
-    label: 'Chats',
-    icon: 'i-lucide-messages-square',
-    slot: 'chats' as const,
+    label: "Chats",
+    icon: "i-lucide-messages-square",
+    slot: "chats" as const,
   },
   {
-    label: 'Invitations',
-    icon: 'i-lucide-mails',
-    slot: 'invitations' as const,
-    
-  }
+    label: "Invitations",
+    icon: "i-lucide-mails",
+    slot: "invitations" as const,
+  },
 ] satisfies TabsItem[];
 
 // Handle user selection in the command palette
@@ -117,7 +129,7 @@ async function onCreateChat() {
   const instance = createChatroomModal.open();
   const res = await instance.result;
   if (res) {
-    if (res.type === 'direct') {
+    if (res.type === "direct") {
       navigateTo(`/chat/${res.id}`);
     } else {
       navigateTo(`/chat/${res.id}/info`);
@@ -128,6 +140,67 @@ async function onRemoveInvitation() {
   // When an invitation has been rejected, reload all invitations
   refreshFetchInvitations();
 }
+
+function generateAvatarUrl(
+  type: string,
+  id: string,
+  otherUserId: string | null
+): {
+  avatarUrl: string | undefined;
+} {
+  return type === "direct"
+    ? {
+        avatarUrl: otherUserId ? getAvatarUrl(otherUserId) : undefined,
+      }
+    : {
+        avatarUrl: useCachedSignedImageUrl(
+          "chatroom_avatars",
+          getGroupAvatarPath(id),
+          true
+        ).value,
+      };
+}
+
+const previewQuery = supabase
+  .from("chatrooms_preview")
+  .select("*")
+  .order("last_activity", { ascending: false });
+
+async function getChatroomList(
+  user_id: string
+): Promise<Awaited<typeof previewQuery>["data"] | null> {
+  const { data, error } = await previewQuery;
+
+  if (error) {
+    logPostgrestError(error, "message fetching");
+    return null;
+  }
+  if (!data || data.length === 0) {
+    console.log("No chatrooms found for user_id:" + user_id);
+    return null;
+  }
+
+  return data;
+}
+
+let chatrooms = ref<Awaited<typeof previewQuery>["data"]>([]);
+const chatroomListResult = await getChatroomList(userData.id);
+chatrooms.value = chatroomListResult ?? [];
+
+const chatroomsWithAvatarUrl = computed(() =>
+  chatrooms.value?.map((chatroom) => {
+    const { avatarUrl } = generateAvatarUrl(
+      chatroom.type!,
+      chatroom.id!,
+      chatroom.other_user_id
+    );
+    return {
+      ...chatroom,
+      avatarUrl,
+    };
+  })
+);
+console.log(chatroomsWithAvatarUrl.value[0]?.last_message);
 </script>
 
 <style></style>
