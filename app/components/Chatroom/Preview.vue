@@ -1,9 +1,9 @@
 <template>
-  <UButton variant="ghost" class="" @click="onUserSelect()">
+  <UButton variant="ghost" class="w-full p-0.5" @click="onUserSelect()">
     <div class="flex max-w-full w-full">
       <UAvatar :src="avatarUrl" icon="i-lucide-user" size="md" />
       <div class="pl-3 flex flex-col flex-grow justify-start items-start">
-        <div class="font-bold text-neutral-300">
+        <div class="font-bold text-neutral-600 dark:text-neutral-300">
           {{ name }}
         </div>
         <div class="font-light text-neutral-500" v-if="lastMsg">

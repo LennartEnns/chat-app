@@ -19,9 +19,11 @@
         @click="onCreateChat"
       />
     </div>
-    <div class="flex-1 mt-1 w-full">
+    <div
+      class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
+    >
       <ChatroomPreview
-        class="w-full mb-2"
+        class="mb-2 glassBG brightness-130"
         v-for="chatroom in chatroomsWithAvatarUrl"
         :name="chatroom.name"
         :avatar-url="chatroom.avatarUrl"
