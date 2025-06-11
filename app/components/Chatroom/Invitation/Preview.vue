@@ -36,7 +36,7 @@
 
     <div v-if="!invitation.invitee_username" class="flex flex-row items-center gap-4 mt-2">
       <UButton label="Accept" variant="subtle" color="success" @click="onAcceptInvitation" />
-      <UButton label="Decline" variant="subtle" color="error" @click="onRejectInvitation" />
+      <UButton label="Reject" variant="subtle" color="error" @click="onRejectInvitation" />
     </div>
   </div>
 </template>
@@ -49,6 +49,10 @@ import { logPostgrestError } from '~~/errors/postgrestErrors';
 
 const props = defineProps<{
   invitation: InvitationPreview,
+}>();
+
+const emit = defineEmits<{
+  rejected: [],
 }>();
 
 const supabase = useSupabaseClient();
@@ -80,6 +84,20 @@ async function onAcceptInvitation() {
   // Open chatroom after adding user
   operationFeedbackHandler.displaySuccess(`Entered '${props.invitation.group_name ?? 'new group'}'`);
   navigateTo(`/chat/${props.invitation.chatroom_id}`);
+}
+async function onRejectInvitation() {
+  // Try to delete the invitation
+  const { error } = await supabase.from('group_invitations')
+    .delete()
+    .eq('id', props.invitation.id);
+  if (error) {
+    logPostgrestError(error, 'invitation reject');
+    operationFeedbackHandler.displayError('Could not reject the invitation');
+    return;
+  }
+
+  operationFeedbackHandler.displaySuccess(`Rejected the invitation${props.invitation.group_name ? ` to ${props.invitation.group_name}` : ''}`);
+  emit('rejected');
 }
 </script>
 
