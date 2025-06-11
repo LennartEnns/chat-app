@@ -26,6 +26,7 @@
         :name="chatroom.name"
         :avatar-url="chatroom.avatarUrl"
         :id="chatroom.id"
+        :lastMsg="chatroom.last_message"
       ></ChatroomPreview>
     </div>
   </div>
@@ -110,7 +111,7 @@ const chatroomsWithAvatarUrl = computed(() =>
     };
   })
 );
-console.log(chatroomsWithAvatarUrl.value);
+console.log(chatroomsWithAvatarUrl.value[0]?.last_message);
 </script>
 
 <style></style>

@@ -1,8 +1,15 @@
 <template>
-  <UButton variant="subtle" @click="onUserSelect()">
-    <UAvatar :src="avatarUrl" icon="i-lucide-user" size="md" />
-    <div class="ml-2">
-      <span class="font-bold">{{ name }}</span>
+  <UButton variant="ghost" class="" @click="onUserSelect()">
+    <div class="flex max-w-full w-full">
+      <UAvatar :src="avatarUrl" icon="i-lucide-user" size="md" />
+      <div class="pl-3 flex flex-col flex-grow justify-start items-start">
+        <div class="font-bold text-neutral-300">
+          {{ name }}
+        </div>
+        <div class="font-light text-neutral-500" v-if="lastMsg">
+          {{ lastMsg }}
+        </div>
+      </div>
     </div>
   </UButton>
 </template>
@@ -14,6 +21,7 @@ const props = defineProps<{
   id: string;
   name: string;
   avatarUrl: string | undefined;
+  lastMsg: string | null;
 }>();
 console.log("Preview component loaded with props:", props.avatarUrl);
 
