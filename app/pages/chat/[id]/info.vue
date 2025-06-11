@@ -56,7 +56,7 @@
           </div>
         </div>
         <div
-          class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:px-5 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
+          class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
           <div class="pb-5 text-neutral-700 dark:text-white">
             <p class="font-bold">Members</p>
@@ -68,7 +68,7 @@
               @click="onInviteUser"
             />
           </div>
-          <div class="flex flex-wrap justify-center gap-3">
+          <div class="flex flex-wrap justify-center gap-3 p-5">
             <div
               v-for="(member, index) in chatMembers"
               :key="index"
@@ -93,8 +93,8 @@
                   >
                 </div>
               </div>
-              <div class="flex flex-col justify-center px-[0.6rem]">
-                <p class="truncate flex font-bold">
+              <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
+                <p class="truncate font-bold">
                   {{ member.displayname }}
                 </p>
                 <p class="line-clamp-2 leading-4">
@@ -219,7 +219,7 @@
                 class="flex flex-col items-center justify-center truncate px-[0.6rem]"
               >
                 <div class="truncate w-full text-center">
-                  {{ invitation.invitee_id }}
+                  {{ invitation.invitee_username }}
                 </div>
               </div>
               <UButton
@@ -261,7 +261,13 @@ const overlay = useOverlay();
 const inviteModal = overlay.create(InviteToGroup);
 
 const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
-const chatInvitations = ref<Tables<"group_invitations">[]>([]);
+
+type ChatInvitation = Pick<
+  Tables<"group_invitations_preview">,
+  "id" | "invitee_id" | "as_role" | "invitee_username"
+>;
+
+const chatInvitations = ref<ChatInvitation[]>([]);
 
 const editMode = ref<boolean>(false);
 
@@ -392,8 +398,8 @@ async function loadChatMembers() {
 
 async function loadChatInvitations() {
   const { data, error } = await supabase
-    .from("group_invitations")
-    .select("*")
+    .from("group_invitations_preview")
+    .select("id, invitee_id, as_role, invitee_username")
     .eq("chatroom_id", chatroom.value.chatroom_id!);
 
   if (error) {
