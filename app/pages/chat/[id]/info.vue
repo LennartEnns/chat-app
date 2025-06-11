@@ -12,11 +12,13 @@
                 />
                 <div class="absolute bottom-0 right-0">
                   <UButton
+                    v-if="editMode"
+                    size="md"
                     icon="i-lucide-image-up"
-                    class="relative overflow-hidden size-fit"
+                    class="relative"
                   >
                     <input
-                      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      class="absolute inset-0 w-full h-full opacity-0"
                       type="file"
                       accept="image/*"
                       @change="uploadAvatar"
@@ -54,10 +56,17 @@
           </div>
         </div>
         <div
-          class="flex flex-col items-center col-span-2 px-5 relative md:border border-defaultNeutral-700 md:border-t-0 md:border-b-0 md:border-r-0 lg:border-t-0 lg:border-b-0 lg:border-r"
+          class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:px-5 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
           <div class="pb-5 text-neutral-700 dark:text-white">
             <p class="font-bold">Members</p>
+            <UButton
+              v-if="editMode"
+              class="flex size-fit absolute top-0 right-5"
+              size="md"
+              icon="i-lucide-user-plus"
+              @click="onInviteUser"
+            />
           </div>
           <div class="flex flex-wrap justify-center gap-3">
             <div
@@ -109,12 +118,23 @@
             </div>
             <div class="hidden md:block">
               <UButton
+                v-if="!editMode"
                 class="flex size-fit"
                 size="xl"
-                icon="i-lucide-plus"
-                @click="onInviteUser"
+                icon="i-lucide-pencil-line"
+                @click="enabeleEdit"
               >
-                Invite Member
+                Edit
+              </UButton>
+              <UButton
+                v-if="editMode"
+                color="error"
+                class="flex size-fit"
+                size="xl"
+                icon="i-lucide-x"
+                @click="disableEdit"
+              >
+                Cancel
               </UButton>
             </div>
           </div>
@@ -152,7 +172,25 @@
                       {{ invitation.invitee_id }}
                     </div>
                   </div>
-                  <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
+                  <UButton
+                    v-if="!editMode"
+                    class="flex size-fit"
+                    size="xl"
+                    icon="i-lucide-pencil-line"
+                    @click="enabeleEdit"
+                  >
+                    Edit
+                  </UButton>
+                  <UButton
+                    color="error"
+                    v-if="editMode"
+                    class="flex size-fit"
+                    size="xl"
+                    icon="i-lucide-x"
+                    @click="disableEdit"
+                  >
+                    Cancel
+                  </UButton>
                 </div>
               </div>
             </div>
@@ -184,7 +222,11 @@
                   {{ invitation.invitee_id }}
                 </div>
               </div>
-              <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
+              <UButton
+                v-if="editMode"
+                icon="i-lucide-trash-2"
+                class="size-fit"
+              ></UButton>
             </div>
           </div>
         </div>
@@ -221,6 +263,8 @@ const inviteModal = overlay.create(InviteToGroup);
 const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
 const chatInvitations = ref<Tables<"group_invitations">[]>([]);
 
+const editMode = ref<boolean>(false);
+
 const route = useRoute();
 const routeChatroomId = computed(() => {
   const params = route.params;
@@ -229,6 +273,14 @@ const routeChatroomId = computed(() => {
 
 async function openDrawer() {
   open.value = true;
+}
+
+async function enabeleEdit() {
+  editMode.value = true;
+}
+
+async function disableEdit() {
+  editMode.value = false;
 }
 
 type Chatroom = Omit<
@@ -240,6 +292,7 @@ type Chatroom = Omit<
 };
 
 async function uploadAvatar(event: Event) {
+  disableEdit();
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (file) {
