@@ -8,7 +8,15 @@
         </div>
       </UCard>
       <div ref="messagesContainer" class="messages">
-        <div :class="`message partner ${themedPartnerMessageColor}`">
+        <div
+          :class="`message partner ${themedPartnerMessageColor}`"
+          @contextmenu.prevent="
+            handleContextMenu($event, {
+              text: 'Partner message content',
+              timestamp: '12:48',
+            })
+          "
+        >
           <UAvatar
             class="justify-self-center"
             src="https://github.com/nuxt.png"
@@ -24,8 +32,7 @@
             </p>
             <span class="message-time">12:48</span>
             <UDropdownMenu
-              class="drop"
-              :items="items"
+              :items="dropdownItems"
               :ui="{
                 content: 'w-48',
               }"
@@ -38,19 +45,19 @@
             </UDropdownMenu>
           </div>
         </div>
+
         <div
           v-for="(message, index) in userMessages"
           :key="index"
           :class="`message user ${themedUserMessageColor} whitespace-pre-line wrap-anywhere`"
+          @contextmenu.prevent="handleContextMenu($event, message)"
         >
           <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
           <div class="message-content">
             <p>{{ message.text }}</p>
             <span class="message-time">{{ message.timestamp }}</span>
-
             <UDropdownMenu
-              class="drop"
-              :items="items"
+              :items="dropdownItems"
               :ui="{
                 content: 'w-48',
               }"
@@ -79,6 +86,12 @@
         /></UButton>
       </div>
     </div>
+
+    <UContextMenu
+      ref="contextMenuRef"
+      v-model:show="isContextMenuOpen"
+      :items="contextMenuItems"
+    />
   </NuxtLayout>
 </template>
 
@@ -109,15 +122,79 @@ const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
 
-const items = ref<DropdownMenuItem[]>([
+const dropdownItems = ref<DropdownMenuItem[]>([
   {
     label: "Delete",
     icon: "i-lucide-trash",
+    click: () => {
+      console.log("Delete clicked from dropdown!");
+    },
   },
   {
     label: "Edit",
     icon: "i-lucide-edit",
+    click: () => {
+      console.log("Edit clicked from dropdown!");
+    },
   },
+]);
+
+interface UContextMenuInstance {
+  open: (event: MouseEvent) => void;
+}
+
+const contextMenuRef = ref<UContextMenuInstance | null>(null);
+const isContextMenuOpen = ref(false);
+const activeMessage = ref<DisplayedMessage | null>(null);
+
+/**
+ * @param event
+ * @param message
+ */
+const handleContextMenu = (
+  event: MouseEvent | TouchEvent,
+  message: DisplayedMessage
+) => {
+  activeMessage.value = message;
+  console.log("handleContextMenu triggered (contextmenu event)", event);
+  if (contextMenuRef.value) {
+    contextMenuRef.value.open(event as MouseEvent);
+    isContextMenuOpen.value = true;
+    console.log("Context menu open call attempted via contextmenu event.");
+  } else {
+    console.log("contextMenuRef.value is null, cannot open context menu.");
+  }
+};
+
+const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
+  [
+    {
+      label: "Delete",
+      icon: "i-lucide-trash",
+      click: () => {
+        if (activeMessage.value) {
+          console.log(
+            "Nachricht löschen (Context Menu):",
+            activeMessage.value.text
+          );
+        }
+        isContextMenuOpen.value = false;
+      },
+    },
+    {
+      label: "Edit",
+      icon: "i-lucide-edit",
+      click: () => {
+        if (activeMessage.value) {
+          console.log(
+            "Nachricht bearbeiten (Context Menu):",
+            activeMessage.value.text
+          );
+        }
+        isContextMenuOpen.value = false;
+      },
+    },
+  ],
 ]);
 
 // messages and writing
