@@ -89,9 +89,8 @@ const {
   execute: executeFetchInvitations,
   pending: invitationsPreviewPending
 } = await useAsyncData('inboundInvitations', async () => {
-  console.log("Fetching invitations");
   const { data, error } = await supabase.from('group_invitations_preview')
-    .select('id, invitor_username, chatroom_id, group_name, as_role')
+    .select('id, invitor_username, invitor_id, chatroom_id, group_name, as_role')
     .eq('invitee_id', userData.id);
 
   if (error) {
