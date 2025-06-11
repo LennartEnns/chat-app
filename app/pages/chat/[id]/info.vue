@@ -120,6 +120,7 @@
           </div>
         </div>
         <UDrawer
+          :handle="false"
           direction="right"
           v-model:open="open"
           class="hidden md:block lg:hidden"
