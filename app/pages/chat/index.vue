@@ -4,123 +4,51 @@
       <!-- Container for Desktop -->
       <div v-if="!isMobile">
         <h1 class="headlineChat-desktop">You didn't open any chats yet</h1>
-        <USeparator :class="`${themedSeparator}`" color="primary" />
+        <USeparator :class="themedSeparator" color="primary" />
       </div>
+
       <!-- Container for Mobile -->
       <div v-if="isMobile">
         <h1 class="headlineChat-mobile">New Messages</h1>
-        <USeparator :class="`${themedSeparatorMobile}`" color="primary" />
+        <USeparator :class="themedSeparatorMobile" color="primary" />
 
-        <!-- Direct -->
-        <h1 class="headline-direct">Direct Chats</h1>
-        <!-- Loop through users array -->
-        <div
-          v-for="(chatroom, index) in directChatrooms"
-          :key="chatroom.chatroom_id"
-          :class="[
-            'container-overlay',
-            index === 0
-              ? 'first-message-container'
-              : 'subsequent-message-container',
-          ]"
-        >
-          <div class="avatars-direct">
-            <UChip inset color="primary">
-              <UAvatar :src="chatroom.loggedUser.avatarUrl" size="lg" />
-            </UChip>
-          </div>
-          <div class="count-new-messages">
-            <UBadge
-              class="font-bold rounded-full"
-              size="md"
-              color="primary"
-              variant="outline"
-            >
-              {{ chatroom.new_messages }}
-            </UBadge>
-          </div>
-          <div class="button-layer">
-            <UButton class="newMessages custom-button-text" :block="true">
-              {{ chatroom.loggedUser.username }}
-            </UButton>
-          </div>
-        </div>
+        <!-- Direct Chats -->
+        <ChatsLanding 
+          title="Direct Chats" 
+          :chatrooms="directChatrooms" 
+          type="direct" 
+        />
 
-        <!-- Groups -->
-        <h1 class="headline-direct">Group Chats</h1>
-        <!-- Loop through groupChatroom array -->
-        <div
-          v-for="(chatroom, index) in groupChatrooms"
-          :key="chatroom.chatroom_id"
-          :class="[
-            'container-overlay',
-            index === 0
-              ? 'first-message-container'
-              : 'subsequent-message-container',
-          ]"
-        >
-          <div class="avatars-group">
-            <UAvatarGroup :max="1">
-              <UChip
-                v-for="user in chatroom.users"
-                :key="user.user_id"
-                inset
-                color="primary"
-              >
-                <UAvatar :src="user.avatarUrl" size="lg" />
-              </UChip>
-            </UAvatarGroup>
-          </div>
-          <div class="count-new-messages">
-            <UBadge
-              class="font-bold rounded-full"
-              size="md"
-              color="primary"
-              variant="outline"
-            >
-              {{ chatroom.new_messages }}
-            </UBadge>
-          </div>
-          <div class="button-layer">
-            <UButton class="newMessages custom-button-text" :block="true">
-              {{ chatroom.name }}
-            </UButton>
-          </div>
-        </div>
+        <!-- Group Chats -->
+        <ChatsLanding
+          title="Group Chats" 
+          :chatrooms="groupChatrooms" 
+          type="group" 
+        />
       </div>
     </div>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
-import { logPostgrestError } from "~~/errors/postgrestErrors";
+import {
+  logPostgrestError,
+} from "~~/errors/postgrestErrors";
+import { getStorageErrorMessage, logStorageError } from "~~/errors/storageErrors";
+import type { DirectChatroomData, GroupChatroomData } from "~/types/chatroom";
 
 export interface UserData {
-  user_id: string;
-  username: string;
-  displayname: string | null;
-  description: string | null;
-  avatarPath: string;
-  avatarUrl: string;
-}
-
-export interface DirectChatroomData {
-  chatroom_id: string;
-  new_messages: number;
-  user1: UserData;
-  user2: UserData;
-  loggedUser: UserData;
-}
-
-export interface GroupChatroomData {
-  chatroom_id: string;
-  name: string;
-  new_messages: number;
-  users: UserData[];
-}
+  id: string,
+  email: string,
+  username: string,
+  displayname: string | null,
+  description: string | null,
+  avatarPath: string,
+  avatarUrl: string,
+};
 
 const isMobile = useMobileDetector();
-const { isLight } = useSSRSafeTheme();
+const {isLight} = useSSRSafeTheme();
 const supabase = useSupabaseClient();
 const userData = useUserData();
 const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -141,40 +69,34 @@ const themedSeparatorMobile = computed(() =>
 );
 
 // Get new messages count
-async function getNewMessagesCount(chatroom_id: string): Promise<number> {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("chatroom_id", chatroom_id);
-  console.log(data);
+async function getNewMessagesCount(chatroom_id: string): Promise<number>{
+  const { data, error } = await supabase.from("messages").select("*").eq("chatroom_id", chatroom_id);
   if (error) {
     logPostgrestError(error, "timestamp fetching");
     return 0;
   }
-  if (data === null || data.length === 0) {
+  if(data === null || data.length === 0){
     console.log("No messages found for chatroom_id:" + chatroom_id);
     return 0;
   }
   let messageCount = 0;
-  for (const message of data) {
-    if (convertedSessionData != undefined) {
+  for(const message of data){
+    if(convertedSessionData != undefined){
       const messageDate = new Date(message.created_at);
-      if (messageDate > convertedSessionData) {
+      if(messageDate > convertedSessionData){
         messageCount++;
       }
     }
   }
-  if (messageCount > 0) {
+  if(messageCount > 0){
     return messageCount;
   } else return 0;
 }
 
+
 // Get data from Group Chatrooms
-async function getGroupChatroomData() {
-  const { data, error } = await supabase
-    .from("user_to_group")
-    .select("chatroom_id")
-    .eq("user_id", userData.id);
+async function getGroupChatroomData(){
+  const { data, error } = await supabase.from("user_to_group").select("chatroom_id").eq("user_id", userData.id);
   if (error) {
     logPostgrestError(error, "message fetching");
     return;
@@ -191,18 +113,14 @@ async function getGroupChatroomData() {
       chatroom_id: element.chatroom_id,
       name: name,
       new_messages: count,
-      users: users,
+      users: users
     });
   }
 }
 
 // Get data from direct chats
-async function getDirectChatroomData() {
-  const { data, error } = await supabase
-    .from("direct_chatrooms")
-    .select("*")
-    .or(`user1_id.eq.${userData.id},user2_id.eq.${userData.id}`);
-  console.log(data);
+async function getDirectChatroomData(){
+  const { data, error } = await supabase.from("direct_chatrooms").select("*").or(`user1_id.eq.${userData.id},user2_id.eq.${userData.id}`);
   if (error) {
     logPostgrestError(error, "no direct chatroom found");
     return;
@@ -215,9 +133,9 @@ async function getDirectChatroomData() {
     if (element.user1_id && element.user2_id) {
       try {
         const count = await getNewMessagesCount(element.chatroom_id);
-        const user1 = await getUserData(element.user1_id);
-        const user2 = await getUserData(element.user2_id);
-
+        const user1 = await getUserDataFromOtherUsers(element.user1_id);
+        const user2 = await getUserDataFromOtherUsers(element.user2_id);
+        
         if (user1 && user2) {
           const loggedUser = user1.id === userData.id ? user2 : user1;
           directChatrooms.value.push({
@@ -225,12 +143,10 @@ async function getDirectChatroomData() {
             new_messages: count,
             user1: user1,
             user2: user2,
-            loggedUser: loggedUser,
+            loggedUser: loggedUser
           });
         } else {
-          console.warn(
-            `Could not load users for chatroom ${element.chatroom_id}`
-          );
+          console.warn(`Could not load users for chatroom ${element.chatroom_id}`);
         }
       } catch (err) {
         console.error(`Error processing chatroom ${element.chatroom_id}:`, err);
@@ -239,22 +155,40 @@ async function getDirectChatroomData() {
   }
 }
 
-function generateAvatarUrl(userId: string) {
-  const avatarPath = `public/${userId}.jpg`;
-  const avatarUrlData = supabase.storage
-    .from("avatars")
-    .getPublicUrl(avatarPath);
-  return {
-    avatarPath,
-    avatarUrl: avatarUrlData.data.publicUrl,
-  };
+async function getAvatarUrl(id: string, type: string): Promise<{ avatarPath: string; avatarUrl: string } | null> {
+  let avatarPath = '';
+  if(type == "chatroom"){
+    avatarPath = `${id}.jpg`
+    const { data, error } = await supabase.storage
+      .from("chatroom_avatars")
+      .createSignedUrl(avatarPath, 20);
+
+    if(error){
+      logStorageError(error, "signed avatar url");
+      operationFeedbackHandler.displayError(
+      getStorageErrorMessage(error, "Error creating signed avatar Url")
+    );
+      return null;
+    }
+    return {
+      avatarPath,
+      avatarUrl: data.signedUrl
+    };
+  } else if(type == "direct"){
+    avatarPath = `public/${id}.jpg`;
+    const avatarUrlData = supabase.storage
+      .from("avatars")
+      .getPublicUrl(avatarPath);
+    return {
+      avatarPath,
+      avatarUrl: avatarUrlData.data.publicUrl
+    };
+  }
+  return null;
 }
 
 async function getGroupChatroomName(chatroom_id: string): Promise<string> {
-  const { data, error } = await supabase
-    .from("group_chatrooms")
-    .select("name")
-    .eq("chatroom_id", chatroom_id);
+  const { data, error } = await supabase.from("group_chatrooms").select("name").eq("chatroom_id", chatroom_id);
   if (error) {
     logPostgrestError(error, "No chatroom name");
     return "Unnamed Group";
@@ -266,15 +200,10 @@ async function getGroupChatroomName(chatroom_id: string): Promise<string> {
   return data[0]?.name || "Unnamed Group";
 }
 
-async function getOtherUsers(element: {
-  chatroom_id: string;
-}): Promise<UserData[]> {
-  const { data, error } = await supabase
-    .from("user_to_group")
-    .select("user_id")
-    .eq("chatroom_id", element.chatroom_id);
+async function getOtherUsers(element:{chatroom_id: string;}): Promise<UserData[]>{
+  const { data, error } = await supabase.from("user_to_group").select("user_id").eq("chatroom_id", element.chatroom_id);
 
-  if (error) {
+  if(error){
     logPostgrestError(error, "message fetching");
     return [];
   }
@@ -296,13 +225,10 @@ async function getOtherUsers(element: {
   return users;
 }
 
-async function getUserData(user_id: string): Promise<UserData | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("user_id", user_id);
+async function getUserDataFromOtherUsers(user_id: string): Promise<UserData | null>{
+  const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user_id);
 
-  if (error) {
+  if(error){
     logPostgrestError(error, "message fetching");
     return null;
   }
@@ -311,20 +237,35 @@ async function getUserData(user_id: string): Promise<UserData | null> {
     return null;
   }
   const userData: UserData[] = [];
-  for (const element of data) {
-    const { avatarPath, avatarUrl } = generateAvatarUrl(element.user_id);
-    userData.push({
-      ...element,
-      avatarPath,
-      avatarUrl,
-    });
+  for(const element of data){
+    const avatarData = await getAvatarUrl(element.user_id, "direct");
+    if (avatarData) {
+      userData.push({
+        ...element,
+        avatarPath: avatarData.avatarPath,
+        avatarUrl: avatarData.avatarUrl,
+        id: "",
+        email: ""
+      });
+    } else {
+      userData.push({
+...element,
+avatarPath: '',
+avatarUrl: '',
+id: "",
+email: ""
+});
+    }
   }
-  if (userData[0] != undefined) {
+  if(userData[0] != undefined){
     return userData[0];
   } else return null;
 }
 
-await Promise.all([getGroupChatroomData(), getDirectChatroomData()]);
+await Promise.all([
+  getGroupChatroomData(),
+  getDirectChatroomData()
+]);
 </script>
 
 <style>
