@@ -33,11 +33,12 @@
         <ChatroomInvitationList
           :invitations="inboundInvitations"
           :loading="invitationsPreviewPending"
+          @remove-invitation="onRemoveInvitation"
         />
       </template>
 
       <template #trailing="{ item }">
-        <UChip v-if="item.slot === 'invitations' && existUnhandledInvitations" standalone />
+        <UChip v-if="item.slot === 'invitations' && existUnhandledInvitations && (!inboundInvitations || inboundInvitations.length > 0)" standalone />
       </template>
     </UTabs>
   </div>
@@ -71,6 +72,7 @@ const { data: existUnhandledInvitations } = await useAsyncData('existUnhandledIn
 const {
   data: inboundInvitations,
   execute: executeFetchInvitations,
+  refresh: refreshFetchInvitations,
   pending: invitationsPreviewPending
 } = await useAsyncData('inboundInvitations', async () => {
   const { data, error } = await supabase.from('group_invitations_preview')
@@ -121,6 +123,10 @@ async function onCreateChat() {
       navigateTo(`/chat/${res.id}/info`);
     }
   }
+}
+async function onRemoveInvitation() {
+  // When an invitation has been rejected, reload all invitations
+  refreshFetchInvitations();
 }
 </script>
 
