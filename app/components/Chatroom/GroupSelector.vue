@@ -70,7 +70,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { SelectedGroup } from '~/types/groupInvitationCreation';
+import type { SelectedGroup } from '~/types/invitations/groupInvitationCreation';
 import type { CommandPaletteItem } from '@nuxt/ui';
 import type { Enums } from '~~/database.types';
 import chatroomRolesVis from '~/visualization/chatroomRoles';

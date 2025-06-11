@@ -11,7 +11,7 @@
     </UFormField>
 
     <UFormField name="invitations" required>
-      <ChatroomGroupInvitationsCreator
+      <ChatroomInvitationGroupInvitationsCreator
         v-model="invitations"
         :allowed-roles="allowedInvRoles"
         :existing-group-id="state.group?.chatroom_id"
@@ -23,7 +23,7 @@
 <script lang="ts" setup>
 import type * as z from 'zod';
 import { inviteUsersToGroupSchema } from '~~/validation/schemas/input/inputChatroomSchemas';
-import type { SelectedGroup, UserInvitation } from '~/types/groupInvitationCreation';
+import type { SelectedGroup, UserInvitation } from '~/types/invitations/groupInvitationCreation';
 import type { Enums } from '~~/database.types';
 import type { NonEmptyArray } from '~/types/tsUtils/helperTypes';
 

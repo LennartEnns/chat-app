@@ -68,6 +68,7 @@
             </div>
       </div>
     </div>
+    <ModalChatroomInviteToGroup v-model:open="open" />
   </NuxtLayout>
 </template>
 
@@ -75,7 +76,7 @@
 import {
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
-
+const open = ref(true);
 export interface UserData {
   user_id: string,
   username: string,
