@@ -61,7 +61,7 @@
 
 <script lang="ts" setup>
 import type { UserSearchResult } from '~/types/userSearch';
-import type { UserInvitation } from '~/types/groupInvitationCreation';
+import type { UserInvitation } from '~/types/invitations/groupInvitationCreation';
 import type { Enums } from '~~/database.types';
 import type { NonEmptyArray } from '~/types/tsUtils/helperTypes';
 
