@@ -382,6 +382,57 @@ export type Database = {
           },
         ]
       }
+      group_invitations_preview: {
+        Row: {
+          as_role: Database["public"]["Enums"]["chatroom_role"] | null
+          chatroom_id: string | null
+          created_at: string | null
+          group_name: string | null
+          id: string | null
+          invitee_id: string | null
+          invitee_username: string | null
+          invitor_id: string | null
+          invitor_username: string | null
+        }
+        Insert: {
+          as_role?: Database["public"]["Enums"]["chatroom_role"] | null
+          chatroom_id?: string | null
+          created_at?: string | null
+          group_name?: never
+          id?: string | null
+          invitee_id?: string | null
+          invitee_username?: never
+          invitor_id?: string | null
+          invitor_username?: never
+        }
+        Update: {
+          as_role?: Database["public"]["Enums"]["chatroom_role"] | null
+          chatroom_id?: string | null
+          created_at?: string | null
+          group_name?: never
+          id?: string | null
+          invitee_id?: string | null
+          invitee_username?: never
+          invitor_id?: string | null
+          invitor_username?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_invitations_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "group_chatrooms"
+            referencedColumns: ["chatroom_id"]
+          },
+          {
+            foreignKeyName: "group_invitations_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "group_chatrooms_last_activity_current_role"
+            referencedColumns: ["chatroom_id"]
+          },
+        ]
+      }
     }
     Functions: {
       search_users: {

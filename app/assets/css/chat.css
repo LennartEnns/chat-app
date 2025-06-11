@@ -33,7 +33,7 @@
   width: 300px;
   max-height: auto;
   padding: 8px 4px 8px 0px;
-  border-radius: 5px;
+  border-radius: 0.3rem;
 }
 
 .messages {
