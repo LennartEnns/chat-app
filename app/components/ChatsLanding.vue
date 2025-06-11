@@ -47,6 +47,7 @@
                 class="newMessages custom-button-text"
                 :block="true"
                 :to="`/chat/${chatroom.chatroom_id}`"
+                @click="onUserSelect(chatroom.chatroom_id)"
             >
             {{ getChatroomDisplayName(chatroom) }}
             </UButton>
@@ -62,6 +63,10 @@ interface Props {
     title: string;
     chatrooms: (DirectChatroomData | GroupChatroomData)[];
     type: 'direct' | 'group';
+}
+
+async function onUserSelect(chatroom_id: string) {
+  navigateTo(`/chat/${chatroom_id}`);
 }
 
 const props = defineProps<Props>();
