@@ -43,7 +43,7 @@
           </div>
           <div class="py-5">
             <p class="text-[40px] font-bold text-neutral-700 dark:text-white">
-              {{ chatroom.displayname }}
+              {{ chatroom.name }}
             </p>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
@@ -61,32 +61,35 @@
           </div>
           <div class="flex flex-wrap justify-center gap-3">
             <div
+              v-for="(member, index) in chatMembers"
+              :key="index"
               class="ring-0 glassContainer text-neutral-700 dark:text-white member"
             >
-              <div class="flex max-h-fit flex-col items-center">
-                <UAvatar class="mb-1" src="https://github.com/nuxt.png" />
-                <UBadge size="xs" class="font-bold rounded-full">Member</UBadge>
+              <div class="flex flex-col items-center w-max">
+                <UAvatar
+                  class="mb-1 w-full h-11"
+                  icon="i-lucide-user"
+                  :src="
+                    (member.user_id && getAvatarUrl(member.user_id)) ||
+                    undefined
+                  "
+                />
+                <div>
+                  <UBadge
+                    class="font-bold rounded-full"
+                    :ui="{
+                      base: 'max-w-11 h-5 text-[10px] flex justify-center',
+                    }"
+                    >{{ member.role }}</UBadge
+                  >
+                </div>
               </div>
               <div class="flex flex-col justify-center px-[0.6rem]">
-                <p class="truncate w-full flex font-bold">Name Lastname</p>
-                <p class="line-clamp-2 w-full leading-none">
-                  User messages are now saved to the database and loaded on
-                  page-reload.
+                <p class="truncate flex font-bold">
+                  {{ member.displayname }}
                 </p>
-              </div>
-            </div>
-            <div
-              class="ring-0 glassContainer text-neutral-700 dark:text-white member"
-            >
-              <div class="flex max-h-fit flex-col items-center">
-                <UAvatar class="mb-1" src="https://github.com/nuxt.png" />
-                <UBadge size="xs" class="font-bold rounded-full">Member</UBadge>
-              </div>
-              <div class="flex flex-col justify-center px-[0.6rem]">
-                <p class="truncate w-full flex font-bold">Name Lastname</p>
-                <p class="line-clamp-2 w-full leading-none">
-                  User messages are now saved to the database and loaded on
-                  page-reload.
+                <p class="line-clamp-2 leading-4">
+                  {{ member.description }}
                 </p>
               </div>
             </div>
@@ -105,9 +108,14 @@
               </div>
             </div>
             <div class="hidden md:block">
-              <UButton class="flex size-fit" size="xl" icon="i-lucide-plus"
-                >Invite member</UButton
+              <UButton
+                class="flex size-fit"
+                size="xl"
+                icon="i-lucide-plus"
+                @click="onInviteUser"
               >
+                Invite Member
+              </UButton>
             </div>
           </div>
         </div>
@@ -181,6 +189,9 @@ import {
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
 
+import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
+import type { Tables } from "~~/database.types";
+
 const { isLight } = useSSRSafeTheme();
 
 const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -188,6 +199,11 @@ const open = ref(false);
 const newAvatarObjectUrl = ref<string | null>(null);
 const showAvatarCroppingModal = ref(false);
 const supabase = useSupabaseClient();
+
+const overlay = useOverlay();
+const inviteModal = overlay.create(InviteToGroup);
+
+const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
 
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -199,10 +215,10 @@ async function openDrawer() {
   open.value = true;
 }
 
-type Chatroom = {
-  id: string;
-  displayname: string | null;
-  description: string | null;
+type Chatroom = Omit<
+  Tables<"group_chatrooms_last_activity_current_role">,
+  "last_activity"
+> & {
   avatarPath: string;
   avatarUrl: string;
 };
@@ -218,7 +234,7 @@ async function uploadAvatar(event: Event) {
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
 
-async function getAvatarUrl() {
+async function getChatroomAvatarUrl() {
   const { data, error } = await supabase.storage
     .from("chatroom_avatars")
     .createSignedUrl(avatarPath, 60);
@@ -234,9 +250,10 @@ async function getAvatarUrl() {
 }
 
 const chatroom = ref<Chatroom>({
-  id: routeChatroomId.value,
-  displayname: "Loading name...",
-  description: "Loadind description...",
+  chatroom_id: routeChatroomId.value,
+  name: "Loading name...",
+  description: "Loading description...",
+  current_user_role: "member",
   avatarPath: avatarPath,
   avatarUrl: "",
 });
@@ -245,17 +262,17 @@ async function loadChatInfo() {
   const { data, error } = await supabase
     .from("group_chatrooms")
     .select("name, description")
-    .eq("chatroom_id", chatroom.value.id)
+    .eq("chatroom_id", chatroom.value.chatroom_id!)
     .single();
 
   if (error) {
-    logPostgrestError(error, "message fetching");
+    logPostgrestError(error, "chat-info fetching");
     operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message fetching error")
+      getPostgrestErrorMessage(error, "Unknown chat-info fetching error")
     );
     return;
   }
-  chatroom.value.displayname = data.name;
+  chatroom.value.name = data.name;
   chatroom.value.description = data.description;
 }
 
@@ -286,9 +303,38 @@ async function onUploadCroppedAvatar(blob: Blob) {
   }
 }
 
+async function loadChatMembers() {
+  const { data, error } = await supabase
+    .from("group_chatroom_members")
+    .select("*")
+    .eq("chatroom_id", chatroom.value.chatroom_id!);
+
+  if (error) {
+    logPostgrestError(error, "members fetching");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown members fetching error")
+    );
+    return;
+  }
+  data.forEach((element) => {
+    chatMembers.value.push(element);
+  });
+}
+
+async function onInviteUser() {
+  inviteModal.open({
+    presetGroup: {
+      chatroom_id: chatroom.value.chatroom_id!,
+      name: chatroom.value.name,
+      current_user_role: chatroom.value.current_user_role,
+    },
+  });
+}
+
 onMounted(() => {
   loadChatInfo();
-  getAvatarUrl();
+  loadChatMembers();
+  getChatroomAvatarUrl();
 });
 </script>
 
