@@ -27,6 +27,18 @@
           icon="i-lucide-message-circle-plus"
           @click="onCreateChat"
         />
+        <div
+          class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
+        >
+          <ChatroomPreview
+            class="mb-2 glassBG brightness-130"
+            v-for="chatroom in chatroomsWithAvatarUrl"
+            :name="chatroom.name"
+            :avatar-url="chatroom.avatarUrl"
+            :id="chatroom.id"
+            :lastMsg="chatroom.last_message"
+          ></ChatroomPreview>
+        </div>
       </template>
       <template #invitations>
         <div>Lennart Todo: Show incoming invitations</div>
@@ -39,18 +51,6 @@
         />
       </template>
     </UTabs>
-    <div
-      class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
-    >
-      <ChatroomPreview
-        class="mb-2 glassBG brightness-130"
-        v-for="chatroom in chatroomsWithAvatarUrl"
-        :name="chatroom.name"
-        :avatar-url="chatroom.avatarUrl"
-        :id="chatroom.id"
-        :lastMsg="chatroom.last_message"
-      ></ChatroomPreview>
-    </div>
   </div>
 </template>
 
