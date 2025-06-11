@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { groupChatroomLimits } from '~~/validation/commonLimits';
 import type { TablesInsert } from '~~/database.types';
 import type { UserSearchResult } from '~/types/userSearch';
-import type { SelectedGroup } from '~/types/groupInvitationCreation';
+import type { SelectedGroup } from '~/types/invitations/groupInvitationCreation';
 
 export const createDirectChatroomSchema = z.object({
   otherUser: z.custom<UserSearchResult>((val) => !!val, 'You must specify a user'),
