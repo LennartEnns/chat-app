@@ -109,9 +109,11 @@ async function getGroupChatroomData(){
     const users = await getOtherUsers(element);
     const name = await getGroupChatroomName(element.chatroom_id);
     const count = await getNewMessagesCount(element.chatroom_id);
+    const avatarUrl = await getAvatarUrl(element.chatroom_id, "group");
     groupChatrooms.value.push({
       chatroom_id: element.chatroom_id,
       name: name,
+      avatar_url: avatarUrl?.avatarUrl,
       new_messages: count,
       users: users
     });
@@ -157,7 +159,7 @@ async function getDirectChatroomData(){
 
 async function getAvatarUrl(id: string, type: string): Promise<{ avatarPath: string; avatarUrl: string } | null> {
   let avatarPath = '';
-  if(type == "chatroom"){
+  if(type == "group"){
     avatarPath = `${id}.jpg`
     const { data, error } = await supabase.storage
       .from("chatroom_avatars")
@@ -165,9 +167,6 @@ async function getAvatarUrl(id: string, type: string): Promise<{ avatarPath: str
 
     if(error){
       logStorageError(error, "signed avatar url");
-      operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Error creating signed avatar Url")
-    );
       return null;
     }
     return {

@@ -17,15 +17,22 @@
             </template>
 
             <template v-else>
-                <UAvatarGroup :max="1">
-                <UChip 
-                    v-for="user in (chatroom as GroupChatroomData).users" 
-                    :key="user.id" 
-                    inset 
-                    color="primary">
-                    <UAvatar :src="user.avatarUrl" size="lg" />
-                </UChip>
-                </UAvatarGroup>
+                <template v-if="(chatroom as GroupChatroomData).avatar_url">
+                    <UChip inset color="primary">
+                        <UAvatar :src="(chatroom as GroupChatroomData).avatar_url" size="lg" />
+                    </UChip>
+                </template>
+                <template v-else>
+                    <UAvatarGroup :max="1">
+                        <UChip 
+                            v-for="user in (chatroom as GroupChatroomData).users" 
+                            :key="user.id" 
+                            inset 
+                            color="primary">
+                            <UAvatar :src="user.avatarUrl" size="lg" />
+                        </UChip>
+                    </UAvatarGroup>
+                </template>
             </template>
         </div>
 

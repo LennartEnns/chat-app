@@ -265,6 +265,7 @@ const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
 type DisplayedMessage = {
   text: string;
   timestamp: string;
+  isOwnMsg: Boolean;
 };
 const newMessage = ref<string>("");
 const userMessages = ref<DisplayedMessage[]>([]);
@@ -277,11 +278,17 @@ async function loadFromDatabase() {
     );
     return;
   }
+
   const { data, error } = await supabase
     .from("messages")
     .select("*")
     .eq("chatroom_id", routeChatroomId.value)
     .order("created_at", { ascending: true });
+<
+  if (data === null) {
+    console.log("No messages found for chatroom_id:" + routeChatroomId.value);
+    return;
+  }
 
   if (error) {
     logPostgrestError(error, "message fetching");
@@ -295,13 +302,17 @@ async function loadFromDatabase() {
   }
   userMessages.value = [];
   data.forEach((element) => {
+    let isOwnMsg: Boolean = element.user_id === userData.id;
+
+    // If the message is not from the current user, it is a partner message
     userMessages.value.push({
       text: element.content,
       timestamp: dateToHMTime(new Date(element.created_at)),
+      isOwnMsg: isOwnMsg,
     });
+    return;
   });
 }
-
 async function saveToDatabase(message: string) {
   console.log("Versuche Nachricht zu speichern (ursprüngliches Verhalten):");
   console.log("  chatroom_id:", routeChatroomId.value);
@@ -315,6 +326,7 @@ async function saveToDatabase(message: string) {
   ]);
 
   if (error) {
+    console.log(error);
     logPostgrestError(error, "message insert");
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(
@@ -335,6 +347,7 @@ async function sendMessage() {
     userMessages.value.push({
       text: newMessage.value.trim(),
       timestamp: timestamp,
+      isOwnMsg: true,
     });
     newMessage.value = "";
   }

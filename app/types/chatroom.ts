@@ -10,6 +10,6 @@ export interface GroupChatroomData {
     chatroom_id: string;
     name: string;
     new_messages: number;
-    // avatar: string,
+    avatar_url: string | undefined;
     users: UserData[];
 }
