@@ -32,18 +32,6 @@
               use the database!
             </p>
             <span class="message-time">12:48</span>
-            <UDropdownMenu
-              :items="dropdownItems"
-              :ui="{
-                content: 'w-48',
-              }"
-            >
-              <UButton
-                icon="i-heroicons-ellipsis-horizontal"
-                variant="ghost"
-                class="message-options-button"
-              />
-            </UDropdownMenu>
           </div>
         </div>
         <div
