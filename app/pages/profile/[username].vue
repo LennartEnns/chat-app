@@ -1,13 +1,15 @@
 <template>
   <NuxtLayout name="logged-in">
-    <div class="flex flex-col justify-center items-center pt-5">
+    <div class="flex flex-col justify-center items-center">
       <div class="glassContainer w-[41rem] max-w-[90%] md:max-w-[70%]">
         <UCard
           class="ring-0 bg-transparent h-full"
           :ui="{ header: 'border-none', body: 'pt-2 sm:pt-2' }"
         >
           <template #header>
-            <div class="font-bold text-black dark:text-white text-xl text-center">
+            <div
+              class="font-bold text-black dark:text-white text-xl text-center"
+            >
               {{ profileTitle }}
             </div>
           </template>
@@ -32,9 +34,22 @@
                 :clearable="isOwnProfile"
               />
             </div>
-            <div v-if="!isOwnProfile" class="w-full flex flex-row items-center justify-center gap-4 md:gap-6 mt-4">
-              <UButton label="Chat" icon="i-lucide-message-circle" :loading="loadingDirectChatroom" loading-icon="i-lucide-loader" @click="onChatWithUser" />
-              <UButton label="Invite" icon="i-lucide-user-round-plus" @click="onInviteUser" />
+            <div
+              v-if="!isOwnProfile"
+              class="w-full flex flex-row items-center justify-center gap-4 md:gap-6 mt-4"
+            >
+              <UButton
+                label="Chat"
+                icon="i-lucide-message-circle"
+                :loading="loadingDirectChatroom"
+                loading-icon="i-lucide-loader"
+                @click="onChatWithUser"
+              />
+              <UButton
+                label="Invite"
+                icon="i-lucide-user-round-plus"
+                @click="onInviteUser"
+              />
             </div>
             <div class="profile-container mt-2 md:mt-0">
               <div class="section-container">
@@ -105,7 +120,11 @@
                 >
                   <div class="self-center">Description</div>
                   <HelpTooltip
-                    :text="isOwnProfile ? 'Tell other users about you!' : 'Some info about the user'"
+                    :text="
+                      isOwnProfile
+                        ? 'Tell other users about you!'
+                        : 'Some info about the user'
+                    "
                     class="self-center"
                   />
                   <div class="grow" />
@@ -215,9 +234,7 @@ const isOwnProfile = computed(() => routeUsername.value === userData.username);
 const profileData = ref<ProfileUserData | null>(null);
 const loading = ref(true);
 const profileTitle = computed(() =>
-  loading.value
-    ? "Loading..."
-    : (profileData.value?.username ?? 'User Profile')
+  loading.value ? "Loading..." : profileData.value?.username ?? "User Profile"
 );
 
 const loadingDirectChatroom = ref(false);
@@ -302,12 +319,12 @@ async function loadUserProfile(username: string) {
       logPostgrestError(dbError, "profile loading");
     }
 
-    if(!data){
+    if (!data) {
       showError({
         statusCode: 404,
         message: "The user you searched for was not found",
         data: {
-          headline: 'Who\'s that?',
+          headline: "Who's that?",
         },
       });
       return;
@@ -373,14 +390,16 @@ async function attachDisplayNameInputEnterHandler() {
 async function onInviteUser() {
   if (!profileData.value) return;
   inviteModal.open({
-    presetInvitations: [{
-      user_id: profileData.value.id,
-      username: profileData.value.username,
-      displayname: profileData.value.displayname,
-      asRole: 'member',
-      alreadyInGroup: false,
-      alreadyInvited: false,
-    }],
+    presetInvitations: [
+      {
+        user_id: profileData.value.id,
+        username: profileData.value.username,
+        displayname: profileData.value.displayname,
+        asRole: "member",
+        alreadyInGroup: false,
+        alreadyInvited: false,
+      },
+    ],
   });
 }
 async function onChatWithUser() {
@@ -392,19 +411,23 @@ async function onChatWithUser() {
 
   // Look if a chat already exists
   const { data, error } = await supabase
-    .from('direct_chatrooms')
-    .select('chatroom_id')
-    .or(`and(user1_id.eq.${myId},user2_id.eq.${otherId}),and(user1_id.eq.${otherId},user2_id.eq.${myId})`);
+    .from("direct_chatrooms")
+    .select("chatroom_id")
+    .or(
+      `and(user1_id.eq.${myId},user2_id.eq.${otherId}),and(user1_id.eq.${otherId},user2_id.eq.${myId})`
+    );
 
   if (error) {
-    operationFeedbackHandler.displayError('Could not fetch the chatroom');
+    operationFeedbackHandler.displayError("Could not fetch the chatroom");
     loadingDirectChatroom.value = false;
     return;
   }
   if (data && data.length > 0) {
     // Direct chatroom already exists, so open it
     loadingDirectChatroom.value = false;
-    navigateTo(`/chat/${(data as NonEmptyArray<{ chatroom_id: string }>)[0].chatroom_id}`);
+    navigateTo(
+      `/chat/${(data as NonEmptyArray<{ chatroom_id: string }>)[0].chatroom_id}`
+    );
   } else {
     // Create chatroom first, then open it
     const newId = await createDirectChatroom({
