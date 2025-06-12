@@ -3,7 +3,7 @@
     :class="`message user whitespace-pre-line wrap-anywhere ${themedMessageColor} ${messagePosition}`"
     @contextmenu.prevent="handleContextMenu($event, message)"
   >
-    <UAvatar class="justify-self-center" :src="undefined" />
+    <UAvatar v-if="message.user_id" class="justify-self-center" :src="avatarUrl" />
     <div class="message-content">
       <p>{{ message.content }}</p>
       <span class="message-time">{{ dateToHMTime(message.created_at) }}</span>
@@ -23,7 +23,7 @@
   </div>
   <UContextMenu
     ref="contextMenuRef"
-    v-model:show="isContextMenuOpen"
+    v-model:open="isContextMenuOpen"
     :items="contextMenuItems"
   />
 </template>
@@ -37,6 +37,7 @@ const props = defineProps<{
 }>();
 // If not user ID is given, we will assume this is the user's own message
 const isOwnMsg = computed(() => !props.message.user_id);
+const avatarUrl = computed(() => props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined);
 
 const { isLight } = useSSRSafeTheme();
 const messagePosition = computed(() => isOwnMsg.value ? 'user' : 'partner')
@@ -80,7 +81,6 @@ const handleContextMenu = (
   activeMessage.value = message;
   console.log("Kontextmenü ausgelöst (contextmenu event)", event);
   if (contextMenuRef.value) {
-    contextMenuRef.value.open(event as MouseEvent);
     isContextMenuOpen.value = true;
     console.log("Kontextmenü-Öffnungsversuch über contextmenu event.");
   } else {

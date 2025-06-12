@@ -48,7 +48,6 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
     });
   }
   async function fetchEarlierMessages() {
-    console.log("ABC");
     const { data, error } = await supabase.from('messages_view')
       .select('content, created_at, user_id, username')
       .eq('chatroom_id', chatroomId.value)
