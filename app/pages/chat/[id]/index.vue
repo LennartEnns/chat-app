@@ -30,7 +30,11 @@
         <div
           v-for="(message, index) in userMessages"
           :key="index"
-          :class="`message user ${themedUserMessageColor} whitespace-pre-line wrap-anywhere`"
+          :class="`message ${
+            message.isOwnMsg
+              ? 'user ' + themedUserMessageColor
+              : 'partner ' + themedPartnerMessageColor
+          }  whitespace-pre-line wrap-anywhere`"
         >
           <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
           <div class="message-content">
@@ -88,6 +92,7 @@ const themedPartnerMessageColor = computed(() =>
 type DisplayedMessage = {
   text: string;
   timestamp: string;
+  isOwnMsg: Boolean;
 };
 const newMessage = ref<string>("");
 const userMessages = ref<DisplayedMessage[]>([]);
@@ -112,14 +117,19 @@ async function loadFromDatabase() {
     );
     return;
   }
+
   data.forEach((element) => {
+    let isOwnMsg: Boolean = element.user_id === userData.id;
+
+    // If the message is not from the current user, it is a partner message
     userMessages.value.push({
       text: element.content,
       timestamp: dateToHMTime(new Date(element.created_at)),
+      isOwnMsg: isOwnMsg,
     });
+    return;
   });
 }
-
 // Save messages to database
 async function saveToDatabase(message: string) {
   const { error } = await supabase.from("messages").insert([
@@ -148,6 +158,7 @@ async function sendMessage() {
     userMessages.value.push({
       text: newMessage.value.trim(),
       timestamp: timestamp,
+      isOwnMsg: true,
     });
     newMessage.value = "";
   }

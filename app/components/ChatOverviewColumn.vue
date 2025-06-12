@@ -10,6 +10,14 @@
           class="flex-1"
         />
       </ModalSearchUser>
+
+      <UButton
+        class=""
+        color="primary"
+        variant="solid"
+        icon="i-lucide-message-circle-plus"
+        @click="onCreateChat"
+      />
     </div>
     <UTabs
       :items="tabItems"
@@ -21,13 +29,6 @@
       @update:model-value="onTabSelected"
     >
       <template #chats>
-        <UButton
-          class=""
-          color="primary"
-          variant="solid"
-          icon="i-lucide-message-circle-plus"
-          @click="onCreateChat"
-        />
         <div
           class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
         >
@@ -51,7 +52,14 @@
       </template>
 
       <template #trailing="{ item }">
-        <UChip v-if="item.slot === 'invitations' && existUnhandledInvitations && (!inboundInvitations || inboundInvitations.length > 0)" standalone />
+        <UChip
+          v-if="
+            item.slot === 'invitations' &&
+            existUnhandledInvitations &&
+            (!inboundInvitations || inboundInvitations.length > 0)
+          "
+          standalone
+        />
       </template>
     </UTabs>
   </div>
@@ -59,7 +67,7 @@
 
 <script lang="ts" setup>
 import type { UserSearchResult } from "~/types/userSearch";
-import type { InvitationPreview } from '~/types/invitations/invitationsPreview';
+import type { InvitationPreview } from "~/types/invitations/invitationsPreview";
 import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import type { TabsItem } from "@nuxt/ui";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
@@ -71,35 +79,46 @@ const overlay = useOverlay();
 const createChatroomModal = overlay.create(CreateChatroom);
 
 // First only do a head query to avoid unnecessary data fetching
-const { data: existUnhandledInvitations } = await useAsyncData('existUnhandledInvitations', async () => {
-  const { count } = await supabase.from('group_invitations')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
-    .eq('invitee_id', userData.id);
+const { data: existUnhandledInvitations } = await useAsyncData(
+  "existUnhandledInvitations",
+  async () => {
+    const { count } = await supabase
+      .from("group_invitations")
+      .select("*", {
+        count: "exact",
+        head: true,
+      })
+      .eq("invitee_id", userData.id);
 
     return !!count;
-});
+  }
+);
 // This will be executed when the invitations tab is opened (lazy loading)
 const {
   data: inboundInvitations,
   execute: executeFetchInvitations,
   refresh: refreshFetchInvitations,
-  pending: invitationsPreviewPending
-} = await useAsyncData('inboundInvitations', async () => {
-  const { data, error } = await supabase.from('group_invitations_preview')
-    .select('id, invitor_username, invitor_id, chatroom_id, group_name, as_role')
-    .eq('invitee_id', userData.id);
+  pending: invitationsPreviewPending,
+} = await useAsyncData(
+  "inboundInvitations",
+  async () => {
+    const { data, error } = await supabase
+      .from("group_invitations_preview")
+      .select(
+        "id, invitor_username, invitor_id, chatroom_id, group_name, as_role"
+      )
+      .eq("invitee_id", userData.id);
 
-  if (error) {
-    logPostgrestError(error, 'invitation loading');
-    operationFeedbackHandler.displayError('Could not load group invitations');
+    if (error) {
+      logPostgrestError(error, "invitation loading");
+      operationFeedbackHandler.displayError("Could not load group invitations");
+    }
+    return (data as InvitationPreview[]) ?? [];
+  },
+  {
+    immediate: false,
   }
-  return (data as InvitationPreview[]) ?? [];
-}, {
-  immediate: false,
-});
+);
 
 const tabItems = [
   {
@@ -121,7 +140,7 @@ async function onUserSelect(result: UserSearchResult | null) {
 }
 
 async function onTabSelected(payload: string | number) {
-  if (payload === '1' && !inboundInvitations.value) {
+  if (payload === "1" && !inboundInvitations.value) {
     executeFetchInvitations();
   }
 }
