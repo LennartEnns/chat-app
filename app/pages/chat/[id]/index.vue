@@ -19,7 +19,8 @@
         >
           <UAvatar
             class="justify-self-center"
-            src="https://github.com/nuxt.png"
+            :src="partnerAvatarUrl"
+            icon="i-lucide-user"
           />
           <div class="message-content">
             <p>
