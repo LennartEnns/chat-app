@@ -33,6 +33,7 @@
   width: 300px;
   max-height: auto;
   padding: 8px 4px 8px 0px;
+  margin-top: 10px;
   border-radius: 0.3rem;
 }
 
@@ -47,12 +48,10 @@
 }
 
 .partner {
-  margin-top: 10px;
   align-self: flex-start;
 }
 
 .user {
-  margin-top: 10px;
   align-self: flex-end;
 }
 
@@ -116,15 +115,6 @@
   padding-right: 30px;
 }
 
-.message-time {
-  display: block;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-  text-align: right;
-  align-self: flex-end;
-  margin-top: 4px;
-}
-
 .partner-light .message-time {
   color: rgba(0, 0, 0, 0.5);
 }
@@ -140,21 +130,4 @@
 }
 .chat span img {
   height: max-content;
-}
-
-.message-options-button {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.message:hover .message-options-button {
-  opacity: 1;
-}
-
-.message-options-button .icon {
-  width: 1.2em;
-  height: 1.2em;
 }

@@ -1,40 +1,55 @@
 <template>
-  <div
-    :class="`message user whitespace-pre-line wrap-anywhere ${themedMessageColor} ${messagePosition}`"
-    @contextmenu.prevent="handleContextMenu($event, message)"
-  >
-    <UAvatar v-if="message.user_id" class="justify-self-center" :src="avatarUrl" />
-    <div class="message-content">
-      <p>{{ message.content }}</p>
-      <span class="message-time">{{ dateToHMTime(message.created_at) }}</span>
-      <UDropdownMenu
-        :items="dropdownItems"
+  <div :class="`max-w-[90%] min-w-20 mt-2.5 flex flex-col items-center gap-2 ${messagePosition}`">
+    <div class="flex flex-row gap-1 w-full">
+      <UPopover
+        v-if="isOwnMsg && showOwnMsgPopover"
+        mode="hover"
+        :content="{
+          align: 'center',
+          side: 'left',
+        }"
         :ui="{
-          content: 'w-48',
+          content: 'rounded-xl ring-1 border-1'
         }"
       >
-        <UButton
-          icon="i-heroicons-ellipsis-horizontal"
-          variant="ghost"
-          class="message-options-button"
-        />
-      </UDropdownMenu>
+        <div
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor}`"
+        >
+          {{ message.content }}
+        </div>
+
+        <template #content>
+          <div class="p-1 flex flex-col md:flex-row">
+            <UTooltip text="Delete Message" arrow>
+              <UButton icon="i-lucide-trash-2" variant="ghost" color="error"  />
+            </UTooltip>
+            <UTooltip text="Edit Message" arrow>
+              <UButton icon="i-lucide-edit" variant="ghost" color="primary" />
+            </UTooltip>
+          </div>
+        </template>
+      </UPopover>
+      <div
+        v-else
+        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor}`"
+      >
+        {{ message.content }}
+      </div>
+      <UAvatar v-if="message.user_id" class="justify-self-center" :src="avatarUrl" />
     </div>
+    <div v-if="showHmTime" :class="`text-xs text-muted px-2 ${isOwnMsg ? 'self-end' : 'self-start'}`">{{ displayedTime }}</div>
   </div>
-  <UContextMenu
-    ref="contextMenuRef"
-    v-model:open="isContextMenuOpen"
-    :items="contextMenuItems"
-  />
 </template>
 
 <script lang="ts" setup>
-import type { DropdownMenuItem } from "@nuxt/ui";
 import type { Message } from "~/types/messages/messageLoading";
 
 const props = defineProps<{
   message: Message,
+  showHmTime: boolean,
+  showOwnMsgPopover: boolean,
 }>();
+
 // If not user ID is given, we will assume this is the user's own message
 const isOwnMsg = computed(() => !props.message.user_id);
 const avatarUrl = computed(() => props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined);
@@ -46,83 +61,11 @@ const themedMessageColor = computed(() => {
     return isOwnMsg.value ? 'user-light' : 'partner-light';
   }
   return isOwnMsg.value ? 'user-dark' : 'partner-dark';
-})
-
-const dropdownItems = ref<DropdownMenuItem[]>([
-  {
-    label: "Löschen",
-    icon: "i-lucide-trash",
-    click: () => {
-      console.log("Löschen geklickt vom Dropdown!");
-      // Implementiere hier die Löschlogik
-    },
-  },
-  {
-    label: "Bearbeiten",
-    icon: "i-lucide-edit",
-    click: () => {
-      console.log("Bearbeiten geklickt vom Dropdown!");
-      // Implementiere hier die Bearbeitungslogik
-    },
-  },
-]);
-
-interface UContextMenuInstance {
-  open: (event: MouseEvent) => void;
-}
-
-const contextMenuRef = ref<UContextMenuInstance | null>(null);
-const isContextMenuOpen = ref(false);
-const activeMessage = ref<Message | null>(null);
-const handleContextMenu = (
-  event: MouseEvent | TouchEvent,
-  message: Message,
-) => {
-  activeMessage.value = message;
-  console.log("Kontextmenü ausgelöst (contextmenu event)", event);
-  if (contextMenuRef.value) {
-    isContextMenuOpen.value = true;
-    console.log("Kontextmenü-Öffnungsversuch über contextmenu event.");
-  } else {
-    console.log(
-      "contextMenuRef.value ist null, kann Kontextmenü nicht öffnen."
-    );
-  }
-};
-
-const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
-  [
-    {
-      label: "Löschen",
-      icon: "i-lucide-trash",
-      click: () => {
-        if (activeMessage.value) {
-          console.log(
-            "Nachricht löschen (Kontextmenü):",
-            activeMessage.value.content
-          );
-          // Implementiere hier die Löschlogik
-        }
-        isContextMenuOpen.value = false;
-      },
-    },
-    {
-      label: "Bearbeiten",
-      icon: "i-lucide-edit",
-      click: () => {
-        if (activeMessage.value) {
-          console.log(
-            "Nachricht bearbeiten (Kontextmenü):",
-            activeMessage.value.content
-          );
-        }
-        isContextMenuOpen.value = false;
-      },
-    },
-  ],
-]);
+});
+const speechBubbleLook = computed(() => isOwnMsg.value ? 'rounded-tl-xs' : 'rounded-tr-xs');
+const displayedTime = computed(() => dateToHMTime(props.message.created_at));
 </script>
 
 <style>
-@import url("~/assets/css/chat.css");
+@import url('~/assets/css/chat.css');
 </style>

@@ -1,4 +1,6 @@
-create or replace view public.messages_view as
+create or replace view public.messages_view
+with (security_invoker)
+as
 select
   msg.id,
   msg.chatroom_id,

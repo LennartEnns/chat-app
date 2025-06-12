@@ -8,10 +8,13 @@
         </div>
       </UCard>
       <div ref="messagesContainer" class="messages">
+        <!-- Group by Hours-Minute-Time -->
         <ChatroomMessage
           v-for="(message, index) in messages"
           :key = "index"
           :message = "message"
+          :show-hm-time="!!messages && (index === (messages.length - 1) || messages[index + 1]?.created_at.getMinutes() !== message.created_at.getMinutes())"
+          :show-own-msg-popover="!scrolling"
         />
         <UButton
           v-if="!isAtBottom"
@@ -43,6 +46,10 @@ const messagesContainer = ref<HTMLElement | null>(null);
 const isAtBottom = ref(true);
 const bottomDetectionThreshold = 10;
 
+const scrolling = ref(false);
+const minTimeAfterScrolling = 100;
+let scrollingTimeout: NodeJS.Timeout | null = null;
+
 const { isLight } = useSSRSafeTheme();
 const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
 
@@ -53,9 +60,10 @@ const routeChatroomId = computed(() => {
   return params.id as string;
 });
 const { messages, sendMessage } = useLazyFetchedMessages(routeChatroomId, messagesContainer);
-const lastMessage = computed(() => messages.value.length > 0 ? messages.value[messages.value.length - 1] : null);
-watch(lastMessage, (lastMsg) => {
-  scrollToBottom();
+watch(messages, (_, old) => {
+  if (!old) {
+    scrollToBottom(true);
+  }
 })
 
 const notFoundError = {
@@ -107,9 +115,10 @@ watch(chatroomPreviewError, (error) => {
 async function onSendMessage() {
   const msgTrimmed = newMessage.value.trim();
   if (!isFalsy(msgTrimmed)) {
-    sendMessage(msgTrimmed);
+    await sendMessage(msgTrimmed);
+    newMessage.value = '';
+    scrollToBottom();
   }
-  newMessage.value = '';
 }
 
 async function handleKeyDown(event: KeyboardEvent) {
@@ -120,29 +129,35 @@ async function handleKeyDown(event: KeyboardEvent) {
 }
 
 async function scrollToBottom(instant: boolean = false) {
-  await nextTick();
-  const container = messagesContainer.value;
-  if (container) {
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: instant ? 'instant' : 'smooth',
-    });
-  }
+  await nextTick(() => {
+    const container = messagesContainer.value;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: instant ? 'instant' : 'smooth',
+      });
+    }
+  });
 }
-async function updateIsAtBottom() {
+async function onContainerScroll() {
   const el = messagesContainer.value;
   if (!el) return;
   isAtBottom.value = (el.scrollHeight - el.scrollTop - el.clientHeight) < bottomDetectionThreshold;
+  if (scrollingTimeout) clearTimeout(scrollingTimeout);
+  scrolling.value = true;
+  scrollingTimeout = setTimeout(() => {
+    scrolling.value = false;
+  }, minTimeAfterScrolling);
 }
 
 onMounted(() => {
-  messagesContainer.value?.addEventListener('scroll', updateIsAtBottom);
+  messagesContainer.value?.addEventListener('scroll', onContainerScroll);
   window.addEventListener("keydown", handleKeyDown);
   scrollToBottom(true);
 });
 
 onUnmounted(() => {
-  messagesContainer.value?.removeEventListener('scroll', updateIsAtBottom);
+  messagesContainer.value?.removeEventListener('scroll', onContainerScroll);
   window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
