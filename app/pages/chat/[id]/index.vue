@@ -168,7 +168,7 @@ async function fetchChatroomDetails() {
 const chatroomDisplayName = computed(() => {
   if (!chatroom.value) return "Wird geladen...";
   if (chatroom.value.type === "direct") {
-    return chatroom.value.other_user_name || "Direkter Chat";
+    return chatroom.value.name || "Direkter Chat";
   } else {
     return chatroom.value.name || "Gruppenchat";
   }
