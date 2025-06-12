@@ -3,8 +3,8 @@
     <div class="align-column">
       <UCard class="profile-bar" variant="subtle">
         <div class="flex items-center gap-2">
-          <UAvatar src="https://github.com/nuxt.png" />
-          <h1 class="text-black dark:text-white">Florian Steckchen</h1>
+          <UAvatar :src="partnerAvatarUrl" icon="i-lucide-user" />
+          <h1 class="text-black dark:text-white">{{ chatroomDisplayName }}</h1>
         </div>
       </UCard>
       <div ref="messagesContainer" class="messages">
@@ -107,11 +107,60 @@ const { isLight } = useSSRSafeTheme();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
 const supabase = useSupabaseClient();
-
 const route = useRoute();
+
 const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
+});
+
+const chatroom = ref<any>(null);
+
+onMounted(async () => {
+  await fetchChatroomDetails();
+});
+
+async function fetchChatroomDetails() {
+  if (!routeChatroomId.value) return;
+
+  const { data, error } = await supabase
+    .from("chatrooms_preview")
+    .select("*")
+    .eq("id", routeChatroomId.value)
+    .single();
+
+  if (error) {
+    logPostgrestError(error, "chatroom details fetching");
+    operationFeedbackHandler.displayError("Could not load chatroom details");
+    return;
+  }
+
+  chatroom.value = data;
+}
+
+const chatroomDisplayName = computed(() => {
+  if (!chatroom.value) return "Loading...";
+  if (chatroom.value.type === "direct") {
+    return chatroom.value.other_user_name || "Direct Chat";
+  } else {
+    return chatroom.value.name || "Group Chat";
+  }
+});
+
+const partnerAvatarUrl = computed(() => {
+  if (!chatroom.value) return undefined;
+
+  if (chatroom.value.type === "direct") {
+    return chatroom.value.other_user_id
+      ? getAvatarUrl(chatroom.value.other_user_id)
+      : undefined;
+  } else {
+    return useCachedSignedImageUrl(
+      "chatroom_avatars",
+      getGroupAvatarPath(chatroom.value.id),
+      true
+    ).value;
+  }
 });
 
 const themedUserMessageColor = computed(() =>
@@ -197,7 +246,6 @@ const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
   ],
 ]);
 
-// messages and writing
 type DisplayedMessage = {
   text: string;
   timestamp: string;
@@ -206,9 +254,11 @@ const newMessage = ref<string>("");
 const userMessages = ref<DisplayedMessage[]>([]);
 const messagesContainer = ref<HTMLElement | null>(null);
 
-// Load messages from database and push to chat UI
 async function loadFromDatabase() {
-  const { data, error } = await supabase.from("messages").select("*");
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chatroom_id", routeChatroomId.value);
 
   if (error) {
     logPostgrestError(error, "message fetching");
@@ -217,20 +267,18 @@ async function loadFromDatabase() {
     );
     return;
   }
-  data.forEach((element) => {
-    userMessages.value.push({
-      text: element.content,
-      timestamp: dateToHMTime(new Date(element.created_at)),
-    });
-  });
+  userMessages.value = data.map((element) => ({
+    text: element.content,
+    timestamp: dateToHMTime(new Date(element.created_at)),
+  }));
 }
 
-// Save messages to database
 async function saveToDatabase(message: string) {
   const { error } = await supabase.from("messages").insert([
     {
       chatroom_id: routeChatroomId.value,
       content: message,
+      sender_id: userData.id,
     },
   ]);
 
@@ -244,20 +292,15 @@ async function saveToDatabase(message: string) {
   return null;
 }
 
-// Push written message to chat UI & database
 async function sendMessage() {
   if (newMessage.value.trim()) {
     const timestamp = dateToHMTime(new Date());
-    saveToDatabase(newMessage.value.trim());
-    userMessages.value.push({
-      text: newMessage.value.trim(),
-      timestamp: timestamp,
-    });
+    await saveToDatabase(newMessage.value.trim());
     newMessage.value = "";
+    await loadFromDatabase();
   }
 }
 
-// Enable using enter for sending a message
 async function handleKeyDown(event: KeyboardEvent) {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
@@ -265,7 +308,6 @@ async function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-// Scroll to the newest message
 async function scrollToBottom() {
   await nextTick();
   const component = messagesContainer.value;
@@ -282,7 +324,6 @@ watch(
   { deep: true }
 );
 
-// on reload
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
   loadFromDatabase();
