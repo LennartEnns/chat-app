@@ -95,7 +95,15 @@ const messagesContainer = ref<HTMLElement | null>(null);
 
 // Load messages from database and push to chat UI
 async function loadFromDatabase() {
-  const { data, error } = await supabase.from("messages").select("*");
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chatroom_id", routeChatroomId.value)
+    .order("created_at", { ascending: true });
+  if (data === null) {
+    console.log("No messages found for chatroom_id:" + routeChatroomId.value);
+    return;
+  }
 
   if (error) {
     logPostgrestError(error, "message fetching");
@@ -122,6 +130,7 @@ async function saveToDatabase(message: string) {
   ]);
 
   if (error) {
+    console.log(error);
     logPostgrestError(error, "message insert");
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown message upload error")
