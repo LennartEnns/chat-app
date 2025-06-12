@@ -9,48 +9,6 @@
       </UCard>
       <div ref="messagesContainer" class="messages">
         <div
-          :class="`message partner ${themedPartnerMessageColor}`"
-          @contextmenu.prevent="
-            handleContextMenu($event, {
-              text: 'Partner message content',
-              timestamp: '12:48',
-            })
-          "
-        >
-          <UAvatar
-            class="justify-self-center"
-            :src="partnerAvatarUrl"
-            icon="i-lucide-user"
-          />
-
-          <div class="message-content flex flex-col">
-            <h3 class="text-black dark:text-white text-sm font-semibold mb-1">
-              {{ chatroomDisplayName }}
-            </h3>
-            <p>
-              User messages are now saved to the database and loaded on
-              page-reload. Start messaging today! **Note** If you want to test
-              this create a local chatroom and add your logged in user's ID to
-              it all via http://localhost:54323/. Afterwards change the
-              currently hardcoded chatroom_id to this chatroom's ID. Now you can
-              use the database!
-            </p>
-            <span class="message-time">12:48</span>
-            <UDropdownMenu
-              :items="dropdownItems"
-              :ui="{
-                content: 'w-48',
-              }"
-            >
-              <UButton
-                icon="i-heroicons-ellipsis-horizontal"
-                variant="ghost"
-                class="message-options-button"
-              />
-            </UDropdownMenu>
-          </div>
-        </div>
-        <div
           v-for="(message, index) in userMessages"
           :key="index"
           :class="`message ${
