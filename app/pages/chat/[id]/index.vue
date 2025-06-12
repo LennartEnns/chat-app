@@ -22,7 +22,11 @@
             :src="partnerAvatarUrl"
             icon="i-lucide-user"
           />
-          <div class="message-content">
+
+          <div class="message-content flex flex-col">
+            <h3 class="text-black dark:text-white text-sm font-semibold mb-1">
+              {{ chatroomDisplayName }}
+            </h3>
             <p>
               User messages are now saved to the database and loaded on
               page-reload. Start messaging today! **Note** If you want to test
@@ -32,6 +36,18 @@
               use the database!
             </p>
             <span class="message-time">12:48</span>
+            <UDropdownMenu
+              :items="dropdownItems"
+              :ui="{
+                content: 'w-48',
+              }"
+            >
+              <UButton
+                icon="i-heroicons-ellipsis-horizontal"
+                variant="ghost"
+                class="message-options-button"
+              />
+            </UDropdownMenu>
           </div>
         </div>
         <div
@@ -90,7 +106,6 @@ import {
 } from "~~/errors/postgrestErrors";
 
 import type { DropdownMenuItem } from "@nuxt/ui";
-
 import { useCachedSignedImageUrl } from "~/composables/useCachedSignedImageUrl";
 
 useFirstLoginDetector();
@@ -193,7 +208,6 @@ const dropdownItems = ref<DropdownMenuItem[]>([
     icon: "i-lucide-trash",
     click: () => {
       console.log("Löschen geklickt vom Dropdown!");
-      // Implementiere hier die Löschlogik
     },
   },
   {
@@ -201,7 +215,6 @@ const dropdownItems = ref<DropdownMenuItem[]>([
     icon: "i-lucide-edit",
     click: () => {
       console.log("Bearbeiten geklickt vom Dropdown!");
-      // Implementiere hier die Bearbeitungslogik
     },
   },
 ]);
@@ -241,7 +254,6 @@ const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
             "Nachricht löschen (Kontextmenü):",
             activeMessage.value.text
           );
-          // Implementiere hier die Löschlogik
         }
         isContextMenuOpen.value = false;
       },
@@ -265,7 +277,6 @@ const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
 type DisplayedMessage = {
   text: string;
   timestamp: string;
-  isOwnMsg: Boolean;
 };
 const newMessage = ref<string>("");
 const userMessages = ref<DisplayedMessage[]>([]);
@@ -278,17 +289,11 @@ async function loadFromDatabase() {
     );
     return;
   }
-
   const { data, error } = await supabase
     .from("messages")
     .select("*")
     .eq("chatroom_id", routeChatroomId.value)
     .order("created_at", { ascending: true });
-<
-  if (data === null) {
-    console.log("No messages found for chatroom_id:" + routeChatroomId.value);
-    return;
-  }
 
   if (error) {
     logPostgrestError(error, "message fetching");
@@ -302,17 +307,13 @@ async function loadFromDatabase() {
   }
   userMessages.value = [];
   data.forEach((element) => {
-    let isOwnMsg: Boolean = element.user_id === userData.id;
-
-    // If the message is not from the current user, it is a partner message
     userMessages.value.push({
       text: element.content,
       timestamp: dateToHMTime(new Date(element.created_at)),
-      isOwnMsg: isOwnMsg,
     });
-    return;
   });
 }
+
 async function saveToDatabase(message: string) {
   console.log("Versuche Nachricht zu speichern (ursprüngliches Verhalten):");
   console.log("  chatroom_id:", routeChatroomId.value);
@@ -326,7 +327,6 @@ async function saveToDatabase(message: string) {
   ]);
 
   if (error) {
-    console.log(error);
     logPostgrestError(error, "message insert");
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(
@@ -347,7 +347,6 @@ async function sendMessage() {
     userMessages.value.push({
       text: newMessage.value.trim(),
       timestamp: timestamp,
-      isOwnMsg: true,
     });
     newMessage.value = "";
   }
