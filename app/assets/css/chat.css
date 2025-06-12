@@ -110,6 +110,10 @@
 .message-content {
   position: relative;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-right: 30px;
 }
 
 .message-time {
@@ -117,6 +121,7 @@
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.6);
   text-align: right;
+  align-self: flex-end;
   margin-top: 4px;
 }
 
@@ -135,4 +140,21 @@
 }
 .chat span img {
   height: max-content;
+}
+
+.message-options-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.message:hover .message-options-button {
+  opacity: 1;
+}
+
+.message-options-button .icon {
+  width: 1.2em;
+  height: 1.2em;
 }
