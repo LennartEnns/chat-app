@@ -3,7 +3,7 @@ import { logPostgrestError } from '~~/errors/postgrestErrors';
 
 const scrollTopTreshold = 1000; // px
 const messagesChunkSize = 20; // Load max. 20 messages at once
-const alwaysFutureDate = new Date(8640000000000000);
+const alwaysFutureDate = new Date(86400000000000);
 
 export const useLazyFetchedMessages = (chatroomId: Ref<string>, containerScrollTop: Ref<number>) => {
   const supabase = useSupabaseClient();
@@ -18,7 +18,7 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, containerScrollT
     const { data, error } = await supabase.from('messages_view')
       .select('content, created_at, user_id, username')
       .eq('chatroom_id', chatroomId.value)
-      .lt('created_at', earliestMessageTime.value)
+      .lt('created_at', earliestMessageTime.value.toISOString())
       .order('created_at', { ascending: true })
       .limit(messagesChunkSize);
 
@@ -42,6 +42,8 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, containerScrollT
 
   watch(almostAtTheTop, (val) => {
     if (val && !reachedEarliestMessage) fetchEarlierMessages();
+  }, {
+    immediate: true,
   });
 
   async function sendMessage(content: string) {

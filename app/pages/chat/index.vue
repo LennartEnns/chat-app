@@ -34,7 +34,7 @@
 import {
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
-import { getStorageErrorMessage, logStorageError } from "~~/errors/storageErrors";
+import { logStorageError } from "~~/errors/storageErrors";
 import type { DirectChatroomData, GroupChatroomData } from "~/types/chatroom";
 
 export interface UserData {
@@ -47,11 +47,11 @@ export interface UserData {
   avatarUrl: string,
 };
 
+useFirstLoginDetector();
 const isMobile = useMobileDetector();
 const {isLight} = useSSRSafeTheme();
 const supabase = useSupabaseClient();
 const userData = useUserData();
-const operationFeedbackHandler = useOperationFeedbackHandler();
 const { data } = await supabase.auth.getSession();
 const sessionData: string | undefined = data.session?.user.updated_at;
 const convertedSessionData = sessionData ? new Date(sessionData) : null;
@@ -124,11 +124,10 @@ async function getGroupChatroomData(){
 async function getDirectChatroomData(){
   const { data, error } = await supabase.from("direct_chatrooms").select("*").or(`user1_id.eq.${userData.id},user2_id.eq.${userData.id}`);
   if (error) {
-    logPostgrestError(error, "no direct chatroom found");
+    logPostgrestError(error, "direct chatroom loading");
     return;
   }
   if (!data || data.length === 0) {
-    console.log("No data found");
     return;
   }
   for (const element of data) {

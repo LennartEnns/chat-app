@@ -33,14 +33,14 @@
           class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
         >
           <ChatroomPreview
-            class="mb-2 glassBG brightness-130"
             v-for="(chatroom, index) in chatroomsWithAvatarUrl"
             :key="index"
-            :name="chatroom.name"
+            class="mb-2 glassBG brightness-130"
+            :chatroom-id="chatroom.id!"
+            :name="chatroom.name!"
             :avatar-url="chatroom.avatarUrl"
-            :id="chatroom.id"
-            :lastMsg="chatroom.last_message"
-          ></ChatroomPreview>
+            :last-msg="chatroom.last_message"
+          />
         </div>
       </template>
       <template #invitations>
@@ -68,8 +68,8 @@
 <script lang="ts" setup>
 import type { UserSearchResult } from "~/types/userSearch";
 import type { InvitationPreview } from "~/types/invitations/invitationsPreview";
-import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import type { TabsItem } from "@nuxt/ui";
+import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
 
 const supabase = useSupabaseClient();
@@ -93,6 +93,7 @@ const { data: existUnhandledInvitations } = await useAsyncData(
     return !!count;
   }
 );
+
 // This will be executed when the invitations tab is opened (lazy loading)
 const {
   data: inboundInvitations,
@@ -160,55 +161,31 @@ async function onRemoveInvitation() {
   refreshFetchInvitations();
 }
 
-function generateAvatarUrl(
-  type: string,
-  id: string,
-  otherUserId: string | null
-): {
-  avatarUrl: string | undefined;
-} {
-  return type === "direct"
-    ? {
-        avatarUrl: otherUserId ? getAvatarUrl(otherUserId) : undefined,
-      }
-    : {
-        avatarUrl: useCachedSignedImageUrl(
-          "chatroom_avatars",
-          getGroupAvatarPath(id),
-          true
-        ).value,
-      };
-}
-
 const previewQuery = supabase
   .from("chatrooms_preview")
   .select("*")
   .order("last_activity", { ascending: false });
 
-async function getChatroomList(
-  user_id: string
-): Promise<Awaited<typeof previewQuery>["data"] | null> {
+async function getChatroomList(): Promise<Awaited<typeof previewQuery>["data"]> {
   const { data, error } = await previewQuery;
 
   if (error) {
-    logPostgrestError(error, "message fetching");
-    return null;
+    logPostgrestError(error, "chatrooms fetching");
+    operationFeedbackHandler.displayError('Could not load chatrooms');
+    return [];
   }
   if (!data || data.length === 0) {
-    console.log("No chatrooms found for user_id:" + user_id);
-    return null;
+    return [];
   }
 
   return data;
 }
 
-let chatrooms = ref<Awaited<typeof previewQuery>["data"]>([]);
-const chatroomListResult = await getChatroomList(userData.id);
-chatrooms.value = chatroomListResult ?? [];
+const { data: chatrooms } = await useAsyncData('chatroomsPreviewList', getChatroomList)
 
 const chatroomsWithAvatarUrl = computed(() =>
   chatrooms.value?.map((chatroom) => {
-    const { avatarUrl } = generateAvatarUrl(
+    const avatarUrl = getAbstractChatroomAvatarUrl(
       chatroom.type!,
       chatroom.id!,
       chatroom.other_user_id
@@ -219,7 +196,6 @@ const chatroomsWithAvatarUrl = computed(() =>
     };
   })
 );
-console.log(chatroomsWithAvatarUrl.value);
 </script>
 
 <style></style>
