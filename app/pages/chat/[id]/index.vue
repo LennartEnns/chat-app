@@ -53,7 +53,11 @@
         <div
           v-for="(message, index) in userMessages"
           :key="index"
-          :class="`message user ${themedUserMessageColor} whitespace-pre-line wrap-anywhere`"
+          :class="`message ${
+            message.isOwnMsg
+              ? 'user ' + themedUserMessageColor
+              : 'partner ' + themedPartnerMessageColor
+          }  whitespace-pre-line wrap-anywhere`"
           @contextmenu.prevent="handleContextMenu($event, message)"
         >
           <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
@@ -277,6 +281,7 @@ const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
 type DisplayedMessage = {
   text: string;
   timestamp: string;
+  isOwnMsg: Boolean;
 };
 const newMessage = ref<string>("");
 const userMessages = ref<DisplayedMessage[]>([]);
@@ -307,9 +312,11 @@ async function loadFromDatabase() {
   }
   userMessages.value = [];
   data.forEach((element) => {
+    let isOwnMsg: Boolean = element.user_id === userData.id;
     userMessages.value.push({
       text: element.content,
       timestamp: dateToHMTime(new Date(element.created_at)),
+      isOwnMsg: isOwnMsg,
     });
   });
 }
