@@ -1,49 +1,92 @@
 import type { Message } from '~/types/messages/messageLoading';
 import { logPostgrestError } from '~~/errors/postgrestErrors';
 
-const scrollTopTreshold = 1000; // px
+const scrollTopTreshold = 50; // px
 const messagesChunkSize = 20; // Load max. 20 messages at once
 const alwaysFutureDate = new Date(86400000000000);
 
-export const useLazyFetchedMessages = (chatroomId: Ref<string>, containerScrollTop: Ref<number>) => {
+export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContainer: Ref<HTMLElement | null>) => {
   const supabase = useSupabaseClient();
   const operationFeedbackHandler = useOperationFeedbackHandler();
-  const almostAtTheTop = computed(() => containerScrollTop.value < scrollTopTreshold);
+  const containerScrollTop = ref(0);
+  const almostAtTheTop = computed(() => containerScrollTop.value <= scrollTopTreshold);
+
   const messages = ref<Message[]>([]);
   const earliestMessageTime = computed(() => messages.value.length === 0 ? alwaysFutureDate : new Date(messages.value[0]!.created_at));
+  const { data: initialMessages } = useAsyncData(`chatMessages-${chatroomId.value}`, async () => {
+    return await fetchEarlierMessages();
+  });
+  watch(initialMessages, (msgs) => {
+    if (msgs) {
+      messages.value = msgs;
+    }
+  }, {
+    immediate: true,
+  })
 
   let reachedEarliestMessage = false;
 
+  async function updateScrollTop() {
+    if (messagesContainer.value) {
+      containerScrollTop.value = messagesContainer.value.scrollTop;
+    }
+  }
+
+  async function insertMessages(newMessages: Message[]) {
+    const oldScrollHeight = messagesContainer.value?.scrollHeight ?? 0;
+    // New messages are in descending order, so insert each one at the start of messages
+    newMessages.forEach((newMsg) => messages.value.unshift(newMsg));
+    // Adjust scrollTop to keep the view "pinned"
+    await nextTick(() => {
+      if (!messagesContainer.value) return;
+      const container = messagesContainer.value;
+      const newScrollHeight = container.scrollHeight;
+      container.scrollTo({
+        top: container.scrollTop + (newScrollHeight - oldScrollHeight),
+        behavior: 'instant', // Override smooth scrolling
+      });
+    });
+  }
   async function fetchEarlierMessages() {
+    console.log("ABC");
     const { data, error } = await supabase.from('messages_view')
       .select('content, created_at, user_id, username')
       .eq('chatroom_id', chatroomId.value)
       .lt('created_at', earliestMessageTime.value.toISOString())
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(messagesChunkSize);
 
     if (error) {
       logPostgrestError(error, 'message fetching');
       operationFeedbackHandler.displayError('Could not load messages');
-      return;
+      return [];
     }
     if (data) {
       if (data.length === 0) {
         reachedEarliestMessage = true;
-        return;
+        return [];
       }
       const dataWithDates = data.map((msg) => ({
         ...msg,
         created_at: new Date(msg.created_at!),
       })) as Message[];
-      messages.value = dataWithDates.concat(messages.value);
+
+      return dataWithDates;
     }
+    return [];
   }
 
-  watch(almostAtTheTop, (val) => {
-    if (val && !reachedEarliestMessage) fetchEarlierMessages();
-  }, {
-    immediate: true,
+  watch(almostAtTheTop, async (val) => {
+    if (val && !reachedEarliestMessage) {
+      const newMsgs = await fetchEarlierMessages();
+      insertMessages(newMsgs);
+    };
+  });
+
+  onMounted(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.addEventListener('scroll', updateScrollTop);
+    }
   });
 
   async function sendMessage(content: string) {

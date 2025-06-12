@@ -1,6 +1,6 @@
 <template>
   <div
-    class="message user light:user-light dark:user-dark whitespace-pre-line wrap-anywhere"
+    :class="`message user whitespace-pre-line wrap-anywhere ${themedMessageColor} ${messagePosition}`"
     @contextmenu.prevent="handleContextMenu($event, message)"
   >
     <UAvatar class="justify-self-center" :src="undefined" />
@@ -32,9 +32,20 @@
 import type { DropdownMenuItem } from "@nuxt/ui";
 import type { Message } from "~/types/messages/messageLoading";
 
-defineProps<{
+const props = defineProps<{
   message: Message,
 }>();
+// If not user ID is given, we will assume this is the user's own message
+const isOwnMsg = computed(() => !props.message.user_id);
+
+const { isLight } = useSSRSafeTheme();
+const messagePosition = computed(() => isOwnMsg.value ? 'user' : 'partner')
+const themedMessageColor = computed(() => {
+  if (isLight.value) {
+    return isOwnMsg.value ? 'user-light' : 'partner-light';
+  }
+  return isOwnMsg.value ? 'user-dark' : 'partner-dark';
+})
 
 const dropdownItems = ref<DropdownMenuItem[]>([
   {

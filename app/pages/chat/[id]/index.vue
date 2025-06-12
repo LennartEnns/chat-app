@@ -24,7 +24,7 @@
           :rows="2"
           :maxrows="7"
         />
-        <UButton class="light:user-light dark:user-dark" @click="onSendMessage">
+        <UButton :class="`${themedSendButtonColor}`" @click="onSendMessage">
           <UIcon name="i-lucide-send-horizontal" size="xs" />
         </UButton>
       </div>
@@ -35,7 +35,9 @@
 <script setup lang="ts">
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
-const containerScrollTop = ref(0);
+
+const { isLight } = useSSRSafeTheme();
+const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
 
 const route = useRoute();
 const supabase = useSupabaseClient();
@@ -43,7 +45,11 @@ const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
 });
-const { messages, sendMessage } = useLazyFetchedMessages(routeChatroomId, containerScrollTop);
+const { messages, sendMessage } = useLazyFetchedMessages(routeChatroomId, messagesContainer);
+const lastMessage = computed(() => messages.value.length > 0 ? messages.value[messages.value.length - 1] : null);
+watch(lastMessage, (lastMsg) => {
+  scrollToBottom();
+})
 
 const notFoundError = {
   statusCode: 404,
@@ -90,12 +96,6 @@ watch(chatroomPreviewError, (error) => {
   immediate: true,
 });
 
-async function updateScrollTop() {
-  if (messagesContainer.value) {
-    containerScrollTop.value = messagesContainer.value.scrollTop;
-  }
-}
-
 // Push written message to Chat UI & insert in db
 async function onSendMessage() {
   const msgTrimmed = newMessage.value.trim();
@@ -112,28 +112,20 @@ async function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-async function scrollToBottom() {
+async function scrollToBottom(instant: boolean = false) {
   await nextTick();
-  const component = messagesContainer.value;
-  if (component) {
-    component.scrollTop = component.scrollHeight;
+  const container = messagesContainer.value;
+  if (container) {
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: instant ? 'instant' : 'smooth',
+    });
   }
 }
 
-watch(
-  messages,
-  () => {
-    scrollToBottom();
-  },
-  { deep: true }
-);
-
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
-  scrollToBottom();
-  if (messagesContainer.value) {
-    messagesContainer.value.addEventListener('scroll', updateScrollTop);
-  }
+  scrollToBottom(true);
 });
 
 onUnmounted(() => {

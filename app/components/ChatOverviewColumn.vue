@@ -193,7 +193,7 @@ async function getChatroomList(): Promise<Awaited<typeof previewQuery>["data"]> 
   return data;
 }
 
-const { data: chatrooms } = await useAsyncData('chatroomsPreviewList', getChatroomList)
+const { data: chatrooms } = await useAsyncData('chatroomsPreviewList', getChatroomList);
 
 const chatroomsWithAvatarUrl = computed(() =>
   chatrooms.value?.map((chatroom) => {
