@@ -3,39 +3,16 @@
     <div class="align-column">
       <UCard class="profile-bar" variant="subtle">
         <div class="flex items-center gap-2">
-          <UAvatar :src="partnerAvatarUrl" icon="i-lucide-user" />
-          <h1 class="text-black dark:text-white">{{ chatroomDisplayName }}</h1>
+          <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
+          <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
         </div>
       </UCard>
       <div ref="messagesContainer" class="messages">
-        <div
-          v-for="(message, index) in userMessages"
-          :key="index"
-          :class="`message ${
-            message.isOwnMsg
-              ? 'user ' + themedUserMessageColor
-              : 'partner ' + themedPartnerMessageColor
-          }  whitespace-pre-line wrap-anywhere`"
-          @contextmenu.prevent="handleContextMenu($event, message)"
-        >
-          <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
-          <div class="message-content">
-            <p>{{ message.text }}</p>
-            <span class="message-time">{{ message.timestamp }}</span>
-            <UDropdownMenu
-              :items="dropdownItems"
-              :ui="{
-                content: 'w-48',
-              }"
-            >
-              <UButton
-                icon="i-heroicons-ellipsis-horizontal"
-                variant="ghost"
-                class="message-options-button"
-              />
-            </UDropdownMenu>
-          </div>
-        </div>
+        <ChatroomMessage
+          v-for="(message, index) in messages"
+          :key = "index"
+          :message = "message"
+        />
       </div>
       <div class="write">
         <UTextarea
@@ -47,281 +24,91 @@
           :rows="2"
           :maxrows="7"
         />
-        <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
-          ><Icon name="ic:baseline-send"
-        /></UButton>
+        <UButton class="light:user-light dark:user-dark" @click="onSendMessage">
+          <UIcon name="i-lucide-send-horizontal" size="xs" />
+        </UButton>
       </div>
     </div>
-
-    <UContextMenu
-      ref="contextMenuRef"
-      v-model:show="isContextMenuOpen"
-      :items="contextMenuItems"
-    />
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
-import {
-  getPostgrestErrorMessage,
-  logPostgrestError,
-} from "~~/errors/postgrestErrors";
+const newMessage = ref<string>("");
+const messagesContainer = ref<HTMLElement | null>(null);
+const containerScrollTop = ref(0);
 
-import type { DropdownMenuItem } from "@nuxt/ui";
-import { useCachedSignedImageUrl } from "~/composables/useCachedSignedImageUrl";
-
-useFirstLoginDetector();
-const { isLight } = useSSRSafeTheme();
-const operationFeedbackHandler = useOperationFeedbackHandler();
-const userData = useUserData();
-const supabase = useSupabaseClient();
 const route = useRoute();
-
+const supabase = useSupabaseClient();
 const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
 });
+const { messages, sendMessage } = useLazyFetchedMessages(routeChatroomId, containerScrollTop);
 
-const chatroom = ref<any>(null);
-
-onMounted(async () => {
-  await fetchChatroomDetails();
-  loadFromDatabase();
-  scrollToBottom();
-  window.addEventListener("keydown", handleKeyDown);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("keydown", handleKeyDown);
-});
-
-async function fetchChatroomDetails() {
-  if (!routeChatroomId.value) {
-    console.warn(
-      "routeChatroomId ist null oder undefined. Chatroom-Details können nicht geladen werden."
-    );
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from("chatrooms_preview")
-    .select("*")
-    .eq("id", routeChatroomId.value)
-    .single();
-
-  if (error) {
-    logPostgrestError(error, "chatroom details fetching");
-    operationFeedbackHandler.displayError(
-      "Konnte Chatroom-Details nicht laden."
-    );
-    return;
-  }
-  chatroom.value = data;
-
-  console.log("Abgerufene Chatroom-Details:", chatroom.value);
-  console.log("  Typ:", chatroom.value?.type);
-  console.log("  Name (für Gruppen):", chatroom.value?.name);
-  console.log(
-    "  Name des anderen Benutzers (für direkte Chats):",
-    chatroom.value?.other_user_name
-  );
-  console.log(
-    "  ID des anderen Benutzers (für direkte Chats):",
-    chatroom.value?.other_user_id
-  );
-}
-
-const chatroomDisplayName = computed(() => {
-  if (!chatroom.value) return "Wird geladen...";
-  if (chatroom.value.type === "direct") {
-    return chatroom.value.name || "Direkter Chat";
-  } else {
-    return chatroom.value.name || "Gruppenchat";
-  }
-});
-
-const partnerAvatarUrl = computed(() => {
-  if (!chatroom.value) return undefined;
-
-  if (chatroom.value.type === "direct") {
-    return chatroom.value.other_user_id
-      ? getAvatarUrl(chatroom.value.other_user_id)
-      : undefined;
-  } else {
-    return useCachedSignedImageUrl(
-      "chatroom_avatars",
-      getGroupAvatarPath(chatroom.value.id),
-      true
-    ).value;
-  }
-});
-
-const themedUserMessageColor = computed(() =>
-  isLight.value ? "user-light" : "user-dark"
-);
-
-const themedPartnerMessageColor = computed(() =>
-  isLight.value ? "partner-light" : "partner-dark"
-);
-
-const dropdownItems = ref<DropdownMenuItem[]>([
-  {
-    label: "Löschen",
-    icon: "i-lucide-trash",
-    click: () => {
-      console.log("Löschen geklickt vom Dropdown!");
-    },
+const notFoundError = {
+  statusCode: 404,
+  message: "This chatroom does not exist",
+  data: {
+    headline: 'No Yapping Here!',
   },
-  {
-    label: "Bearbeiten",
-    icon: "i-lucide-edit",
-    click: () => {
-      console.log("Bearbeiten geklickt vom Dropdown!");
-    },
+}
+const unknownError = {
+  statusCode: 500,
+  message: "Unknown error loading your chatroom",
+  data: {
+    headline: 'Oh no!',
   },
-]);
-
-interface UContextMenuInstance {
-  open: (event: MouseEvent) => void;
 }
-
-const contextMenuRef = ref<UContextMenuInstance | null>(null);
-const isContextMenuOpen = ref(false);
-const activeMessage = ref<DisplayedMessage | null>(null);
-const handleContextMenu = (
-  event: MouseEvent | TouchEvent,
-  message: DisplayedMessage
-) => {
-  activeMessage.value = message;
-  console.log("Kontextmenü ausgelöst (contextmenu event)", event);
-  if (contextMenuRef.value) {
-    contextMenuRef.value.open(event as MouseEvent);
-    isContextMenuOpen.value = true;
-    console.log("Kontextmenü-Öffnungsversuch über contextmenu event.");
-  } else {
-    console.log(
-      "contextMenuRef.value ist null, kann Kontextmenü nicht öffnen."
-    );
-  }
-};
-
-const contextMenuItems = computed<DropdownMenuItem[][]>(() => [
-  [
-    {
-      label: "Löschen",
-      icon: "i-lucide-trash",
-      click: () => {
-        if (activeMessage.value) {
-          console.log(
-            "Nachricht löschen (Kontextmenü):",
-            activeMessage.value.text
-          );
-        }
-        isContextMenuOpen.value = false;
-      },
-    },
-    {
-      label: "Bearbeiten",
-      icon: "i-lucide-edit",
-      click: () => {
-        if (activeMessage.value) {
-          console.log(
-            "Nachricht bearbeiten (Kontextmenü):",
-            activeMessage.value.text
-          );
-        }
-        isContextMenuOpen.value = false;
-      },
-    },
-  ],
-]);
-
-type DisplayedMessage = {
-  text: string;
-  timestamp: string;
-  isOwnMsg: Boolean;
-};
-const newMessage = ref<string>("");
-const userMessages = ref<DisplayedMessage[]>([]);
-const messagesContainer = ref<HTMLElement | null>(null);
-
-async function loadFromDatabase() {
-  if (!routeChatroomId.value) {
-    console.warn(
-      "routeChatroomId ist null oder undefined. Nachrichten können nicht geladen werden."
-    );
-    return;
-  }
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("chatroom_id", routeChatroomId.value)
-    .order("created_at", { ascending: true });
+const { data: chatroomPreviewData, error: chatroomPreviewError } = useAsyncData(`chatroomPreviewData-${routeChatroomId.value}`, async () => {
+  const { data, error } = await supabase.from('chatrooms_preview')
+    .select('name, type, other_user_id')
+    .eq('id', routeChatroomId.value)
+    .maybeSingle();
 
   if (error) {
-    logPostgrestError(error, "message fetching");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(
-        error,
-        "Unbekannter Fehler beim Laden der Nachrichten."
-      )
-    );
-    return;
+    throw createError(error.code === '22P02' ? notFoundError : unknownError);
   }
-  userMessages.value = [];
-  data.forEach((element) => {
-    let isOwnMsg: Boolean = element.user_id === userData.id;
-    userMessages.value.push({
-      text: element.content,
-      timestamp: dateToHMTime(new Date(element.created_at)),
-      isOwnMsg: isOwnMsg,
-    });
-  });
-}
-
-async function saveToDatabase(message: string) {
-  console.log("Versuche Nachricht zu speichern (ursprüngliches Verhalten):");
-  console.log("  chatroom_id:", routeChatroomId.value);
-  console.log("  content:", message);
-
-  const { error } = await supabase.from("messages").insert([
-    {
-      chatroom_id: routeChatroomId.value,
-      content: message,
-    },
-  ]);
-
+  else if (!data) throw createError(notFoundError);
+  return data;
+});
+const chatroomPreview = computed(() => {
+  if (!chatroomPreviewData.value) return {
+    name: 'Chatroom',
+    avatarUrl: undefined,
+  };
+  const cpData = chatroomPreviewData.value;
+  return {
+    name: cpData.name!,
+    avatarUrl: getAbstractChatroomAvatarUrl(cpData.type!, routeChatroomId.value, cpData.other_user_id),
+  };
+});
+watch(chatroomPreviewError, (error) => {
   if (error) {
-    logPostgrestError(error, "message insert");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(
-        error,
-        `Nachricht konnte nicht gesendet werden: ${error.message}`
-      )
-    );
+    showError(error);
   }
+}, {
+  immediate: true,
+});
 
-  return null;
+async function updateScrollTop() {
+  if (messagesContainer.value) {
+    containerScrollTop.value = messagesContainer.value.scrollTop;
+  }
 }
 
-async function sendMessage() {
-  if (newMessage.value.trim()) {
-    const timestamp = dateToHMTime(new Date());
-
-    saveToDatabase(newMessage.value.trim());
-    userMessages.value.push({
-      text: newMessage.value.trim(),
-      timestamp: timestamp,
-      isOwnMsg: true,
-    });
-    newMessage.value = "";
+// Push written message to Chat UI & insert in db
+async function onSendMessage() {
+  const msgTrimmed = newMessage.value.trim();
+  if (!isFalsy(msgTrimmed)) {
+    sendMessage(msgTrimmed);
   }
+  newMessage.value = '';
 }
 
 async function handleKeyDown(event: KeyboardEvent) {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    sendMessage();
+    onSendMessage();
   }
 }
 
@@ -334,12 +121,24 @@ async function scrollToBottom() {
 }
 
 watch(
-  userMessages,
+  messages,
   () => {
     scrollToBottom();
   },
   { deep: true }
 );
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+  scrollToBottom();
+  if (messagesContainer.value) {
+    messagesContainer.value.addEventListener('scroll', updateScrollTop);
+  }
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <style>

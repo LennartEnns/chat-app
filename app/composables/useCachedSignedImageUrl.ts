@@ -28,7 +28,7 @@ export const useCachedSignedImageUrl = (bucket: string, path: string, loadImmedi
     }
 
     // If no valid cached URL, create a new one
-    const { data, error } = await supabase
+    const { data } = await supabase
       .storage
       .from(bucket)
       .createSignedUrl(path, EXPIRES_IN);
@@ -39,8 +39,6 @@ export const useCachedSignedImageUrl = (bucket: string, path: string, loadImmedi
         url: data.signedUrl,
         expiresAt: now + EXPIRES_IN
       }));
-    } else {
-      console.error('Error generating signed URL: ', error);
     }
   }
 

@@ -9,8 +9,8 @@
           {{ name }}
         </div>
         <div
-          class="font-light w-full text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
           v-if="lastMsg"
+          class="font-light w-full text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
         >
           {{ lastMsg }}
         </div>
@@ -20,19 +20,16 @@
 </template>
 
 <script lang="ts" setup>
-import type { UserSearchResult } from "~/types/userSearch";
-console.log("loaded");
 const props = defineProps<{
-  id: string;
+  chatroomId: string;
   name: string;
   avatarUrl: string | undefined;
   lastMsg: string | null;
 }>();
-console.log("Preview component loaded with props:", props.avatarUrl);
 
 // Handle user selection in the command palette
 async function onUserSelect() {
-  navigateTo(`/chat/${props.id}`);
+  navigateTo(`/chat/${props.chatroomId}`);
 }
 </script>
 
