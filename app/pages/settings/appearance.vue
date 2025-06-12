@@ -11,6 +11,7 @@
     <USeparator label="Main Color" class="mt-4" color="primary" />
     <UDropdownMenu
       v-model:open="open"
+      class="glassBG"
       :items="computedItems as DropdownMenuItem[]"
       :ui="{ content: 'w-48' }"
     >
