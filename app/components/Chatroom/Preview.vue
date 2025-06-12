@@ -27,8 +27,11 @@ const props = defineProps<{
   lastMsg: string | null;
 }>();
 
+const drawerOpen = useOpenDrawer();
+
 // Handle user selection in the command palette
 async function onUserSelect() {
+  drawerOpen.value = false;
   navigateTo(`/chat/${props.chatroomId}`);
 }
 </script>

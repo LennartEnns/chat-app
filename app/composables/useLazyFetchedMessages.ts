@@ -18,7 +18,7 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
   });
   watch(initialMessages, (msgs) => {
     if (msgs) {
-      messages.value = msgs;
+      messages.value = msgs.toReversed();
     }
   }, {
     immediate: true,
@@ -33,6 +33,7 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
   }
 
   async function insertMessages(newMessages: Message[]) {
+    if (newMessages.length === 0) return;
     const oldScrollHeight = messagesContainer.value?.scrollHeight ?? 0;
     // New messages are in descending order, so insert each one at the start of messages
     newMessages.forEach((newMsg) => messages.value.unshift(newMsg));
@@ -83,10 +84,11 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
   });
 
   onMounted(() => {
-    if (messagesContainer.value) {
-      messagesContainer.value.addEventListener('scroll', updateScrollTop);
-    }
+    messagesContainer.value?.addEventListener('scroll', updateScrollTop);
   });
+  onUnmounted(() => {
+    messagesContainer.value?.removeEventListener('scroll', updateScrollTop);
+  })
 
   async function sendMessage(content: string) {
     const { error } = await supabase.from('messages').insert({

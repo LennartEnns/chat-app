@@ -7,13 +7,13 @@
       >
         <UButton
           v-if="isMobile"
-          :icon="buttonIcon"
+          :icon="mobileLeftButton.icon"
           color="neutral"
           variant="ghost"
           class="py-1 h-min self-center cursor-pointer"
           size="xl"
-          :label="buttonText"
-          @click="buttonTarget"
+          :label="mobileLeftButton.label"
+          @click="mobileLeftButton.onClick"
         />
         <UButton
           variant="ghost"
@@ -108,26 +108,40 @@ import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
-
+const drawerOpen = useOpenDrawer();
 const isMobile = useMobileDetector();
 const mobileMenuOpen = ref(false);
 
-const drawerOpen = useOpenDrawer();
-const buttonText = ref<string>("Back");
-const buttonIcon = ref<string>("i-lucide-arrow-left");
-
-async function buttonTarget() {
-  if (route.path === "/chat") {
-    drawerOpen.value = true;
-  } else {
-    navigateTo("/chat");
+const mobileLeftButton = computed(() => {
+  if (route.name === 'chat-id-info') {
+    return {
+      icon: 'i-lucide-arrow-left',
+      label: 'Back',
+      onClick: () => {
+        const chatroomId = route.params.id as string | null;
+        if (!chatroomId) navigateTo('/chat');
+        navigateTo(`/chat/${chatroomId}`);
+      },
+    };
   }
-}
-
-if (route.path === "/chat") {
-  buttonText.value = "Chats";
-  buttonIcon.value = "i-lucide-messages-square";
-}
+  const buttonData = {
+    icon: 'i-lucide-messages-square',
+    label: 'Chats',
+  };
+  if (route.name === 'chat' || route.name === 'chat-id') {
+    // These routes use the mobile drawer, so just open it
+    return {
+      ...buttonData,
+      onClick: () => drawerOpen.value = true,
+    }
+  }
+  // Default: Navigate to /chat landing page
+  return {
+    ...buttonData,
+    label: 'Chat',
+    onClick: () => navigateTo('/chat'),
+  }
+});
 
 async function logout(scope: "global" | "local" | "others") {
   if (scope !== "others") {

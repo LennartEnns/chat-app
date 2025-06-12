@@ -13,6 +13,11 @@
           :key = "index"
           :message = "message"
         />
+        <UButton
+          v-if="!isAtBottom"
+          icon="i-lucide-arrow-down"
+          class="absolute w-min bottom-28 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
+          @click="scrollToBottom()" />
       </div>
       <div class="write">
         <UTextarea
@@ -35,6 +40,8 @@
 <script setup lang="ts">
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
+const isAtBottom = ref(true);
+const bottomDetectionThreshold = 10;
 
 const { isLight } = useSSRSafeTheme();
 const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
@@ -122,13 +129,20 @@ async function scrollToBottom(instant: boolean = false) {
     });
   }
 }
+async function updateIsAtBottom() {
+  const el = messagesContainer.value;
+  if (!el) return;
+  isAtBottom.value = (el.scrollHeight - el.scrollTop - el.clientHeight) < bottomDetectionThreshold;
+}
 
 onMounted(() => {
+  messagesContainer.value?.addEventListener('scroll', updateIsAtBottom);
   window.addEventListener("keydown", handleKeyDown);
   scrollToBottom(true);
 });
 
 onUnmounted(() => {
+  messagesContainer.value?.removeEventListener('scroll', updateIsAtBottom);
   window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
