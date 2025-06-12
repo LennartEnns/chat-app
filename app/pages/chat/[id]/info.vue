@@ -95,10 +95,10 @@
               </div>
               <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
                 <p class="truncate font-bold">
-                  {{ member.displayname }}
+                  {{ member.name }}
                 </p>
                 <p class="line-clamp-2 leading-4">
-                  {{ member.description }}
+                  {{ member.description ?? "Hey there! I am using YapSpace." }}
                 </p>
               </div>
             </div>
@@ -333,6 +333,12 @@ const chatroom = ref<Chatroom>({
   avatarUrl: "",
 });
 
+const { data: chatroomInfoData } = await useAsyncData(
+  "chatroomInfoData",
+  async () => {
+    return await loadChatInfo();
+  }
+);
 async function loadChatInfo() {
   const { data, error } = await supabase
     .from("group_chatrooms")
@@ -345,11 +351,25 @@ async function loadChatInfo() {
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown chat-info fetching error")
     );
-    return;
+    return null;
   }
-  chatroom.value.name = data.name;
-  chatroom.value.description = data.description;
+  return data;
 }
+
+watch(
+  chatroomInfoData,
+  (data) => {
+    console.log("test");
+    if (!data) {
+      return;
+    }
+    chatroom.value.name = data.name;
+    chatroom.value.description = data.description;
+  },
+  {
+    immediate: true,
+  }
+);
 
 async function onUploadCroppedAvatar(blob: Blob) {
   showAvatarCroppingModal.value = false;
@@ -425,7 +445,6 @@ async function onInviteUser() {
 }
 
 onMounted(() => {
-  loadChatInfo();
   loadChatMembers();
   loadChatInvitations();
   getChatroomAvatarUrl();

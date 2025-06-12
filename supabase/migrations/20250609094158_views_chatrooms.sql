@@ -76,8 +76,7 @@ select
   user_to_group.chatroom_id,
   pf.user_id,
   user_to_group.role,
-  pf.username,
-  pf.displayname,
-  pf.description
+  pf.description,
+  coalesce(pf.displayname, pf.username) as name
 from public.profiles pf
 join public.user_to_group on pf.user_id = user_to_group.user_id;
