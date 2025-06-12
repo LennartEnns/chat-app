@@ -35,6 +35,11 @@
           <ChatroomPreview
             v-for="(chatroom, index) in chatroomsWithAvatarUrl"
             :key="index"
+            :class="`mb-2 glassBG brightness-130 border-1 ${
+              routeChatroomId === chatroom.id
+                ? 'border-primary'
+                : 'border-transparent'
+            }`"
             class="mb-2 glassBG brightness-130"
             :chatroom-id="chatroom.id!"
             :name="chatroom.name!"
@@ -77,6 +82,13 @@ const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
 const overlay = useOverlay();
 const createChatroomModal = overlay.create(CreateChatroom);
+
+const route = useRoute();
+
+const routeChatroomId = computed(() => {
+  const params = route.params;
+  return params.id as string;
+});
 
 // First only do a head query to avoid unnecessary data fetching
 const { data: existUnhandledInvitations } = await useAsyncData(

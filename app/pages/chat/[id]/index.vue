@@ -36,6 +36,7 @@
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
 const containerScrollTop = ref(0);
+
 const route = useRoute();
 const supabase = useSupabaseClient();
 const routeChatroomId = computed(() => {

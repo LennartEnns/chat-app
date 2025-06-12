@@ -138,7 +138,7 @@ async function getDirectChatroomData(){
         const user2 = await getUserDataFromOtherUsers(element.user2_id);
         
         if (user1 && user2) {
-          const loggedUser = user1.id === userData.id ? user2 : user1;
+          const loggedUser = user1.id === userData.id ? user1 : user2;
           directChatrooms.value.push({
             chatroom_id: element.chatroom_id,
             new_messages: count,

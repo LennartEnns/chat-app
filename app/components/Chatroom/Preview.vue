@@ -4,13 +4,13 @@
       <UAvatar :src="avatarUrl" icon="i-lucide-user" size="md" />
       <div class="pl-3 flex flex-col flex-grow justify-start items-start">
         <div
-          class="font-bold w-full text-left text-neutral-600 dark:text-neutral-300"
+          class="font-bold w-full text-left text-neutral-600 dark:text-neutral-300 overflow-hidden line-clamp-1 text-ellipsis"
         >
           {{ name }}
         </div>
         <div
           v-if="lastMsg"
-          class="font-light w-full text-left text-neutral-500"
+          class="font-light w-full text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
         >
           {{ lastMsg }}
         </div>
