@@ -433,6 +433,39 @@ export type Database = {
           },
         ]
       }
+      messages_view: {
+        Row: {
+          chatroom_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms_preview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms_with_last_activity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       search_users: {

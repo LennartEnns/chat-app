@@ -36,7 +36,7 @@
           :rows="2"
           :maxrows="7"
         />
-        <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
+        <UButton :class="`${themedUserMessageColor}`" @click="onSendMessage"
           ><Icon name="ic:baseline-send"
         /></UButton>
       </div>
@@ -45,22 +45,19 @@
 </template>
 
 <script setup lang="ts">
-import {
-  getPostgrestErrorMessage,
-  logPostgrestError,
-} from "~~/errors/postgrestErrors";
+const newMessage = ref<string>("");
+const messagesContainer = ref<HTMLElement | null>(null);
+const containerScrollTop = ref(Infinity);
 
 useFirstLoginDetector();
 const { isLight } = useSSRSafeTheme();
-const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
-const supabase = useSupabaseClient();
-
 const route = useRoute();
 const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
 });
+const { messages, sendMessage } = useLazyFetchedMessages(routeChatroomId, containerScrollTop);
 
 const themedUserMessageColor = computed(() =>
   isLight.value ? "user-light" : "user-dark"
@@ -70,78 +67,17 @@ const themedPartnerMessageColor = computed(() =>
   isLight.value ? "partner-light" : "partner-dark"
 );
 
-// messages and writing
-type DisplayedMessage = {
-  text: string;
-  timestamp: string;
-  isOwnMsg: Boolean;
-};
-const newMessage = ref<string>("");
-const userMessages = ref<DisplayedMessage[]>([]);
-const messagesContainer = ref<HTMLElement | null>(null);
-
-// Load messages from database and push to chat UI
-async function loadFromDatabase() {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("chatroom_id", routeChatroomId.value)
-    .order("created_at", { ascending: true });
-  if (data === null) {
-    console.log("No messages found for chatroom_id:" + routeChatroomId.value);
-    return;
+async function updateScrollTop() {
+  if (messagesContainer.value) {
+    containerScrollTop.value = messagesContainer.value.scrollTop;
   }
-
-  if (error) {
-    logPostgrestError(error, "message fetching");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message fetching error")
-    );
-    return;
-  }
-
-  data.forEach((element) => {
-    let isOwnMsg: Boolean = element.user_id === userData.id;
-
-    // If the message is not from the current user, it is a partner message
-    userMessages.value.push({
-      text: element.content,
-      timestamp: dateToHMTime(new Date(element.created_at)),
-      isOwnMsg: isOwnMsg,
-    });
-    return;
-  });
-}
-// Save messages to database
-async function saveToDatabase(message: string) {
-  const { error } = await supabase.from("messages").insert([
-    {
-      chatroom_id: routeChatroomId.value,
-      content: message,
-    },
-  ]);
-
-  if (error) {
-    console.log(error);
-    logPostgrestError(error, "message insert");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message upload error")
-    );
-  }
-
-  return null;
 }
 
-// Push written message to chat UI & database
-async function sendMessage() {
-  if (newMessage.value.trim()) {
-    const timestamp = dateToHMTime(new Date());
-    saveToDatabase(newMessage.value.trim());
-    userMessages.value.push({
-      text: newMessage.value.trim(),
-      timestamp: timestamp,
-      isOwnMsg: true,
-    });
+// Push written message to Chat UI & insert in db
+async function onSendMessage() {
+  const msgTrimmed = newMessage.value.trim();
+  if (!isFalsy(msgTrimmed)) {
+    sendMessage(msgTrimmed);
     newMessage.value = "";
   }
 }
@@ -150,7 +86,7 @@ async function sendMessage() {
 async function handleKeyDown(event: KeyboardEvent) {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    sendMessage();
+    onSendMessage();
   }
 }
 
@@ -164,18 +100,19 @@ async function scrollToBottom() {
 }
 
 watch(
-  userMessages,
+  messages,
   () => {
     scrollToBottom();
   },
   { deep: true }
 );
 
-// on reload
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
-  loadFromDatabase();
   scrollToBottom();
+  if (messagesContainer.value) {
+    messagesContainer.value.addEventListener('scroll', updateScrollTop);
+  }
 });
 
 onUnmounted(() => {
