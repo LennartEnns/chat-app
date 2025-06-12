@@ -9,24 +9,6 @@
         </div>
       </UCard>
       <div ref="messagesContainer" class="messages">
-        <!--example messages-->
-        <div :class="`message partner ${themedPartnerMessageColor}`">
-          <UAvatar
-            class="justify-self-center"
-            src="https://github.com/nuxt.png"
-          />
-          <div class="message-content">
-            <p>
-              User messages are now saved to the database and loaded on
-              page-reload. Start messaging today! **Note** If you want to test
-              this create a local chatroom and add your logged in user's ID to
-              it all via http://localhost:54323/. Afterwards change the
-              currently hardcoded chatroom_id to this chatroom's ID. Now you can
-              use the database!
-            </p>
-            <span class="message-time">12:48</span>
-          </div>
-        </div>
         <div
           v-for="(message, index) in userMessages"
           :key="index"

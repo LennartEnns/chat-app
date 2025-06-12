@@ -219,7 +219,7 @@ const chatroomsWithAvatarUrl = computed(() =>
     };
   })
 );
-console.log(chatroomsWithAvatarUrl.value[0]?.last_message);
+console.log(chatroomsWithAvatarUrl.value);
 </script>
 
 <style></style>
