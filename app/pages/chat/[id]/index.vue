@@ -312,6 +312,7 @@ async function sendMessage() {
     userMessages.value.push({
       text: newMessage.value.trim(),
       timestamp: timestamp,
+      isOwnMsg: true,
     });
     newMessage.value = "";
   }
