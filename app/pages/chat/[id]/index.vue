@@ -63,7 +63,6 @@
 </template>
 
 <script setup lang="ts">
-import { is } from "valibot";
 import {
   getPostgrestErrorMessage,
   logPostgrestError,
