@@ -16,6 +16,7 @@
           :show-hm-time="!!messages && (index === (messages.length - 1) || messages[index + 1]?.created_at.getMinutes() !== message.created_at.getMinutes())"
           :show-own-msg-popover="!scrolling"
           @delete="onDeleteMessage(message.id, index)"
+          @update="onUpdateMessage(message.id, index, $event)"
         />
         <UButton
           v-if="!isAtBottom"
@@ -106,7 +107,7 @@ watch(chatroomPreviewError, (error) => {
   immediate: true,
 });
 
-const { messages, sendMessage, deleteMessage } = useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
+const { messages, sendMessage, deleteMessage, updateMessage } = useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
 watch(messages, (_, old) => {
   if (!old) {
     scrollToBottom(true);
@@ -125,6 +126,10 @@ async function onSendMessage() {
 async function onDeleteMessage(id: string | null, index: number) {
   if (!id) return;
   deleteMessage(id, index);
+}
+async function onUpdateMessage(id: string | null, index: number, newContent: string) {
+  if (!id) return;
+  updateMessage(id, index, newContent);
 }
 
 async function handleKeyDown(event: KeyboardEvent) {

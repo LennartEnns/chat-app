@@ -11,18 +11,12 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
   const containerScrollTop = ref(0);
   const almostAtTheTop = computed(() => containerScrollTop.value <= scrollTopTreshold);
 
-  // const messages = ref<Message[]>([]);
   const { data: messages } = useAsyncData(`chatMessages-${chatroomId}`, async () => {
     return (await fetchEarlierMessages(false)).toReversed();
   });
-  const earliestMessageTime = computed(() => (!messages.value || messages.value.length === 0) ? alwaysFutureDate : new Date(messages.value[0]!.created_at));
-  // watch(initialMessages, async (msgs) => {
-  //   if (msgs) {
-  //     messages.value = msgs.toReversed();
-  //   }
-  // }, {
-  //   immediate: true,
-  // });
+  function getEarliestMessageTime() {
+    return (!messages.value || messages.value.length === 0) ? alwaysFutureDate : new Date(messages.value[0]!.created_at);
+  }
 
   let reachedEarliestMessage = false;
 
@@ -55,7 +49,7 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
       .order('created_at', { ascending: false })
       .limit(messagesChunkSize);
     if (checkBeforeTime) {
-      query = query.lt('created_at', earliestMessageTime.value.toISOString());
+      query = query.lt('created_at', getEarliestMessageTime().toISOString());
     }
     const { data, error } = await query;
 
@@ -130,10 +124,34 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
     // Remove message from local list after successful deletion
     messages.value = messages.value?.toSpliced(index, 1);
   }
+  async function updateMessage(id: string, index: number, newContent: string) {
+    // Request update
+    const { error } = await supabase.from('messages')
+      .update({
+        content: newContent,
+      })
+      .eq('id', id);
+    
+    if (error) {
+      logPostgrestError(error, "message update");
+      operationFeedbackHandler.displayError('Could not update message');
+      return;
+    }
+
+    // Update displayed message after successful db update
+    if (!messages.value || messages.value.length <= index) return;
+    const oldMsg = messages.value[index]!;
+    const newMsg = {
+      ...oldMsg,
+      content: newContent,
+    };
+    messages.value = messages.value.toSpliced(index, 1, newMsg); // Remove old + insert new
+  }
 
   return {
     messages,
     sendMessage,
     deleteMessage,
+    updateMessage,
   }
 }
