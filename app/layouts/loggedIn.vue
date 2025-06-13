@@ -171,7 +171,7 @@ async function onLogoutSelect() {
 const showLogoutModal = ref(false);
 const items = ref<NavigationMenuItem[]>([
   {
-    label: "Chat",
+    label: "Overview",
     icon: "i-lucide-messages-square",
     to: "/chat",
   },
