@@ -5,24 +5,24 @@ const scrollTopTreshold = 50; // px
 const messagesChunkSize = 20; // Load max. 20 messages at once
 const alwaysFutureDate = new Date(86400000000000);
 
-export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContainer: Ref<HTMLElement | null>) => {
+export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Ref<HTMLElement | null>) => {
   const supabase = useSupabaseClient();
   const operationFeedbackHandler = useOperationFeedbackHandler();
   const containerScrollTop = ref(0);
   const almostAtTheTop = computed(() => containerScrollTop.value <= scrollTopTreshold);
 
-  const messages = ref<Message[]>([]);
-  const earliestMessageTime = computed(() => messages.value.length === 0 ? alwaysFutureDate : new Date(messages.value[0]!.created_at));
-  const { data: initialMessages } = useAsyncData(`chatMessages-${chatroomId.value}`, async () => {
-    return await fetchEarlierMessages();
+  // const messages = ref<Message[]>([]);
+  const { data: messages } = useAsyncData(`chatMessages-${chatroomId}`, async () => {
+    return (await fetchEarlierMessages(false)).toReversed();
   });
-  watch(initialMessages, (msgs) => {
-    if (msgs) {
-      messages.value = msgs;
-    }
-  }, {
-    immediate: true,
-  })
+  const earliestMessageTime = computed(() => (!messages.value || messages.value.length === 0) ? alwaysFutureDate : new Date(messages.value[0]!.created_at));
+  // watch(initialMessages, async (msgs) => {
+  //   if (msgs) {
+  //     messages.value = msgs.toReversed();
+  //   }
+  // }, {
+  //   immediate: true,
+  // });
 
   let reachedEarliestMessage = false;
 
@@ -33,9 +33,10 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
   }
 
   async function insertMessages(newMessages: Message[]) {
+    if (!messages.value || newMessages.length === 0) return;
     const oldScrollHeight = messagesContainer.value?.scrollHeight ?? 0;
     // New messages are in descending order, so insert each one at the start of messages
-    newMessages.forEach((newMsg) => messages.value.unshift(newMsg));
+    newMessages.forEach((newMsg) => messages.value!.unshift(newMsg));
     // Adjust scrollTop to keep the view "pinned"
     await nextTick(() => {
       if (!messagesContainer.value) return;
@@ -47,13 +48,16 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
       });
     });
   }
-  async function fetchEarlierMessages() {
-    const { data, error } = await supabase.from('messages_view')
-      .select('content, created_at, user_id, username')
-      .eq('chatroom_id', chatroomId.value)
-      .lt('created_at', earliestMessageTime.value.toISOString())
+  async function fetchEarlierMessages(checkBeforeTime: boolean) {
+    let query = supabase.from('messages_view')
+      .select('id, content, created_at, user_id, username')
+      .eq('chatroom_id', chatroomId)
       .order('created_at', { ascending: false })
       .limit(messagesChunkSize);
+    if (checkBeforeTime) {
+      query = query.lt('created_at', earliestMessageTime.value.toISOString());
+    }
+    const { data, error } = await query;
 
     if (error) {
       logPostgrestError(error, 'message fetching');
@@ -77,20 +81,23 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
 
   watch(almostAtTheTop, async (val) => {
     if (val && !reachedEarliestMessage) {
-      const newMsgs = await fetchEarlierMessages();
+      const newMsgs = await fetchEarlierMessages(true);
       insertMessages(newMsgs);
     };
   });
 
   onMounted(() => {
-    if (messagesContainer.value) {
-      messagesContainer.value.addEventListener('scroll', updateScrollTop);
-    }
+    messagesContainer.value?.addEventListener('scroll', updateScrollTop);
   });
+  onUnmounted(() => {
+    messagesContainer.value?.removeEventListener('scroll', updateScrollTop);
+  })
 
   async function sendMessage(content: string) {
+    const newId = crypto.randomUUID();
     const { error } = await supabase.from('messages').insert({
-      chatroom_id: chatroomId.value,
+      id: newId,
+      chatroom_id: chatroomId,
       content,
     });
 
@@ -99,7 +106,8 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
       operationFeedbackHandler.displayError('Could not send the message');
       return;
     }
-    messages.value.push({
+    messages.value?.push({
+      id: newId,
       content,
       created_at: new Date(),
       // null because it's the user's own message
@@ -107,9 +115,25 @@ export const useLazyFetchedMessages = (chatroomId: Ref<string>, messagesContaine
       username: null,
     });
   }
+  async function deleteMessage(id: string, index: number) {
+    // Request deletion
+    const { error } = await supabase.from('messages')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      logPostgrestError(error, "message deletion");
+      operationFeedbackHandler.displayError('Could not delete message');
+      return;
+    }
+
+    // Remove message from local list after successful deletion
+    messages.value = messages.value?.toSpliced(index, 1);
+  }
 
   return {
     messages,
     sendMessage,
+    deleteMessage,
   }
 }

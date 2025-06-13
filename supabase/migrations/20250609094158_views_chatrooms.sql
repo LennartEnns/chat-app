@@ -1,4 +1,6 @@
-create or replace view public.chatrooms_with_last_activity as
+create or replace view public.chatrooms_with_last_activity
+with (security_invoker)
+as
 select
   c.*,
   coalesce(
@@ -12,7 +14,9 @@ select
 from public.chatrooms c;
 
 -- Use this to preview a list of all chats of a user
-create or replace view public.chatrooms_preview as
+create or replace view public.chatrooms_preview
+with (security_invoker)
+as
 select
   cwla.id, cwla.type, cwla.last_activity,
 
@@ -57,7 +61,9 @@ select
   ) as last_message
 from public.chatrooms_with_last_activity cwla;
 
-create or replace view public.group_chatrooms_last_activity_current_role as
+create or replace view public.group_chatrooms_last_activity_current_role
+with (security_invoker)
+as
 select
   gc.*,
   cwla.last_activity,
@@ -71,7 +77,9 @@ select
 from public.group_chatrooms gc
 join public.chatrooms_with_last_activity cwla on cwla.id = gc.chatroom_id;
 
-create or replace view public.group_chatroom_members as
+create or replace view public.group_chatroom_members
+with (security_invoker)
+as
 select
   user_to_group.chatroom_id,
   pf.user_id,

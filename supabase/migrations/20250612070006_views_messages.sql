@@ -1,6 +1,11 @@
-create or replace view public.messages_view as
+create or replace view public.messages_view
+with (security_invoker)
+as
 select
-  msg.id,
+  case when msg.user_id = (select auth.uid())
+    then msg.id -- User only needs to know ID for own messages
+    else null
+  end as id,
   msg.chatroom_id,
   msg.content,
   msg.created_at,
