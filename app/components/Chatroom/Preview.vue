@@ -9,10 +9,9 @@
           {{ name }}
         </div>
         <div
-          v-if="lastMsg"
           class="font-light w-full text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
         >
-          {{ lastMsg }}
+          {{ lastMsg }}‎
         </div>
       </div>
     </div>
