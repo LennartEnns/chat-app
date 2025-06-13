@@ -4,12 +4,13 @@
       <UPopover
         v-if="isOwnMsg && showOwnMsgPopover"
         mode="hover"
+        arrow
         :content="{
           align: 'center',
           side: 'left',
         }"
         :ui="{
-          content: 'rounded-xl ring-1 border-1'
+          content: 'rounded-xl'
         }"
       >
         <div
@@ -21,7 +22,7 @@
         <template #content>
           <div class="p-1 flex flex-col md:flex-row">
             <UTooltip text="Delete Message" arrow>
-              <UButton icon="i-lucide-trash-2" variant="ghost" color="error"  />
+              <UButton icon="i-lucide-trash-2" variant="ghost" color="error" @click="emit('delete')" />
             </UTooltip>
             <UTooltip text="Edit Message" arrow>
               <UButton icon="i-lucide-edit" variant="ghost" color="primary" />
@@ -35,7 +36,7 @@
       >
         {{ message.content }}
       </div>
-      <UAvatar v-if="message.user_id" class="justify-self-center" :src="avatarUrl" />
+      <UAvatar v-if="!isOwnMsg" class="justify-self-center" :src="avatarUrl" />
     </div>
     <div v-if="showHmTime" :class="`text-xs text-muted px-2 ${isOwnMsg ? 'self-end' : 'self-start'}`">{{ displayedTime }}</div>
   </div>
@@ -48,6 +49,10 @@ const props = defineProps<{
   message: Message,
   showHmTime: boolean,
   showOwnMsgPopover: boolean,
+}>();
+
+const emit = defineEmits<{
+  delete: [],
 }>();
 
 // If not user ID is given, we will assume this is the user's own message

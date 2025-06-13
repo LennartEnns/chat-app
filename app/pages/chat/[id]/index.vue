@@ -15,6 +15,7 @@
           :message = "message"
           :show-hm-time="!!messages && (index === (messages.length - 1) || messages[index + 1]?.created_at.getMinutes() !== message.created_at.getMinutes())"
           :show-own-msg-popover="!scrolling"
+          @delete="onDeleteMessage(message.id, index)"
         />
         <UButton
           v-if="!isAtBottom"
@@ -59,12 +60,6 @@ const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
 });
-const { messages, sendMessage } = useLazyFetchedMessages(routeChatroomId, messagesContainer);
-watch(messages, (_, old) => {
-  if (!old) {
-    scrollToBottom(true);
-  }
-})
 
 const notFoundError = {
   statusCode: 404,
@@ -111,6 +106,13 @@ watch(chatroomPreviewError, (error) => {
   immediate: true,
 });
 
+const { messages, sendMessage, deleteMessage } = useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
+watch(messages, (_, old) => {
+  if (!old) {
+    scrollToBottom(true);
+  }
+});
+
 // Push written message to Chat UI & insert in db
 async function onSendMessage() {
   const msgTrimmed = newMessage.value.trim();
@@ -119,6 +121,10 @@ async function onSendMessage() {
     newMessage.value = '';
     scrollToBottom();
   }
+}
+async function onDeleteMessage(id: string | null, index: number) {
+  if (!id) return;
+  deleteMessage(id, index);
 }
 
 async function handleKeyDown(event: KeyboardEvent) {
