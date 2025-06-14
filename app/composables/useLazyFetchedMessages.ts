@@ -44,7 +44,7 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
   }
   async function fetchEarlierMessages(checkBeforeTime: boolean) {
     let query = supabase.from('messages_view')
-      .select('id, content, created_at, user_id, username')
+      .select('is_own, id, content, created_at, user_id, username')
       .eq('chatroom_id', chatroomId)
       .order('created_at', { ascending: false })
       .limit(messagesChunkSize);
@@ -107,6 +107,7 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
       // null because it's the user's own message
       user_id: null,
       username: null,
+      is_own: true,
     });
   }
   async function deleteMessage(id: string, index: number) {
@@ -114,7 +115,7 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
     const { error } = await supabase.from('messages')
       .delete()
       .eq('id', id);
-    
+
     if (error) {
       logPostgrestError(error, "message deletion");
       operationFeedbackHandler.displayError('Could not delete message');

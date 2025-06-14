@@ -1,13 +1,18 @@
 <template>
   <NuxtLayout name="chat">
     <div class="align-column">
-      <UCard class="profile-bar" variant="subtle">
-        <div class="flex items-center gap-2">
+      <UCard
+        class="profile-bar"
+        variant="subtle"
+        :ui="{
+          body: 'sm:py-2 py-2 sm:px-3 px-3',
+        }">
+        <UButton variant="ghost" class="flex items-center gap-2 m-0 p-1" @click="onHeaderClick">
           <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
           <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
-        </div>
+        </UButton>
       </UCard>
-      <div ref="messagesContainer" class="messages">
+      <div ref="messagesContainer" class="messages py-2 px-2 md:px-4">
         <!-- Group by Hours-Minute-Time -->
         <ChatroomMessage
           v-for="(message, index) in messages"
@@ -26,14 +31,36 @@
       </div>
       <div class="write">
         <UTextarea
+          ref="newMessageArea"
           v-model="newMessage"
           variant="subtle"
           class="w-full glassBG"
           placeholder="Write a message..."
+          size="xl"
           autoresize
-          :rows="2"
+          :rows="1"
           :maxrows="7"
-        />
+          :ui="{
+            trailing: 'flex flex-col justify-center'
+          }"
+          @click="saveCaret"
+          @keyup="saveCaret"
+        >
+          <template #trailing>
+            <UPopover
+              arrow
+              :content="{
+                align: 'center',
+                side: 'top',
+              }"
+            >
+              <UButton icon="i-lucide-smile" variant="ghost" size="lg" class="text-muted" />
+              <template #content>
+                <EmojiPicker :native="true" :theme="isLight ? 'light' : 'dark'" @select="onSelectEmoji" />
+              </template>
+            </UPopover>
+          </template>
+        </UTextarea>
         <UButton :class="`${themedSendButtonColor}`" @click="onSendMessage">
           <UIcon name="i-lucide-send-horizontal" size="xs" />
         </UButton>
@@ -43,6 +70,11 @@
 </template>
 
 <script setup lang="ts">
+import EmojiPicker from 'vue3-emoji-picker';
+import 'vue3-emoji-picker/css'
+import type { EmojiExt } from 'vue3-emoji-picker';
+import { logPostgrestError } from '~~/errors/postgrestErrors';
+
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
 const isAtBottom = ref(true);
@@ -52,15 +84,22 @@ const scrolling = ref(false);
 const minTimeAfterScrolling = 100;
 let scrollingTimeout: NodeJS.Timeout | null = null;
 
+const newMessageArea = ref<{ $el: HTMLElement } | null>(null);
+const newMsgSelectionStart = ref(0);
+const newMsgSelectionEnd = ref(0);
+
 const { isLight } = useSSRSafeTheme();
 const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
 
-const route = useRoute();
 const supabase = useSupabaseClient();
+const operationFeedbackHandler = useOperationFeedbackHandler();
+const route = useRoute();
 const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
 });
+const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
+lastChatroomState.value = routeChatroomId.value;
 
 const notFoundError = {
   statusCode: 404,
@@ -114,7 +153,65 @@ watch(messages, (_, old) => {
   }
 });
 
-// Push written message to Chat UI & insert in db
+async function onHeaderClick() {
+  if (!chatroomPreviewData.value?.type) return;
+  const type = chatroomPreviewData.value.type;
+  if (type === 'direct') {
+    // Handle direct chatroom redirect
+    if (!chatroomPreviewData.value.other_user_id) return;
+    const otherUserId = chatroomPreviewData.value.other_user_id;
+
+    // Fetch other user name based on other_user_id
+    const { data, error } = await supabase.from('profiles')
+      .select('username')
+      .eq('user_id', otherUserId)
+      .maybeSingle();
+    if (error) {
+      logPostgrestError(error, 'username fetching');
+    }
+    if (!data) {
+      operationFeedbackHandler.displayError('Could not open user profile');
+      return;
+    }
+    navigateTo(`/profile/${data.username}`);
+    return;
+  }
+
+  // Handle group chatroom redirect
+  navigateTo(`/chat/${routeChatroomId.value}/info`);
+}
+
+//////////////////////// <Logic for Emojis /> ////////////////////////
+function getNewMsgTextarea(): HTMLTextAreaElement | null {
+  return newMessageArea.value?.$el.querySelector('textarea') || null;
+}
+function saveCaret() {
+  const el = getNewMsgTextarea();
+  if (!el) return;
+  newMsgSelectionStart.value = el.selectionStart;
+  newMsgSelectionEnd.value = el.selectionEnd;
+}
+function insertEmoji(unicode: string) {
+  const el = getNewMsgTextarea();
+  if (!el) return;
+
+  const before = newMessage.value.slice(0, newMsgSelectionEnd.value);
+  const after = newMessage.value.slice(newMsgSelectionEnd.value);
+  newMessage.value = before + unicode + after;
+
+  const newCaret = before.length + unicode.length
+  newMsgSelectionStart.value = newCaret;
+  newMsgSelectionEnd.value = newCaret;
+  nextTick(() => {
+    el.focus();
+    el.setSelectionRange(newCaret, newCaret);
+  })
+}
+async function onSelectEmoji(emoji: EmojiExt) {
+  insertEmoji(emoji.i);
+}
+
+//////////////////////// <Message Operations /> ////////////////////////
 async function onSendMessage() {
   const msgTrimmed = newMessage.value.trim();
   if (!isFalsy(msgTrimmed)) {
