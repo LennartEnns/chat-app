@@ -1,8 +1,8 @@
 <template>
-  <div :class="`max-w-[90%] min-w-20 mt-2.5 flex flex-col items-center gap-2 ${messagePosition}`">
+  <div :class="`max-w-[90%] mt-2.5 flex flex-col items-center gap-2 ${messagePosition}`">
     <div class="flex flex-row gap-1 w-full">
       <UPopover
-        v-if="isOwnMsg && showOwnMsgPopover && !editingMessage"
+        v-if="message.is_own && showOwnMsgPopover && !editingMessage"
         v-model:open="popoverOpen"
         mode="hover"
         arrow
@@ -14,13 +14,13 @@
           content: 'rounded-xl'
         }"
       >
-        <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor}`"
+        <!-- eslint-disable vue/no-v-html -->
+         <div
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           @touchstart="popoverOpen = true"
-        >
-          {{ message.content }}
-        </div>
-
+          v-html="contentLinkified"
+        />
+        <!-- eslint-enable -->
         <template #content>
           <div class="p-1 flex flex-row">
             <UButton icon="i-lucide-trash-2" variant="ghost" color="error" @click="emit('delete')" />
@@ -59,13 +59,15 @@
       </div>
       <div
         v-else
-        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor}`"
-      >
-        {{ message.content }}
-      </div>
-      <UAvatar v-if="!isOwnMsg" class="justify-self-center" :src="avatarUrl" />
+        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+        v-html="contentLinkified"
+      />
+      <UButton v-if="!message.is_own && message.username" variant="ghost" class="ml-2 flex flex-row items-center gap-2 h-fit" @click="onAvatarClick">
+        <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
+        <div class="text-muted whitespace-nowrap select-none">{{ message.username }}</div>
+      </UButton>
     </div>
-    <div v-if="showHmTime" :class="`text-xs text-muted px-2 ${isOwnMsg ? 'self-end' : 'self-start'}`">{{ displayedTime }}</div>
+    <div v-if="showHmTime" :class="`text-xs text-muted px-2 ${message.is_own ? 'self-end' : 'self-start'}`">{{ displayedTime }}</div>
   </div>
 </template>
 
@@ -92,20 +94,29 @@ const messageContentChanged = computed(() => newMessageSanitized.value !== props
 const disableMessageUpdate = computed(() => newMessageSanitized.value.length === 0 || !messageContentChanged.value);
 
 // If not user ID is given, we will assume this is the user's own message
-const isOwnMsg = computed(() => !props.message.user_id);
 const avatarUrl = computed(() => props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined);
+const contentLinkified = useLinkifiedText(computed(() => props.message.content));
+
+// Make message bigger if it's just a single emoji
+const singleEmojiRegex = /^[\p{Extended_Pictographic}\u200D]+$/u;
+const msgSize = computed(() => singleEmojiRegex.test(props.message.content) ? 'text-4xl' : '');
 
 const { isLight } = useSSRSafeTheme();
-const messagePosition = computed(() => isOwnMsg.value ? 'user' : 'partner')
+const messagePosition = computed(() => props.message.is_own ? 'user' : 'partner')
 const themedMessageColor = computed(() => {
   if (isLight.value) {
-    return isOwnMsg.value ? 'user-light' : 'partner-light';
+    return props.message.is_own ? 'user-light' : 'partner-light';
   }
-  return isOwnMsg.value ? 'user-dark' : 'partner-dark';
+  return props.message.is_own ? 'user-dark' : 'partner-dark';
 });
-const speechBubbleLook = computed(() => isOwnMsg.value ? 'rounded-tl-xs' : 'rounded-tr-xs');
+const speechBubbleLook = computed(() => props.message.is_own ? 'rounded-tl-xs' : 'rounded-tr-xs');
 const displayedTime = computed(() => dateToHMTime(props.message.created_at));
 
+watch(() => props.showOwnMsgPopover, (show) => {
+  if (!show) {
+    popoverOpen.value = false;
+  }
+})
 async function onEditMessage() {
   popoverOpen.value = false;
   newMessage.value = props.message.content;
@@ -115,8 +126,12 @@ async function onUpdateMessage() {
   editingMessage.value = false;
   emit('update', newMessageSanitized.value);
 }
+async function onAvatarClick() {
+  if (!props.message.username) return;
+  navigateTo(`/profile/${props.message.username}`);
+}
 
-// Some hacky solutions
+// Some (more or less) hacky solutions
 async function handleEditAreaBlur() {
   requestAnimationFrame(() => {
     const active = document.activeElement;
@@ -131,6 +146,8 @@ async function attachEditAreaEventHandler() {
     ?.addEventListener("keydown", (e: KeyboardEvent) => {
       if (e.code === "Enter") {
         newMessage.value += '\n';
+      } else if (e.code === "Escape") {
+        editingMessage.value = false;
       }
     }, {
       once: false,

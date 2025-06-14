@@ -105,6 +105,7 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 
+const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
@@ -112,6 +113,7 @@ const drawerOpen = useOpenDrawer();
 const isMobile = useMobileDetector();
 const mobileMenuOpen = ref(false);
 
+const chatUrl = computed(() => lastChatroomState.value ? `/chat/${lastChatroomState.value}` : '/chat');
 const mobileLeftButton = computed(() => {
   if (route.name === 'chat-id-info') {
     return {
@@ -135,11 +137,11 @@ const mobileLeftButton = computed(() => {
       onClick: () => drawerOpen.value = true,
     }
   }
-  // Default: Navigate to /chat landing page
+  // Default: Navigate to last chat, or to chat landing page if none exists
   return {
     ...buttonData,
     label: 'Chat',
-    onClick: () => navigateTo('/chat'),
+    onClick: () => navigateTo(chatUrl.value),
   }
 });
 
@@ -171,9 +173,12 @@ async function onLogoutSelect() {
 const showLogoutModal = ref(false);
 const items = ref<NavigationMenuItem[]>([
   {
-    label: "Overview",
+    label: "Chat",
     icon: "i-lucide-messages-square",
-    to: "/chat",
+    onSelect: () => {
+      mobileMenuOpen.value = false;
+      navigateTo(chatUrl.value);
+    },
   },
   {
     label: "Settings",

@@ -439,6 +439,7 @@ export type Database = {
           content: string | null
           created_at: string | null
           id: string | null
+          is_own: boolean | null
           user_id: string | null
           username: string | null
         }

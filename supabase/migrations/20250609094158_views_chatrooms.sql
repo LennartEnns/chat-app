@@ -29,7 +29,7 @@ select
     from public.direct_chatrooms dc
     where dc.chatroom_id = cwla.id
   )
-  end as other_user_id, -- Only used for direct chatrooms
+  end as other_user_id, -- Only used for direct chatrooms (avatar fetching)
 
   case when cwla.type = 'group' then
     (
@@ -53,7 +53,11 @@ select
   as name,
 
   (
-    select msg.content
+    select case
+      when length(msg.content) > 30
+      then left(msg.content, 27) || '...'
+      else msg.content
+    end
     from public.messages msg
     where chatroom_id = cwla.id
     order by msg.created_at desc
