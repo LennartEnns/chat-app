@@ -12,13 +12,15 @@
           <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
         </UButton>
       </UCard>
-      <div ref="messagesContainer" class="messages py-2 px-2 md:px-4">
+      <div ref="messagesContainer" class="messages py-2 px-4 md:px-6">
         <!-- Group by Hours-Minute-Time -->
         <ChatroomMessage
           v-for="(message, index) in messages"
           :key = "index"
           :message = "message"
-          :show-hm-time="!!messages && (index === (messages.length - 1) || messages[index + 1]?.created_at.getMinutes() !== message.created_at.getMinutes())"
+          :show-user-info="!!messages && (index === 0 || messages[index - 1]?.username !== message.username)"
+          :show-date-marker="!!messages && (index === 0 || !areDatesSame('day', messages[index - 1]?.created_at, message.created_at))"
+          :show-hm-time="!!messages && (index >= (messages.length - 1) || !areDatesSame('minute', messages[index + 1]?.created_at, message.created_at))"
           :show-own-msg-popover="!scrolling"
           @delete="onDeleteMessage(message.id, index)"
           @update="onUpdateMessage(message.id, index, $event)"
@@ -26,7 +28,7 @@
         <UButton
           v-if="!isAtBottom"
           icon="i-lucide-arrow-down"
-          class="absolute w-min bottom-28 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
+          class="absolute w-min bottom-20 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
           @click="scrollToBottom()" />
       </div>
       <div class="write">
@@ -147,8 +149,8 @@ watch(chatroomPreviewError, (error) => {
 });
 
 const { messages, sendMessage, deleteMessage, updateMessage } = useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
-watch(messages, (_, old) => {
-  if (!old) {
+watch(messages, (newMsgs, oldMsgs) => {
+  if (newMsgs && !oldMsgs && newMsgs.length > 0) {
     scrollToBottom(true);
   }
 });

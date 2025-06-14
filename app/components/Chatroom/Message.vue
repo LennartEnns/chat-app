@@ -1,4 +1,10 @@
 <template>
+  <div
+    v-if="showDateMarker"
+    ref="dateMarker"
+    class="text-muted text-sm border-1 rounded-xl self-center py-1 px-3">
+    {{ dateMarkerText }}
+  </div>
   <div :class="`max-w-[90%] mt-2.5 flex flex-col items-center gap-2 ${messagePosition}`">
     <div class="flex flex-row gap-1 w-full">
       <UPopover
@@ -62,7 +68,7 @@
         :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
         v-html="contentLinkified"
       />
-      <UButton v-if="!message.is_own && message.username" variant="ghost" class="ml-2 flex flex-row items-center gap-2 h-fit" @click="onAvatarClick">
+      <UButton v-if="!message.is_own && showUserInfo && message.username" variant="ghost" class="ml-2 flex flex-row items-center gap-2 h-fit" @click="onAvatarClick">
         <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
         <div class="text-muted whitespace-nowrap select-none">{{ message.username }}</div>
       </UButton>
@@ -74,8 +80,12 @@
 <script lang="ts" setup>
 import type { Message } from "~/types/messages/messageLoading";
 
+const dateMarker = ref<HTMLElement | null>(null);
+
 const props = defineProps<{
   message: Message,
+  showUserInfo: boolean,
+  showDateMarker: boolean,
   showHmTime: boolean,
   showOwnMsgPopover: boolean,
 }>();
@@ -85,6 +95,8 @@ const emit = defineEmits<{
   update: [value: string],
 }>();
 
+const dateMarkerText = computed(() => getDateUserText(props.message.created_at));
+
 const editMsgButtonArea = ref<HTMLElement | null>(null);
 const popoverOpen = ref(false);
 const editingMessage = ref(false);
@@ -92,8 +104,6 @@ const newMessage = ref("");
 const newMessageSanitized = computed(() => newMessage.value.trim());
 const messageContentChanged = computed(() => newMessageSanitized.value !== props.message.content);
 const disableMessageUpdate = computed(() => newMessageSanitized.value.length === 0 || !messageContentChanged.value);
-
-// If not user ID is given, we will assume this is the user's own message
 const avatarUrl = computed(() => props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined);
 const contentLinkified = useLinkifiedText(computed(() => props.message.content));
 
