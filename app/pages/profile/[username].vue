@@ -32,6 +32,9 @@
                 default-icon="i-lucide-user"
                 :editable="isOwnProfile"
                 :clearable="isOwnProfile"
+                root_styling="size-26 md:size-32"
+                icon_styling="size-9/12"
+                styling="border-2"
               />
             </div>
             <div

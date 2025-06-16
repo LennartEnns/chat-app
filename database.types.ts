@@ -354,10 +354,9 @@ export type Database = {
         Row: {
           chatroom_id: string | null
           description: string | null
-          displayname: string | null
+          name: string | null
           role: Database["public"]["Enums"]["chatroom_role"] | null
           user_id: string | null
-          username: string | null
         }
         Relationships: [
           {

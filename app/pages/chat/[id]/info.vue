@@ -4,42 +4,21 @@
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
         <div class="flex flex-col items-center p-5 overflow-hidden">
           <div class="pt-10 pb-5">
-            <div v-if="chatroom.avatarUrl">
+            <div class="h-70 w-70 md:h-50 md:w-50">
               <div class="relative h-70 w-70 md:h-50 md:w-50">
-                <UAvatar
-                  class="border-2 border-defaultNeutral-700 size-full"
+                <EditableAvatar
                   :src="chatroom.avatarUrl"
+                  bucket-name="chatroom_avatars"
+                  :filepath="chatroom.avatarPath"
+                  default-icon="i-lucide-user"
+                  :editable="editMode"
+                  :clearable="editMode"
+                  styling="border-2 border-defaultNeutral-700 size-full"
+                  root_styling=""
+                  icon_styling=""
                 />
-                <div class="absolute bottom-0 right-0">
-                  <UButton
-                    icon="i-lucide-image-up"
-                    class="relative overflow-hidden size-fit"
-                  >
-                    <input
-                      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      type="file"
-                      accept="image/*"
-                      @change="uploadAvatar"
-                    />
-                  </UButton>
-                </div>
               </div>
             </div>
-            <UModal
-              v-model:open="showAvatarCroppingModal"
-              title="Crop Avatar"
-              :ui="{
-                header: 'justify-center',
-              }"
-            >
-              <template #body>
-                <AvatarUploadCropper
-                  v-if="newAvatarObjectUrl"
-                  :image-url="newAvatarObjectUrl"
-                  @upload="onUploadCroppedAvatar"
-                />
-              </template>
-            </UModal>
           </div>
           <div class="py-5">
             <p class="text-[40px] font-bold text-neutral-700 dark:text-white">
@@ -54,12 +33,19 @@
           </div>
         </div>
         <div
-          class="flex flex-col items-center col-span-2 px-5 relative md:border border-defaultNeutral-700 md:border-t-0 md:border-b-0 md:border-r-0 lg:border-t-0 lg:border-b-0 lg:border-r"
+          class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
           <div class="pb-5 text-neutral-700 dark:text-white">
             <p class="font-bold">Members</p>
+            <UButton
+              v-if="editMode"
+              class="flex size-fit absolute top-0 right-5"
+              size="md"
+              icon="i-lucide-user-plus"
+              @click="onInviteUser"
+            />
           </div>
-          <div class="flex flex-wrap justify-center gap-3">
+          <div class="flex flex-wrap justify-center gap-3 p-5">
             <div
               v-for="(member, index) in chatMembers"
               :key="index"
@@ -84,12 +70,12 @@
                   >
                 </div>
               </div>
-              <div class="flex flex-col justify-center px-[0.6rem]">
-                <p class="truncate flex font-bold">
-                  {{ member.displayname }}
+              <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
+                <p class="truncate font-bold">
+                  {{ member.name }}
                 </p>
                 <p class="line-clamp-2 leading-4">
-                  {{ member.description }}
+                  {{ member.description ?? "Hey there! I am using YapSpace." }}
                 </p>
               </div>
             </div>
@@ -109,17 +95,29 @@
             </div>
             <div class="hidden md:block">
               <UButton
+                v-if="!editMode"
                 class="flex size-fit"
                 size="xl"
-                icon="i-lucide-plus"
-                @click="onInviteUser"
+                icon="i-lucide-pencil-line"
+                @click="enabeleEdit"
               >
-                Invite Member
+                Edit
+              </UButton>
+              <UButton
+                v-if="editMode"
+                color="error"
+                class="flex size-fit"
+                size="xl"
+                icon="i-lucide-x"
+                @click="disableEdit"
+              >
+                Cancel
               </UButton>
             </div>
           </div>
         </div>
         <UDrawer
+          :handle="false"
           direction="right"
           v-model:open="open"
           class="hidden md:block lg:hidden"
@@ -131,20 +129,45 @@
               </div>
               <div class="pb-5">
                 <div
+                  v-for="(invitation, index) in chatInvitations"
+                  :key="index"
                   class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
                 >
                   <UAvatar
                     class="justify-self-center"
-                    src="https://github.com/nuxt.png"
+                    icon="i-lucide-user"
+                    :src="
+                      (invitation.invitee_id &&
+                        getAvatarUrl(invitation.invitee_id)) ||
+                      undefined
+                    "
                   />
                   <div
                     class="flex flex-col items-center justify-center truncate px-[0.6rem]"
                   >
                     <div class="truncate w-full text-center">
-                      Peterskotstube wrkegjtlwkjertlwkejrce
+                      {{ invitation.invitee_id }}
                     </div>
                   </div>
-                  <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
+                  <UButton
+                    v-if="!editMode"
+                    class="flex size-fit"
+                    size="xl"
+                    icon="i-lucide-pencil-line"
+                    @click="enabeleEdit"
+                  >
+                    Edit
+                  </UButton>
+                  <UButton
+                    color="error"
+                    v-if="editMode"
+                    class="flex size-fit"
+                    size="xl"
+                    icon="i-lucide-x"
+                    @click="disableEdit"
+                  >
+                    Cancel
+                  </UButton>
                 </div>
               </div>
             </div>
@@ -156,20 +179,31 @@
           </div>
           <div class="pb-5">
             <div
+              v-for="(invitation, index) in chatInvitations"
+              :key="index"
               class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
             >
               <UAvatar
                 class="justify-self-center"
-                src="https://github.com/nuxt.png"
+                icon="i-lucide-user"
+                :src="
+                  (invitation.invitee_id &&
+                    getAvatarUrl(invitation.invitee_id)) ||
+                  undefined
+                "
               />
               <div
                 class="flex flex-col items-center justify-center truncate px-[0.6rem]"
               >
                 <div class="truncate w-full text-center">
-                  Peterskotstube wrkegjtlwkjertlwkejrce
+                  {{ invitation.invitee_username }}
                 </div>
               </div>
-              <UButton icon="i-lucide-trash-2" class="size-fit"></UButton>
+              <UButton
+                v-if="editMode"
+                icon="i-lucide-trash-2"
+                class="size-fit"
+              ></UButton>
             </div>
           </div>
         </div>
@@ -179,11 +213,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-  getStorageErrorMessage,
-  logStorageError,
-} from "~~/errors/storageErrors";
-
 import {
   getPostgrestErrorMessage,
   logPostgrestError,
@@ -196,14 +225,21 @@ const { isLight } = useSSRSafeTheme();
 
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const open = ref(false);
-const newAvatarObjectUrl = ref<string | null>(null);
-const showAvatarCroppingModal = ref(false);
 const supabase = useSupabaseClient();
 
 const overlay = useOverlay();
 const inviteModal = overlay.create(InviteToGroup);
 
 const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
+
+type ChatInvitation = Pick<
+  Tables<"group_invitations_preview">,
+  "id" | "invitee_id" | "as_role" | "invitee_username"
+>;
+
+const chatInvitations = ref<ChatInvitation[]>([]);
+
+const editMode = ref<boolean>(false);
 
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -215,39 +251,23 @@ async function openDrawer() {
   open.value = true;
 }
 
+async function enabeleEdit() {
+  editMode.value = true;
+}
+
+async function disableEdit() {
+  editMode.value = false;
+}
+
 type Chatroom = Omit<
   Tables<"group_chatrooms_last_activity_current_role">,
-  "last_activity"
+  "last_activity" | "avatarUrl"
 > & {
   avatarPath: string;
-  avatarUrl: string;
+  avatarUrl: Ref<string | undefined>;
 };
 
-async function uploadAvatar(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (file) {
-    newAvatarObjectUrl.value = URL.createObjectURL(file);
-    showAvatarCroppingModal.value = true;
-  }
-}
-
 const avatarPath = `${routeChatroomId.value}.jpg`;
-
-async function getChatroomAvatarUrl() {
-  const { data, error } = await supabase.storage
-    .from("chatroom_avatars")
-    .createSignedUrl(avatarPath, 60);
-
-  if (error) {
-    logStorageError(error, "signed avatar url");
-    operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Error creating signed avatar Url")
-    );
-    return;
-  }
-  chatroom.value.avatarUrl = data.signedUrl;
-}
 
 const chatroom = ref<Chatroom>({
   chatroom_id: routeChatroomId.value,
@@ -255,9 +275,15 @@ const chatroom = ref<Chatroom>({
   description: "Loading description...",
   current_user_role: "member",
   avatarPath: avatarPath,
-  avatarUrl: "",
+  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, true),
 });
 
+const { data: chatroomInfoData } = await useAsyncData(
+  "chatroomInfoData",
+  async () => {
+    return await loadChatInfo();
+  }
+);
 async function loadChatInfo() {
   const { data, error } = await supabase
     .from("group_chatrooms")
@@ -270,38 +296,24 @@ async function loadChatInfo() {
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown chat-info fetching error")
     );
-    return;
+    return null;
   }
-  chatroom.value.name = data.name;
-  chatroom.value.description = data.description;
+  return data;
 }
 
-async function onUploadCroppedAvatar(blob: Blob) {
-  showAvatarCroppingModal.value = false;
-  newAvatarObjectUrl.value = null;
-  const { error } = await supabase.storage
-    .from("chatroom_avatars")
-    .upload(chatroom.value.avatarPath, blob, {
-      upsert: true,
-      contentType: "image/jpeg",
-      cacheControl: "0",
-
-      headers: {
-        "cache-control": "no-cache",
-      },
-    });
-  if (error) {
-    logStorageError(error, "avatar upload");
-    operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Unknown error uploading avatar")
-    );
-    return;
-  } else {
-    operationFeedbackHandler.displaySuccess(
-      "Your avatar has been updated. You may need to reload the page."
-    );
+watch(
+  chatroomInfoData,
+  (data) => {
+    if (!data) {
+      return;
+    }
+    chatroom.value.name = data.name;
+    chatroom.value.description = data.description;
+  },
+  {
+    immediate: true,
   }
-}
+);
 
 async function loadChatMembers() {
   const { data, error } = await supabase
@@ -321,6 +333,24 @@ async function loadChatMembers() {
   });
 }
 
+async function loadChatInvitations() {
+  const { data, error } = await supabase
+    .from("group_invitations_preview")
+    .select("id, invitee_id, as_role, invitee_username")
+    .eq("chatroom_id", chatroom.value.chatroom_id!);
+
+  if (error) {
+    logPostgrestError(error, "invitations fetching");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Unknown invitations fetching error")
+    );
+    return;
+  }
+  data.forEach((element) => {
+    chatInvitations.value.push(element);
+  });
+}
+
 async function onInviteUser() {
   inviteModal.open({
     presetGroup: {
@@ -332,9 +362,8 @@ async function onInviteUser() {
 }
 
 onMounted(() => {
-  loadChatInfo();
   loadChatMembers();
-  getChatroomAvatarUrl();
+  loadChatInvitations();
 });
 </script>
 
