@@ -57,7 +57,6 @@ const existsAvatarImage = ref(false);
 const srcModified = ref(props.src);
 // Value only needed if image might be updated by the user
 if (!props.editable && !props.clearable) {
-  console.log(props.src);
   existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
 }
 watch(

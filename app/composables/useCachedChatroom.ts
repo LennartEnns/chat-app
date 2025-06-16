@@ -15,7 +15,6 @@ export const useCachedChatroom = (chatroomId: string) => {
       cachedChatrooms.value[chatroomId] = setObj;
     },
   });
-  watch(cachedChatroomDataObject, (val) => console.log(val), { deep: true });
 
   return cachedChatroomDataObject;
 }
