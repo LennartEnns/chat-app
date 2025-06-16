@@ -1,4 +1,3 @@
-import type { Message } from '~/types/messages/messageLoading';
 import type { Tables } from '~~/database.types';
 
 export interface DirectChatroomData {
@@ -19,4 +18,4 @@ export interface GroupChatroomData {
 
 
 export type CachedChatroomData = Tables<'chatrooms_preview'>;
-export type CachedChatroomsMap = Record<NonNullable<Tables<'chatrooms_preview'>['id']>, Omit<CachedChatroomData, 'id'>>
+export type CachedChatroomsMap = Record<NonNullable<Tables<'chatrooms_preview'>['id']>, Omit<CachedChatroomData, 'id'> | undefined>

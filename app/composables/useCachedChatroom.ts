@@ -10,7 +10,11 @@ export const useCachedChatroom = (chatroomId: string) => {
       return { ...obj, id: chatroomId };
     },
     set: (obj) => {
-      if (!cachedChatrooms.value || !obj) return;
+      if (!cachedChatrooms.value) return;
+      if (!obj) {
+        cachedChatrooms.value[chatroomId] = undefined;
+        return;
+      }
       const { id, ...setObj } = obj;
       cachedChatrooms.value[chatroomId] = setObj;
     },
