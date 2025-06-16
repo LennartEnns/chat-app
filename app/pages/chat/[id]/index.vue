@@ -41,12 +41,67 @@
           :rows="1"
           :maxrows="7"
           :ui="{
-            trailing: 'flex flex-col justify-center'
+            trailing: 'flex justify-center items-center'
           }"
           @click="saveCaret"
           @keyup="saveCaret"
         >
           <template #trailing>
+              <div>
+                <input
+                  ref="imageInput"
+                  type="file"
+                  accept="image/*"
+                  @change="handleImageSelect"
+                  class="hidden"
+                />
+                
+                <input
+                  ref="audioInput"
+                  type="file"
+                  accept="audio/*"
+                  @change="handleAudioSelect"
+                  class="hidden"
+                />
+
+                <!-- Popover with Media Buttons -->
+                <UPopover
+                  arrow
+                  :content="{
+                    align: 'center',
+                    side: 'top'
+                  }"
+                >
+                  <UButton icon="i-lucide-paperclip" variant="ghost" class="text-muted"/>
+                  <template #content>
+                    <div class="flex gap-4 p-3">
+                      <!-- Image Button -->
+                      <div class="flex flex-col items-center gap-1">
+                        <UButton 
+                          icon="i-lucide-image" 
+                          variant="ghost" 
+                          class="text-muted"
+                          @click="openImageUpload"
+                          :disabled="uploading"
+                        />
+                        <span class="text-xs text-muted-foreground">Bild</span>
+                      </div>
+                      
+                      <!-- Audio Button -->
+                      <div class="flex flex-col items-center gap-1">
+                        <UButton 
+                          icon="i-lucide-headphones" 
+                          variant="ghost" 
+                          class="text-muted"
+                          @click="openAudioUpload"
+                          :disabled="uploading"
+                        />
+                        <span class="text-xs text-muted-foreground">Audio</span>
+                      </div>
+                    </div>
+                  </template>
+                </UPopover>
+              </div>
             <UPopover
               arrow
               :content="{
@@ -65,6 +120,47 @@
           <UIcon name="i-lucide-send-horizontal" size="xs" />
         </UButton>
       </div>
+      <!-- UModal for Image Preview -->
+      <UModal v-model:open="showImagePreview" v-if="selectedImage" class="z-[1000]">
+        <template #content>
+          <div class="p-6">
+        <h3 class="text-lg font-semibold mb-4">Bild senden</h3>
+        
+        <!-- Image Preview -->
+        <div class="mb-4">
+          <img 
+            :src="imagePreviewUrl" 
+            :alt="selectedImage.name"
+            class="max-w-full max-h-64 object-contain rounded-lg mx-auto"
+          />
+        </div>
+        
+        <!-- Caption Input -->
+        <UTextarea
+          v-model="imageCaption"
+          placeholder="Bildunterschrift hinzufügen..."
+          class="mb-4"
+          :rows="2"
+        />
+        
+        <!-- Actions -->
+        <div class="flex justify-end gap-2">
+          <UButton 
+            variant="ghost" 
+            @click="cancelImageSelection"
+          >
+            Abbrechen
+          </UButton>
+          <UButton 
+            @click="sendImage"
+            :loading="uploading"
+          >
+            Senden
+          </UButton>
+        </div>
+      </div>
+        </template>
+      </UModal>
     </div>
   </NuxtLayout>
 </template>
@@ -74,6 +170,7 @@ import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css'
 import type { EmojiExt } from 'vue3-emoji-picker';
 import { logPostgrestError } from '~~/errors/postgrestErrors';
+import type { Message } from '~/types/messages/messageLoading';
 
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -92,6 +189,7 @@ const { isLight } = useSSRSafeTheme();
 const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
 
 const supabase = useSupabaseClient();
+const user = useSupabaseUser();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -180,6 +278,265 @@ async function onHeaderClick() {
   // Handle group chatroom redirect
   navigateTo(`/chat/${routeChatroomId.value}/info`);
 }
+
+//////////////////////// <Logic for Multimedia /> ////////////////////////
+
+  const imageInput = ref<HTMLInputElement>()
+  const audioInput = ref<HTMLInputElement>()
+  const isPopoverOpen = ref(false)
+
+  const selectedImage = ref<File | null>(null)
+  const imagePreviewUrl = ref('')
+  const imageCaption = ref('')
+  const showImagePreview = ref(false)
+
+  const selectedAudio = ref<File | null>(null)
+
+  const uploading = ref(false)
+  const openImageUpload = () => {
+    isPopoverOpen.value = false
+    imageInput.value?.click()
+  }
+
+  const handleImageSelect = (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+    
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        return
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        return
+      }
+      
+      selectedImage.value = file
+      imagePreviewUrl.value = URL.createObjectURL(file)
+      showImagePreview.value = true
+    }
+  }
+
+  const sendImage = async () => {
+    if (!selectedImage.value || !user.value) {return}
+    
+    uploading.value = true
+    try {
+      const mediaId = crypto.randomUUID()
+      const fileExtension = '.jpg'
+      const filePath = `${user.value.id}/image/${mediaId}${fileExtension}`
+      
+      const fileToUpload = await convertImageToJpg(selectedImage.value)
+      
+      const { error: uploadError } = await supabase
+        .storage
+        .from("messages_media")
+        .upload(filePath, fileToUpload, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (uploadError) throw uploadError
+
+      const newId = crypto.randomUUID();
+      
+      //Einen Message Eintrag erstellen -> Problem hier
+      const { data: message, error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        id: newId,
+        chatroom_id: routeChatroomId.value,
+        message_type: 'image',
+        content: imageCaption.value || ''
+      }).select().single()
+      
+        if (messageError) {
+          logPostgrestError(messageError, "message insert");
+          operationFeedbackHandler.displayError('Could not send the message');
+          return;
+        }
+      
+        console.log("helloooooo")
+      
+        const { error: mediaError } = await supabase
+          .from('messages_to_media')
+          .insert({
+            message_id: message.id,
+            media_id: mediaId,
+            type: 'image'
+          })
+      
+      if (mediaError) throw mediaError
+
+      const newMessage: Message = {
+        id: message.id,
+        content: imageCaption.value || '',
+        created_at: new Date(message.created_at),
+        is_own: true,
+        message_type: message.message_type,
+        user_id: user.value.id,
+        username: null,
+        media: [{
+          id: mediaId,
+          type: 'image' as const,
+          url: useCachedSignedImageUrl("messages_media", filePath, true),
+        }]
+      };
+    
+      if (messages.value) {
+        messages.value.push(newMessage);
+      }
+      await nextTick(() => {
+        scrollToBottom();
+      });
+
+      cancelImageSelection()
+    } catch (error) {
+      console.error('Error sending image:', error)
+    } finally {
+      uploading.value = false
+    }
+  }
+
+  const cancelImageSelection = () => {
+    selectedImage.value = null
+    imageCaption.value = ''
+    showImagePreview.value = false
+    
+    if (imagePreviewUrl.value) {
+      URL.revokeObjectURL(imagePreviewUrl.value)
+      imagePreviewUrl.value = ''
+    }
+    
+    if (imageInput.value) {
+      imageInput.value.value = ''
+    }
+  }
+
+  // Audio Upload
+  const openAudioUpload = () => {
+    isPopoverOpen.value = false
+    audioInput.value?.click()
+  }
+
+  const handleAudioSelect = async (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+    
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        return
+      }
+      
+      if (!file.type.startsWith('audio/')) {
+        return
+      }
+      
+      selectedAudio.value = file
+      await sendAudio()
+    }
+  }
+
+  const sendAudio = async () => {
+    if (!selectedAudio.value || !user.value) return
+    
+    uploading.value = true
+    
+    try {
+      const mediaId = crypto.randomUUID()
+      const fileExtension = '.mp3'
+      const filePath = `${user.value.id}/audio/${mediaId}${fileExtension}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('messages_media')
+        .upload(filePath, selectedAudio.value, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (uploadError) throw uploadError
+      
+      // Erstelle Message-Eintrag
+      const { data: message, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          chatroom_id: routeChatroomId.value,
+          user_id: user.value.id,
+          content: ''
+        })
+        .select()
+        .single()
+      
+      if (messageError) throw messageError
+      
+      // Erstelle messages_to_media Eintrag
+      const { error } = await supabase
+        .from('messages_to_media')
+        .insert({
+          message_id: message.id,
+          media_id: mediaId,
+          type: 'audio'
+        })
+      
+      if (error) throw error
+      
+      selectedAudio.value = null
+      
+      if (audioInput.value) {
+        audioInput.value.value = ''
+      }
+    } catch (error) {
+      console.error('Error sending audio:', error)
+    } finally {
+      uploading.value = false
+    }
+  }
+
+  // Helper function to convert images to JPG
+  const convertImageToJpg = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        canvas.width = img.width
+        canvas.height = img.height
+        ctx?.drawImage(img, 0, 0)
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const jpgFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+            resolve(jpgFile)
+          }
+        }, 'image/jpeg', 0.8)
+      }
+      
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  const deleteMedia = async (filePath: string) => {
+    if (!user.value) return false;
+
+    try {
+      const { error } = await supabase.storage
+        .from("messages_media")
+        .remove([filePath]);
+
+      return !error;
+    } catch (error) {
+      console.error("Error deleting media:", error);
+      return false;
+    }
+  };
+
+  onUnmounted(() => {
+    if (imagePreviewUrl.value) {
+      URL.revokeObjectURL(imagePreviewUrl.value)
+    }
+  })
+
 
 //////////////////////// <Logic for Emojis /> ////////////////////////
 function getNewMsgTextarea(): HTMLTextAreaElement | null {

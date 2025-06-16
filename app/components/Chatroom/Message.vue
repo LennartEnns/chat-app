@@ -14,8 +14,19 @@
           content: 'rounded-xl'
         }"
       >
+        <!-- Bild-Nachricht -->
+        <div v-if="message.message_type === 'image'" :class="`flex flex-col gap-2 rounded-md ${speechBubbleLook} ${themedMessageColor} p-2`">
+          <img 
+            v-if="message.media && message.media[0]"
+            :src="message.media[0].url.value" 
+            :alt="message.content || 'Uploaded image'"
+            class="max-w-full max-h-64 object-contain rounded-md cursor-pointer"
+            @click="openImageModal"
+          />
+          <p v-if="message.content" class="text-sm">{{ message.content }}</p>
+        </div>
         <!-- eslint-disable vue/no-v-html -->
-         <div
+         <div v-else
           :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           @touchstart="popoverOpen = true"
           v-html="contentLinkified"
@@ -89,6 +100,7 @@ const editMsgButtonArea = ref<HTMLElement | null>(null);
 const popoverOpen = ref(false);
 const editingMessage = ref(false);
 const newMessage = ref("");
+const showImageModal = ref(false);
 const newMessageSanitized = computed(() => newMessage.value.trim());
 const messageContentChanged = computed(() => newMessageSanitized.value !== props.message.content);
 const disableMessageUpdate = computed(() => newMessageSanitized.value.length === 0 || !messageContentChanged.value);
@@ -111,6 +123,10 @@ const themedMessageColor = computed(() => {
 });
 const speechBubbleLook = computed(() => props.message.is_own ? 'rounded-tl-xs' : 'rounded-tr-xs');
 const displayedTime = computed(() => dateToHMTime(props.message.created_at));
+
+const openImageModal = () => {
+  showImageModal.value = true;
+}
 
 watch(() => props.showOwnMsgPopover, (show) => {
   if (!show) {
