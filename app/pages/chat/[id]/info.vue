@@ -26,10 +26,44 @@
             </p>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
-            <p :class="`font-bold pb-5 ${themedSectionLabelClasses}`">
-              Description:
-            </p>
-            <p class="line-clamp-10 w-full text-justify">
+            <div class="relative">
+              <p :class="`font-bold pb-5 ${themedSectionLabelClasses}`">
+                Description
+              </p>
+              <div class="flex flex-row size-fit absolute top-0 right-0">
+                <UButton
+                  v-if="editMode"
+                  :icon="isEditingDescription ? 'i-lucide-x' : 'i-lucide-pen'"
+                  size="sm"
+                  variant="ghost"
+                  color="neutral"
+                  class="cursor-pointer self-center"
+                  @click="toggleEditDescription"
+                />
+                <UButton
+                  v-if="editMode && isEditingDescription"
+                  size="sm"
+                  class="ml-2 self-center"
+                  @click="updateGroupDescription(chatroom.chatroom_id)"
+                >
+                  Save
+                </UButton>
+              </div>
+            </div>
+            <UTextarea
+              v-if="isEditingDescription && editMode"
+              class="w-50 md:w-70"
+              :rows="14"
+              :maxrows="14"
+              autoresize
+              v-model="newDescription"
+              variant="outline"
+              placeholder="Tell the world what this group is about..."
+            />
+            <p
+              v-if="!isEditingDescription"
+              class="line-clamp-14 w-full text-justify"
+            >
               {{ chatroom?.description || "No Description" }}
             </p>
           </div>
@@ -101,7 +135,7 @@
                 class="flex size-fit"
                 size="xl"
                 icon="i-lucide-pencil-line"
-                @click="enabeleEdit"
+                @click="toggleEdit"
               >
                 Edit
               </UButton>
@@ -111,7 +145,7 @@
                 class="flex size-fit"
                 size="xl"
                 icon="i-lucide-x"
-                @click="disableEdit"
+                @click="toggleEdit"
               >
                 Cancel
               </UButton>
@@ -158,7 +192,7 @@
                     class="flex size-fit"
                     size="xl"
                     icon="i-lucide-pencil-line"
-                    @click="enabeleEdit"
+                    @click="toggleEdit"
                   >
                     Edit
                   </UButton>
@@ -168,7 +202,7 @@
                     class="flex size-fit"
                     size="xl"
                     icon="i-lucide-x"
-                    @click="disableEdit"
+                    @click="toggleEdit"
                   >
                     Cancel
                   </UButton>
@@ -252,6 +286,7 @@ const themedSectionLabelClasses = computed(() =>
 );
 
 const editMode = ref<boolean>(false);
+const isEditingDescription = ref<boolean>();
 
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -263,12 +298,13 @@ async function openDrawer() {
   open.value = true;
 }
 
-async function enabeleEdit() {
-  editMode.value = true;
+async function toggleEdit() {
+  editMode.value = !editMode.value;
+  toggleEditDescription();
 }
 
-async function disableEdit() {
-  editMode.value = false;
+async function toggleEditDescription() {
+  isEditingDescription.value = !isEditingDescription.value;
 }
 
 type Chatroom = Omit<
@@ -289,6 +325,29 @@ const chatroom = ref<Chatroom>({
   avatarPath: avatarPath,
   avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, true),
 });
+
+const newDescription = ref<string | null>();
+
+async function updateGroupDescription(description: string | null) {
+  toggleEdit();
+  if (newDescription.value != chatroom.value.description) {
+    const { error } = await supabase
+      .from("group_chatrooms")
+      .update({ description: newDescription.value })
+      .eq("chatroom_id", chatroom.value.chatroom_id!);
+    if (error) {
+      logPostgrestError(error, "chatroom update");
+      operationFeedbackHandler.displayError(
+        getPostgrestErrorMessage(
+          error,
+          "Could not update chatroom description."
+        )
+      );
+    } else {
+      operationFeedbackHandler.displaySuccess("Updated chatroom description.");
+    }
+  }
+}
 
 const { data: chatroomInfoData } = await useAsyncData(
   "chatroomInfoData",
@@ -321,6 +380,7 @@ watch(
     }
     chatroom.value.name = data.name;
     chatroom.value.description = data.description;
+    newDescription.value = chatroom.value.description;
   },
   {
     immediate: true,
