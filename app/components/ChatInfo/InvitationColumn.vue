@@ -6,7 +6,7 @@
     <div
       v-for="(invitation, index) in props.invitations"
       :key="index"
-      class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
+      class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation mb-2"
     >
       <UAvatar
         class="justify-self-center"

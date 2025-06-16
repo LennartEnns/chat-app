@@ -113,7 +113,7 @@
           <div class="pb-5 text-neutral-700 dark:text-white">
             <p :class="`font-bold ${themedSectionLabelClasses}`">Members</p>
             <UButton
-              class="flex size-fit absolute top-0 right-5"
+              class="flex size-fit absolute top-0 right-5 mt-3 md:mt-0"
               size="md"
               icon="i-lucide-user-plus"
               @click="onInviteUser"
