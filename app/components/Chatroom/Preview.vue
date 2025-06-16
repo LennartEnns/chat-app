@@ -10,7 +10,7 @@
         </div>
         <div
           v-if="lastMsg"
-          class="font-light w-full text-wrap text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
+          class="font-light w-full text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
         >
           {{ lastMsg }}
         </div>

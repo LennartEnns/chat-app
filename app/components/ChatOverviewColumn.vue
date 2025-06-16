@@ -36,12 +36,11 @@
           <ChatroomPreview
             v-for="(chatroom, index) in chatroomsWithAvatarUrl"
             :key="index"
-            :class="`mb-2 glassBG brightness-130 border-1 ${
+            :class="`mb-2 glassBG  border-1 ${
               routeChatroomId === chatroom.id
-                ? 'border-primary'
-                : 'border-transparent'
+                ? 'border-primary backdrop-brightness-110 dark:backdrop-brightness-250 '
+                : 'border-transparent dark:backdrop-brightness-150'
             }`"
-            class="mb-2 glassBG brightness-130"
             :chatroom-id="chatroom.id!"
             :name="chatroom.name!"
             :avatar-url="chatroom.avatarUrl"
@@ -200,12 +199,12 @@ async function getChatroomList(): Promise<Tables<'chatrooms_preview'>[]> {
     console.log("Using cached chatrooms");
     return chatroomsMapToArray(cachedChatrooms.value);
   }
-  
+
   const { data, error } = await previewQuery;
 
   if (error) {
     logPostgrestError(error, "chatrooms fetching");
-    operationFeedbackHandler.displayError('Could not load chatrooms');
+    operationFeedbackHandler.displayError("Could not load chatrooms");
     return [];
   }
   if (!data || data.length === 0) {
