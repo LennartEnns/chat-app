@@ -137,6 +137,7 @@
                 <div>
                   <UBadge
                     class="font-bold rounded-full"
+                    :color="getColor(member.role)"
                     :ui="{
                       base: 'max-w-11 h-5 text-[10px] flex justify-center',
                     }"

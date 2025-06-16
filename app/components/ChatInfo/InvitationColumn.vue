@@ -19,11 +19,12 @@
       <div
         class="flex flex-col items-center justify-center truncate px-[0.6rem]"
       >
-        <div class="flex flex-row items-center">
-          <div class="truncate w-full text-center">
+        <div class="flex flex-row items-center w-full">
+          <div class="truncate text-center">
             {{ invitation.invitee_username }}
           </div>
           <UBadge
+            :color="getColor(invitation.as_role)"
             class="ml-4 font-bold rounded-full"
             :ui="{
               base: 'max-w-11 h-5 text-[10px] flex justify-center',
