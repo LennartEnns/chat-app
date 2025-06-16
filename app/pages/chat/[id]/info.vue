@@ -21,10 +21,36 @@
               </div>
             </div>
           </div>
-          <div class="py-5">
-            <p class="text-[40px] font-bold text-neutral-700 dark:text-white">
+          <div class="py-5 flex flex-row">
+            <p
+              v-if="!isEditingName"
+              class="text-[40px] font-bold text-neutral-700 dark:text-white"
+            >
               {{ chatroom.name }}
             </p>
+            <UInput
+              v-if="isEditingName && editMode"
+              size="xl"
+              class="flex w-fit"
+              v-model="newName"
+            />
+            <UButton
+              v-if="editMode"
+              :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pen'"
+              size="xl"
+              variant="ghost"
+              color="neutral"
+              class="cursor-pointer self-center"
+              @click="toggleEditName"
+            />
+            <UButton
+              v-if="editMode && isEditingName"
+              size="xl"
+              class="ml-2 self-center"
+              @click="updateGroupName"
+            >
+              Save
+            </UButton>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
             <p
@@ -54,7 +80,7 @@
                   v-if="editMode && isEditingDescription"
                   size="sm"
                   class="ml-2 self-center"
-                  @click="updateGroupDescription(chatroom.chatroom_id)"
+                  @click="updateGroupDescription()"
                 >
                   Save
                 </UButton>
@@ -224,7 +250,6 @@ import {
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import InvitationColumn from "~/components/ChatInfo/InvitationColumn.vue";
 import type { Tables } from "~~/database.types";
-import { maxLength } from "valibot";
 
 const { isLight } = useSSRSafeTheme();
 
@@ -250,6 +275,7 @@ const themedSectionLabelClasses = computed(() =>
 
 const editMode = ref<boolean>(false);
 const isEditingDescription = ref<boolean>();
+const isEditingName = ref<boolean>(false);
 
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -264,11 +290,19 @@ async function openDrawer() {
 async function toggleEdit() {
   editMode.value = !editMode.value;
   toggleEditDescription();
+  toggleEditName();
 }
 
 async function toggleEditDescription() {
   isEditingDescription.value = !isEditingDescription.value;
 }
+
+async function toggleEditName() {
+  isEditingName.value = !isEditingName.value;
+}
+
+const newDescription = ref<string | null>();
+const newName = ref<string>();
 
 type Chatroom = Omit<
   Tables<"group_chatrooms_last_activity_current_role">,
@@ -289,9 +323,7 @@ const chatroom = ref<Chatroom>({
   avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, true),
 });
 
-const newDescription = ref<string | null>();
-
-async function updateGroupDescription(description: string | null) {
+async function updateGroupDescription() {
   toggleEdit();
   if (newDescription.value != chatroom.value.description) {
     const { error } = await supabase
@@ -308,6 +340,24 @@ async function updateGroupDescription(description: string | null) {
       );
     } else {
       operationFeedbackHandler.displaySuccess("Updated chatroom description.");
+    }
+  }
+}
+
+async function updateGroupName() {
+  toggleEdit();
+  if (newName.value != chatroom.value.name) {
+    const { error } = await supabase
+      .from("group_chatrooms")
+      .update({ name: newName.value })
+      .eq("chatroom_id", chatroom.value.chatroom_id!);
+    if (error) {
+      logPostgrestError(error, "chatroom update");
+      operationFeedbackHandler.displayError(
+        getPostgrestErrorMessage(error, "Could not update chatroom  name.")
+      );
+    } else {
+      operationFeedbackHandler.displaySuccess("Updated chatroom name.");
     }
   }
 }
@@ -344,6 +394,7 @@ watch(
     chatroom.value.name = data.name;
     chatroom.value.description = data.description;
     newDescription.value = chatroom.value.description;
+    newName.value = chatroom.value.name;
   },
   {
     immediate: true,
