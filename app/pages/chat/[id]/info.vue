@@ -119,12 +119,19 @@
               @click="onInviteUser"
             />
           </div>
-          <div class="flex flex-wrap justify-center gap-3 p-5">
+          <div class="flex flex-wrap relative justify-center gap-3 p-5">
             <div
               v-for="(member, index) in chatMembers"
               :key="index"
               class="ring-0 glassContainer text-neutral-700 dark:text-white member"
             >
+              <UButton
+                v-if="member.role != 'admin' && editMode"
+                icon="i-lucide-trash-2"
+                size="xs"
+                class="size-fit absolute"
+                @click="removeMember(member.user_id)"
+              />
               <div class="flex flex-col items-center w-max">
                 <UAvatar
                   class="mb-1 w-full h-11"
@@ -447,6 +454,21 @@ async function onInviteUser() {
       current_user_role: chatroom.value.current_user_role,
     },
   });
+}
+
+async function removeMember(user_id: string | null) {
+  const { error } = await supabase
+    .from("user_to_group")
+    .delete()
+    .eq("user_id", user_id!);
+  if (error) {
+    logPostgrestError(error, "member removal");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Could not remove user from chatroom.")
+    );
+  } else {
+    operationFeedbackHandler.displaySuccess("Removed user from chatroom.");
+  }
 }
 
 onMounted(() => {
