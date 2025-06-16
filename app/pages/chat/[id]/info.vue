@@ -4,27 +4,19 @@
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
         <div class="flex flex-col items-center p-5 overflow-hidden">
           <div class="pt-10 pb-5">
-            <div v-if="chatroom.avatarUrl">
+            <div class="h-70 w-70 md:h-50 md:w-50">
               <div class="relative h-70 w-70 md:h-50 md:w-50">
-                <UAvatar
-                  class="border-2 border-defaultNeutral-700 size-full"
+                <EditableAvatar
                   :src="chatroom.avatarUrl"
+                  bucket-name="chatroom_avatars"
+                  :filepath="chatroom.avatarPath"
+                  default-icon="i-lucide-user"
+                  :editable="true"
+                  :clearable="true"
+                  styling="border-2 border-defaultNeutral-700 size-full"
+                  root_styling=""
+                  icon_styling=""
                 />
-                <div class="absolute bottom-0 right-0">
-                  <UButton
-                    v-if="editMode"
-                    size="md"
-                    icon="i-lucide-image-up"
-                    class="relative"
-                  >
-                    <input
-                      class="absolute inset-0 w-full h-full opacity-0"
-                      type="file"
-                      accept="image/*"
-                      @change="uploadAvatar"
-                    />
-                  </UButton>
-                </div>
               </div>
             </div>
             <UModal
@@ -291,38 +283,13 @@ async function disableEdit() {
 
 type Chatroom = Omit<
   Tables<"group_chatrooms_last_activity_current_role">,
-  "last_activity"
+  "last_activity" | "avatarUrl"
 > & {
   avatarPath: string;
-  avatarUrl: string;
+  avatarUrl: Ref<string | undefined>;
 };
 
-async function uploadAvatar(event: Event) {
-  disableEdit();
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (file) {
-    newAvatarObjectUrl.value = URL.createObjectURL(file);
-    showAvatarCroppingModal.value = true;
-  }
-}
-
 const avatarPath = `${routeChatroomId.value}.jpg`;
-
-async function getChatroomAvatarUrl() {
-  const { data, error } = await supabase.storage
-    .from("chatroom_avatars")
-    .createSignedUrl(avatarPath, 60);
-
-  if (error) {
-    logStorageError(error, "signed avatar url");
-    operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Error creating signed avatar Url")
-    );
-    return;
-  }
-  chatroom.value.avatarUrl = data.signedUrl;
-}
 
 const chatroom = ref<Chatroom>({
   chatroom_id: routeChatroomId.value,
@@ -330,7 +297,7 @@ const chatroom = ref<Chatroom>({
   description: "Loading description...",
   current_user_role: "member",
   avatarPath: avatarPath,
-  avatarUrl: "",
+  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath),
 });
 
 const { data: chatroomInfoData } = await useAsyncData(
@@ -447,7 +414,6 @@ async function onInviteUser() {
 onMounted(() => {
   loadChatMembers();
   loadChatInvitations();
-  getChatroomAvatarUrl();
 });
 </script>
 
