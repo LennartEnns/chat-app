@@ -72,7 +72,7 @@
             />
             <p
               v-if="!isEditingDescription"
-              class="line-clamp-14 w-full text-justify"
+              class="w-full whitespace-pre-line wrap-anywhere"
             >
               {{ chatroom?.description || "No Description" }}
             </p>
