@@ -13,12 +13,14 @@ with check (
   utils.get_role_in_chatroom((select auth.uid()), chatroom_id) in ('member', 'mod', 'admin')
 );
 
--- Allow only inserts of id, content and chatroom_id
+grant execute on function utils.get_role_in_chatroom(uuid, uuid) to authenticated;
+
+-- Allow only inserts of id, content, chatroom_id and message_type
 revoke insert
 on table public.messages
 from authenticated;
 
-grant insert (id, content, chatroom_id)
+grant insert (id, content, chatroom_id, message_type)
 on table public.messages
 to authenticated;
 
