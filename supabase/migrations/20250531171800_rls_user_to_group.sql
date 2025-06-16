@@ -33,21 +33,9 @@ using (
 create policy "Admins can remove non-admins from the chatroom"
 on user_to_group for delete to authenticated
 using (
-  utils.get_role_in_chatroom((select auth.uid()), chatroom_id) = 'admin'
+  user_id != (select auth.uid())
+  and utils.get_role_in_chatroom((select auth.uid()), chatroom_id) = 'admin'
   and role != 'admin'
-);
-
-create policy "Users can leave chatroom, except if they are the last admin"
-on user_to_group for delete to authenticated
-using (
-  user_id = (select auth.uid()) and (
-    role != 'admin' 
-      or (select count(1) from public.user_to_group utg
-        where utg.chatroom_id = chatroom_id) = 1
-      or (select count(1) from public.user_to_group utg
-        where utg.chatroom_id = chatroom_id
-        and   utg.role = 'admin') > 1
-  )
 );
 
 -- Only the role column can be updated

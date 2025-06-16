@@ -2,17 +2,20 @@
   <NuxtLayout name="chat">
     <div class="align-column">
       <UCard
-        class="profile-bar"
         variant="subtle"
         :ui="{
-          body: 'sm:py-2 py-2 sm:px-3 px-3',
-        }">
-        <UButton variant="ghost" class="flex items-center gap-2 m-0 p-1" @click="onHeaderClick">
+          body: 'sm:py-2 py-2 sm:px-3 px-3 flex flex-row',
+        }"
+      >
+        <UButton variant="ghost" class="flex items-center m-0 py-1 px-2" @click="onHeaderClick">
           <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
           <ClientOnly>
             <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
           </ClientOnly>
         </UButton>
+        <div class="grow" />
+        <UButton label="Details" icon="i-lucide-external-link" variant="ghost" @click="onHeaderClick" />
+        <UButton label="Leave" icon="i-lucide-log-out" color="error" variant="ghost" @click="onLeaveChatroom" />
       </UCard>
       <div ref="messagesContainer" class="messages py-2 px-4 md:px-6">
         <!-- Group by Hours-Minute-Time -->
@@ -233,6 +236,9 @@ async function onDeleteMessage(id: string | null, index: number) {
 async function onUpdateMessage(id: string | null, index: number, newContent: string) {
   if (!id) return;
   updateMessage(id, index, newContent);
+}
+async function onLeaveChatroom() {
+  
 }
 
 async function handleKeyDown(event: KeyboardEvent) {

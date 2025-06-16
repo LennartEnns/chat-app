@@ -83,9 +83,20 @@ export const useChatroomActions = () => {
     return id;
   }
 
+  async function leaveChatroom(id: string) {
+    const { error } = await supabase.rpc('leave_chatroom', { cid: id });
+    if (error) {
+      logPostgrestError(error, 'Chatroom leave');
+      operationFeedbackHandler.displayError(error.message ?? 'Could not leave the chatroom');
+      return false;
+    }
+    return true;
+  }
+
   return {
     createDirectChatroom,
     createGroupChatroom,
     inviteUsers,
+    leaveChatroom,
   };
 }
