@@ -494,6 +494,10 @@ export type Database = {
       }
     }
     Functions: {
+      leave_chatroom: {
+        Args: { cid: string }
+        Returns: undefined
+      }
       search_users: {
         Args: {
           p_term: string

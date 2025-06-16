@@ -2,17 +2,27 @@
   <NuxtLayout name="chat">
     <div class="align-column">
       <UCard
-        class="profile-bar"
         variant="subtle"
         :ui="{
-          body: 'sm:py-2 py-2 sm:px-3 px-3',
-        }">
-        <UButton variant="ghost" class="flex items-center gap-2 m-0 p-1" @click="onHeaderClick">
+          body: 'sm:py-2 py-2 sm:px-3 px-3 flex flex-row',
+        }"
+      >
+        <UButton variant="ghost" class="flex items-center m-0 py-1 px-2" @click="onHeaderClick">
           <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
           <ClientOnly>
-            <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
+            <div v-if="cachedChatroomDataObject">
+               <h1 v-if="!hasOtherUserLeft" class="text-black dark:text-white">
+                {{ chatroomPreview.name }}
+              </h1>
+               <h1 v-else class="text-muted italic">User has left</h1>
+            </div>
           </ClientOnly>
         </UButton>
+        <div class="grow" />
+        <ClientOnly>
+          <UButton v-if="!hasOtherUserLeft" label="Details" icon="i-lucide-external-link" variant="ghost" @click="onHeaderClick" />
+          <UButton :label="hasOtherUserLeft ? 'Delete' : 'Leave'" :icon="hasOtherUserLeft ? 'i-lucide-trash-2' : 'i-lucide-log-out'" color="error" variant="ghost" @click="onLeaveChatroom" />
+        </ClientOnly>
       </UCard>
       <div ref="messagesContainer" class="messages py-2 px-4 md:px-6">
         <!-- Group by Hours-Minute-Time -->
@@ -88,6 +98,7 @@ import type { EmojiExt } from 'vue3-emoji-picker';
 import { logPostgrestError } from '~~/errors/postgrestErrors';
 import { messageLimits } from '~~/validation/commonLimits';
 import chatroomRolesVis from '~/visualization/chatroomRoles';
+import { ModalChatroomLeave } from '#components';
 
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -105,6 +116,8 @@ const newMsgSelectionEnd = ref(0);
 const { isLight } = useSSRSafeTheme();
 const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
 
+const overlay = useOverlay();
+const leaveModal = overlay.create(ModalChatroomLeave);
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
@@ -116,6 +129,7 @@ const isViewer = ref(false);
 const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
 lastChatroomState.value = routeChatroomId.value;
 const cachedChatroomDataObject = useCachedChatroom(routeChatroomId.value);
+const hasOtherUserLeft = computed(() => !!cachedChatroomDataObject.value && cachedChatroomDataObject.value.type === 'direct' && !cachedChatroomDataObject.value.other_user_id);
 
 const notFoundError = {
   statusCode: 404,
@@ -233,6 +247,16 @@ async function onDeleteMessage(id: string | null, index: number) {
 async function onUpdateMessage(id: string | null, index: number, newContent: string) {
   if (!id) return;
   updateMessage(id, index, newContent);
+}
+async function onLeaveChatroom() {
+  const instance = leaveModal.open({
+    chatroomId: routeChatroomId.value,
+  });
+  const success = await instance.result;
+  if (!success) return;
+  // Force chatrooms refetch by clearing in-memory cache and navigate to overview page
+  useState('chatrooms').value = undefined;
+  nextTick(() => navigateTo('/chat'));
 }
 
 async function handleKeyDown(event: KeyboardEvent) {
