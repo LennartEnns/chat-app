@@ -2,6 +2,7 @@
   <UApp>
     <NuxtLayout name="logged-in" :class="`${isLight ? 'base' : false}`">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
+        <!-- Chat Info Column-->
         <div class="flex flex-col items-center p-5 overflow-hidden">
           <div class="pt-10 pb-5">
             <div class="h-70 w-70 md:h-50 md:w-50">
@@ -61,10 +62,11 @@
             </div>
             <UTextarea
               v-if="isEditingDescription && editMode"
-              class="w-50 md:w-70"
+              class="w-90 md:w-65 lg:w-70"
               color="primary"
-              :rows="14"
-              :maxrows="14"
+              :rows="8"
+              :maxrows="8"
+              :maxLength="255"
               autoresize
               v-model="newDescription"
               variant="outline"
@@ -78,6 +80,7 @@
             </p>
           </div>
         </div>
+        <!-- Members Column-->
         <div
           class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
@@ -147,7 +150,7 @@
                 icon="i-lucide-pencil-line"
                 @click="toggleEdit"
               >
-                Edit
+                Edit Group
               </UButton>
               <UButton
                 v-if="editMode"
@@ -162,6 +165,7 @@
             </div>
           </div>
         </div>
+        <!-- Invitations Column-->
         <UDrawer
           :handle="false"
           direction="right"
@@ -184,6 +188,27 @@
             :editBoolean="editMode"
             :text-theme="themedSectionLabelClasses"
           />
+          <div class="md:hidden p-10">
+            <UButton
+              v-if="!editMode"
+              class="flex size-fit"
+              size="xl"
+              icon="i-lucide-pencil-line"
+              @click="toggleEdit"
+            >
+              Edit Group
+            </UButton>
+            <UButton
+              v-if="editMode"
+              color="error"
+              class="flex size-fit"
+              size="xl"
+              icon="i-lucide-x"
+              @click="toggleEdit"
+            >
+              Close
+            </UButton>
+          </div>
         </div>
       </div>
     </NuxtLayout>
@@ -199,6 +224,7 @@ import {
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import InvitationColumn from "~/components/ChatInfo/InvitationColumn.vue";
 import type { Tables } from "~~/database.types";
+import { maxLength } from "valibot";
 
 const { isLight } = useSSRSafeTheme();
 
