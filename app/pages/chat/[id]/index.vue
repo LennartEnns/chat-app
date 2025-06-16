@@ -10,12 +10,19 @@
         <UButton variant="ghost" class="flex items-center m-0 py-1 px-2" @click="onHeaderClick">
           <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
           <ClientOnly>
-            <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
+            <div v-if="cachedChatroomDataObject">
+               <h1 v-if="!hasOtherUserLeft" class="text-black dark:text-white">
+                {{ chatroomPreview.name }}
+              </h1>
+               <h1 v-else class="text-muted italic">User has left</h1>
+            </div>
           </ClientOnly>
         </UButton>
         <div class="grow" />
-        <UButton label="Details" icon="i-lucide-external-link" variant="ghost" @click="onHeaderClick" />
-        <UButton label="Leave" icon="i-lucide-log-out" color="error" variant="ghost" @click="onLeaveChatroom" />
+        <ClientOnly>
+          <UButton v-if="!hasOtherUserLeft" label="Details" icon="i-lucide-external-link" variant="ghost" @click="onHeaderClick" />
+          <UButton :label="hasOtherUserLeft ? 'Delete' : 'Leave'" :icon="hasOtherUserLeft ? 'i-lucide-trash-2' : 'i-lucide-log-out'" color="error" variant="ghost" @click="onLeaveChatroom" />
+        </ClientOnly>
       </UCard>
       <div ref="messagesContainer" class="messages py-2 px-4 md:px-6">
         <!-- Group by Hours-Minute-Time -->
@@ -122,6 +129,7 @@ const isViewer = ref(false);
 const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
 lastChatroomState.value = routeChatroomId.value;
 const cachedChatroomDataObject = useCachedChatroom(routeChatroomId.value);
+const hasOtherUserLeft = computed(() => !!cachedChatroomDataObject.value && cachedChatroomDataObject.value.type === 'direct' && !cachedChatroomDataObject.value.other_user_id);
 
 const notFoundError = {
   statusCode: 404,
@@ -246,9 +254,9 @@ async function onLeaveChatroom() {
   });
   const success = await instance.result;
   if (!success) return;
-  // Remove chatroom from list and navigate to overview page
-  cachedChatroomDataObject.value = undefined;
-  navigateTo('/chat');
+  // Force chatrooms refetch by clearing in-memory cache and navigate to overview page
+  useState('chatrooms').value = undefined;
+  nextTick(() => navigateTo('/chat'));
 }
 
 async function handleKeyDown(event: KeyboardEvent) {

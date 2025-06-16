@@ -90,6 +90,7 @@ export const useChatroomActions = () => {
       operationFeedbackHandler.displayError(error.message ?? 'Could not leave the chatroom');
       return false;
     }
+    operationFeedbackHandler.displaySuccess('Left the chatroom');
     return true;
   }
 
