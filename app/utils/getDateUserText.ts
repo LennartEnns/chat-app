@@ -8,5 +8,9 @@ export default (date: Date | null | undefined) => {
   if (areDatesSame('day', date, today)) {
     return 'Yesterday';
   }
-  return new Intl.DateTimeFormat('de-DE').format(date);
+  return new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  }).format(date);
 }

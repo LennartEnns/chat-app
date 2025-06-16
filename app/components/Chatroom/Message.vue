@@ -1,4 +1,5 @@
 <template>
+  <USeparator v-if="showNewMessagesMarker" label="New Messages" color="primary" class="w-full my-2" />
   <div
     v-if="showDateMarker"
     ref="dateMarker"
@@ -85,6 +86,7 @@ const dateMarker = ref<HTMLElement | null>(null);
 const props = defineProps<{
   message: Message,
   showUserInfo: boolean,
+  showNewMessagesMarker: boolean,
   showDateMarker: boolean,
   showHmTime: boolean,
   showOwnMsgPopover: boolean,

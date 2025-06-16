@@ -103,9 +103,11 @@
 
 <script lang="ts" setup>
 import type { NavigationMenuItem } from "@nuxt/ui";
+import type { CachedChatroomsMap } from "~/types/chatroom";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 
 const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
+const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
@@ -146,6 +148,7 @@ const mobileLeftButton = computed(() => {
 });
 
 async function logout(scope: "global" | "local" | "others") {
+  showLogoutModal.value = false;
   if (scope !== "others") {
     navigateTo("/");
   }
@@ -157,12 +160,16 @@ async function logout(scope: "global" | "local" | "others") {
     operationFeedbackHandler.displayError(
       getAuthErrorMessage(error, "Unexpected error during logout")
     );
-  } else if (scope === "others") {
+    return;
+  }
+  if (scope === "others") {
     operationFeedbackHandler.displaySuccess(
       "All other sessions have been terminated."
     );
-    showLogoutModal.value = false;
   }
+  // Clear state after successful logout
+  lastChatroomState.value = undefined;
+  cachedChatrooms.value = undefined;
 }
 
 async function onLogoutSelect() {

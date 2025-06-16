@@ -30,6 +30,7 @@
     >
       <template #chats>
         <div
+          v-if="chatroomsListFetchingStatus === 'success' || chatroomsListFetchingStatus === 'idle'"
           class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
         >
           <ChatroomPreview
@@ -45,8 +46,19 @@
             :name="chatroom.name!"
             :avatar-url="chatroom.avatarUrl"
             :last-msg="chatroom.last_message"
+            :number-new-messages="chatroom.number_new_messages ?? 0"
           />
         </div>
+        <div v-else-if="chatroomsListFetchingStatus === 'pending'" class="mt-1 w-full space-y-4">
+          <USkeleton v-for="i in 3" :key="i" class="w-full h-10" />
+        </div>
+        <div v-else class="flex flex-row gap-x-2 items-center justify-center flex-wrap">
+          <UIcon name="i-lucide-x-circle" size="xl" class="text-error" />
+          <div class="text-error text-lg">
+            Error loading chatrooms
+          </div>
+        </div>
+        <Skeleton class="mt-1" />
       </template>
       <template #invitations>
         <ChatroomInvitationList
@@ -73,10 +85,13 @@
 <script lang="ts" setup>
 import type { UserSearchResult } from "~/types/userSearch";
 import type { InvitationPreview } from "~/types/invitations/invitationsPreview";
+import type { CachedChatroomsMap } from '~/types/chatroom';
 import type { TabsItem } from "@nuxt/ui";
+import type { Tables } from "~~/database.types";
 import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
 
+const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
@@ -91,12 +106,12 @@ const routeChatroomId = computed(() => {
 });
 
 // First only do a head query to avoid unnecessary data fetching
-const { data: existUnhandledInvitations } = await useAsyncData(
+const { data: existUnhandledInvitations } = await useLazyAsyncData(
   "existUnhandledInvitations",
   async () => {
     const { count } = await supabase
       .from("group_invitations")
-      .select("*", {
+      .select("id", {
         count: "exact",
         head: true,
       })
@@ -112,7 +127,7 @@ const {
   execute: executeFetchInvitations,
   refresh: refreshFetchInvitations,
   pending: invitationsPreviewPending,
-} = await useAsyncData(
+} = await useLazyAsyncData(
   "inboundInvitations",
   async () => {
     const { data, error } = await supabase
@@ -178,7 +193,14 @@ const previewQuery = supabase
   .select("*")
   .order("last_activity", { ascending: false });
 
-async function getChatroomList(): Promise<Awaited<typeof previewQuery>["data"]> {
+async function getChatroomList(): Promise<Tables<'chatrooms_preview'>[]> {
+  console.log("Fetching chatrooms...");
+  // Prefer using cached chatrooms if available
+  if (cachedChatrooms.value) {
+    console.log("Using cached chatrooms");
+    return chatroomsMapToArray(cachedChatrooms.value);
+  }
+  
   const { data, error } = await previewQuery;
 
   if (error) {
@@ -193,7 +215,27 @@ async function getChatroomList(): Promise<Awaited<typeof previewQuery>["data"]> 
   return data;
 }
 
-const { data: chatrooms } = await useAsyncData('chatroomsPreviewList', getChatroomList);
+const { data: chatrooms, status: chatroomsListFetchingStatus, refresh: refreshChatroomsList } = await useLazyAsyncData('chatroomsPreviewList', getChatroomList);
+let refetchChatroomsOnStateUpdate = true;
+// Re-fetch chatroom previews from local state when it is updated
+watch(cachedChatrooms, (cached) => {
+  if (!cached || !refetchChatroomsOnStateUpdate) return;
+  refreshChatroomsList();
+}, {
+  deep: true,
+});
+watch(chatrooms, (rooms) => {
+  if (cachedChatrooms.value || !rooms) return;
+
+  // Cache fetched chatrooms in shared state
+  console.log("Caching chatrooms");
+  // Ignore this state change to avoid unnecessary refetch
+  refetchChatroomsOnStateUpdate = false;
+  cachedChatrooms.value = chatroomsArrayToMap(rooms);
+  nextTick(() => refetchChatroomsOnStateUpdate = true);
+}, {
+  immediate: true,
+});
 
 const chatroomsWithAvatarUrl = computed(() =>
   chatrooms.value?.map((chatroom) => {

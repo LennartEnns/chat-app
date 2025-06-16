@@ -1,6 +1,6 @@
 <template>
-  <UButton variant="ghost" class="w-full p-1" @click="onUserSelect()">
-    <div class="flex max-w-full w-full">
+  <UButton variant="ghost" class="w-full p-1" @click="onChatroomSelect()">
+    <div class="flex items-center max-w-full w-full">
       <UAvatar :src="avatarUrl" icon="i-lucide-user" size="md" />
       <div class="pl-3 flex flex-col flex-grow justify-center items-start">
         <div
@@ -15,22 +15,39 @@
           {{ lastMsg }}
         </div>
       </div>
+      <UChip
+        v-if="numberNewMessages > 0"
+        :text="numberNewMessages"
+        size="3xl"
+        class="self-start mt-2 mr-2 light:text-error-500 dark:text-error-500"
+        :ui="{
+          base: 'px-1'
+        }"
+      />
     </div>
   </UButton>
 </template>
 
 <script lang="ts" setup>
 const props = defineProps<{
-  chatroomId: string;
-  name: string;
-  avatarUrl: string | undefined;
-  lastMsg: string | null;
+  chatroomId: string,
+  name: string,
+  avatarUrl: string | undefined,
+  lastMsg: string | null,
+  numberNewMessages: number,
 }>();
 
 const drawerOpen = useOpenDrawer();
+const cachedChatroomDataObject = useCachedChatroom(props.chatroomId);
 
-// Handle user selection in the command palette
-async function onUserSelect() {
+async function onChatroomSelect() {
+  // When opening the chatroom, reset unread messages to 0 in the local state
+  setTimeout(() => {
+    if (cachedChatroomDataObject.value) {
+      console.log("Reset")
+      cachedChatroomDataObject.value = { ...cachedChatroomDataObject.value, number_new_messages: 0 };
+    }
+  }, 1000);
   drawerOpen.value = false;
   navigateTo(`/chat/${props.chatroomId}`);
 }
