@@ -113,7 +113,6 @@
           <div class="pb-5 text-neutral-700 dark:text-white">
             <p :class="`font-bold ${themedSectionLabelClasses}`">Members</p>
             <UButton
-              v-if="editMode"
               class="flex size-fit absolute top-0 right-5"
               size="md"
               icon="i-lucide-user-plus"
@@ -354,7 +353,7 @@ async function updateGroupName() {
     if (error) {
       logPostgrestError(error, "chatroom update");
       operationFeedbackHandler.displayError(
-        getPostgrestErrorMessage(error, "Could not update chatroom  name.")
+        getPostgrestErrorMessage(error, "Could not update chatroom name.")
       );
     } else {
       operationFeedbackHandler.displaySuccess("Updated chatroom name.");

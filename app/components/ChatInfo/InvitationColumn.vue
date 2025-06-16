@@ -19,26 +19,57 @@
       <div
         class="flex flex-col items-center justify-center truncate px-[0.6rem]"
       >
-        <div class="truncate w-full text-center">
-          {{ invitation.invitee_username }}
+        <div class="flex flex-row items-center">
+          <div class="truncate w-full text-center">
+            {{ invitation.invitee_username }}
+          </div>
+          <UBadge
+            class="ml-4 font-bold rounded-full"
+            :ui="{
+              base: 'max-w-11 h-5 text-[10px] flex justify-center',
+            }"
+            >{{ invitation.as_role }}</UBadge
+          >
         </div>
       </div>
       <UButton
-        v-if="editBoolean"
         icon="i-lucide-trash-2"
         class="size-fit"
-      ></UButton>
+        @click="deleteInvite(invitation.id)"
+      />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import type { Tables } from "~~/database.types";
+import {
+  getPostgrestErrorMessage,
+  logPostgrestError,
+} from "~~/errors/postgrestErrors";
+
+const supabase = useSupabaseClient();
+const operationFeedbackHandler = useOperationFeedbackHandler();
 
 type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
   "id" | "invitee_id" | "as_role" | "invitee_username"
 >;
+
+async function deleteInvite(id: string | null) {
+  const { error } = await supabase
+    .from("group_invitations")
+    .delete()
+    .eq("id", id!);
+  if (error) {
+    logPostgrestError(error, "invitation deletion");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Could not delete chatroom invitation.")
+    );
+  } else {
+    operationFeedbackHandler.displaySuccess("Deleted Chatroom Invitation.");
+  }
+}
 
 const props = defineProps<{
   invitations: ChatInvitation[];
