@@ -11,29 +11,14 @@
                   bucket-name="chatroom_avatars"
                   :filepath="chatroom.avatarPath"
                   default-icon="i-lucide-user"
-                  :editable="true"
-                  :clearable="true"
+                  :editable="editMode"
+                  :clearable="editMode"
                   styling="border-2 border-defaultNeutral-700 size-full"
                   root_styling=""
                   icon_styling=""
                 />
               </div>
             </div>
-            <UModal
-              v-model:open="showAvatarCroppingModal"
-              title="Crop Avatar"
-              :ui="{
-                header: 'justify-center',
-              }"
-            >
-              <template #body>
-                <AvatarUploadCropper
-                  v-if="newAvatarObjectUrl"
-                  :image-url="newAvatarObjectUrl"
-                  @upload="onUploadCroppedAvatar"
-                />
-              </template>
-            </UModal>
           </div>
           <div class="py-5">
             <p class="text-[40px] font-bold text-neutral-700 dark:text-white">
@@ -229,11 +214,6 @@
 
 <script setup lang="ts">
 import {
-  getStorageErrorMessage,
-  logStorageError,
-} from "~~/errors/storageErrors";
-
-import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
@@ -245,8 +225,6 @@ const { isLight } = useSSRSafeTheme();
 
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const open = ref(false);
-const newAvatarObjectUrl = ref<string | null>(null);
-const showAvatarCroppingModal = ref(false);
 const supabase = useSupabaseClient();
 
 const overlay = useOverlay();
@@ -297,7 +275,7 @@ const chatroom = ref<Chatroom>({
   description: "Loading description...",
   current_user_role: "member",
   avatarPath: avatarPath,
-  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath),
+  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, true),
 });
 
 const { data: chatroomInfoData } = await useAsyncData(
@@ -326,7 +304,6 @@ async function loadChatInfo() {
 watch(
   chatroomInfoData,
   (data) => {
-    console.log("test");
     if (!data) {
       return;
     }
@@ -337,33 +314,6 @@ watch(
     immediate: true,
   }
 );
-
-async function onUploadCroppedAvatar(blob: Blob) {
-  showAvatarCroppingModal.value = false;
-  newAvatarObjectUrl.value = null;
-  const { error } = await supabase.storage
-    .from("chatroom_avatars")
-    .upload(chatroom.value.avatarPath, blob, {
-      upsert: true,
-      contentType: "image/jpeg",
-      cacheControl: "0",
-
-      headers: {
-        "cache-control": "no-cache",
-      },
-    });
-  if (error) {
-    logStorageError(error, "avatar upload");
-    operationFeedbackHandler.displayError(
-      getStorageErrorMessage(error, "Unknown error uploading avatar")
-    );
-    return;
-  } else {
-    operationFeedbackHandler.displaySuccess(
-      "Your avatar has been updated. You may need to reload the page."
-    );
-  }
-}
 
 async function loadChatMembers() {
   const { data, error } = await supabase

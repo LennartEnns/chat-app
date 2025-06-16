@@ -19,7 +19,7 @@
       </div>
     </div>
     <UButton
-      v-if="clearable && existsSrc"
+      v-if="clearable && existsAvatarImage"
       label="Clear Avatar"
       variant="ghost"
       class="cursor-pointer mt-1"
@@ -53,8 +53,13 @@ const operationFeedbackHandler = useOperationFeedbackHandler();
 const overlay = useOverlay();
 const croppingModal = overlay.create(CropAvatar);
 
-const existsSrc = ref(false);
+const existsAvatarImage = ref(false);
 const srcModified = ref(props.src);
+// Value only needed if image might be updated by the user
+if (!props.editable && !props.clearable) {
+  console.log(props.src);
+  existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
+}
 watch(
   () => props.src,
   (newVal) => {
@@ -79,7 +84,7 @@ async function startCroppingAvatar(event: Event) {
       props.filepath
     );
     if (success) {
-      existsSrc.value = true;
+      existsAvatarImage.value = true;
       srcModified.value = URL.createObjectURL(result);
     }
   }
@@ -91,20 +96,11 @@ async function clearAvatar() {
   if (error) {
     operationFeedbackHandler.displayError("Could not clear avatar.");
   } else {
-    existsSrc.value = false;
+    existsAvatarImage.value = false;
     srcModified.value = undefined;
     emit("clear");
   }
 }
-
-onNuxtReady(async () => {
-  // Value only needed if image might be updated by the user
-  if (!props.editable && !props.clearable) return;
-  const { data } = await supabase.storage
-    .from(props.bucketName)
-    .exists(props.filepath);
-  existsSrc.value = data;
-});
 </script>
 
 <style>
