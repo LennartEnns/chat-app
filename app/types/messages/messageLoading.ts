@@ -1,5 +1,19 @@
 import type { Tables } from "~~/database.types";
 import type { RequireNonNull } from "../tsUtils/helperTypes";
 
-type MessageNeeded = Omit<Tables<'messages_view'>, 'chatroom_id' | 'created_at'>
-export type Message = RequireNonNull<MessageNeeded, 'content'> & { created_at: Date }
+type MessageNeeded = Omit<
+    Tables<"messages_view">,
+    "chatroom_id" | "created_at"
+>;
+
+export type Message = RequireNonNull<MessageNeeded, "content"> & {
+    created_at: Date;
+    message_type: "image" | "audio" | "text";
+    media?: MediaItem[];
+};
+
+export interface MediaItem {
+    id: string;
+    type: "image" | "audio";
+    url: Ref<string | undefined, string | undefined>;
+}
