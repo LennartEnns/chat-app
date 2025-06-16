@@ -14,8 +14,8 @@
                   :editable="editMode"
                   :clearable="editMode"
                   styling="border-2 border-defaultNeutral-700 size-full"
-                  root_styling=""
-                  icon_styling=""
+                  root_styling="relative h-70 w-70 md:h-50 md:w-50"
+                  icon_styling="border-2 border-defaultNeutral-700 size-full"
                 />
               </div>
             </div>
@@ -26,7 +26,9 @@
             </p>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
-            <p class="font-bold pb-5">Description:</p>
+            <p :class="`font-bold pb-5 ${themedSectionLabelClasses}`">
+              Description:
+            </p>
             <p class="line-clamp-10 w-full text-justify">
               {{ chatroom?.description || "No Description" }}
             </p>
@@ -36,7 +38,7 @@
           class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
           <div class="pb-5 text-neutral-700 dark:text-white">
-            <p class="font-bold">Members</p>
+            <p :class="`font-bold ${themedSectionLabelClasses}`">Members</p>
             <UButton
               v-if="editMode"
               class="flex size-fit absolute top-0 right-5"
@@ -125,7 +127,9 @@
           <template #body>
             <div class="flex flex-col items-center px-5">
               <div class="pb-5 text-neutral-700 dark:text-white">
-                <p class="font-bold">Invitations</p>
+                <p :class="`font-bold ${themedSectionLabelClasses}`">
+                  Invitations
+                </p>
               </div>
               <div class="pb-5">
                 <div
@@ -175,7 +179,11 @@
         </UDrawer>
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
           <div class="pb-5 text-neutral-700 pt-5 md:pt-0 dark:text-white">
-            <p class="font-bold flex justify-center">Invitations</p>
+            <p
+              :class="`font-bold flex justify-center ${themedSectionLabelClasses}`"
+            >
+              Invitations
+            </p>
           </div>
           <div class="pb-5">
             <div
@@ -238,6 +246,10 @@ type ChatInvitation = Pick<
 >;
 
 const chatInvitations = ref<ChatInvitation[]>([]);
+
+const themedSectionLabelClasses = computed(() =>
+  isLight.value ? "text-primary-900" : "text-primary-400"
+);
 
 const editMode = ref<boolean>(false);
 
