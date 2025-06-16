@@ -47,6 +47,9 @@
             :last-msg="chatroom.last_message"
             :number-new-messages="chatroom.number_new_messages ?? 0"
           />
+          <div v-if="!chatroomsWithAvatarUrl || chatroomsWithAvatarUrl.length === 0" class="text-xl text-muted text-center mb-2">
+            No chatrooms
+          </div>
         </div>
         <div v-else-if="chatroomsListFetchingStatus === 'pending'" class="mt-1 w-full space-y-4">
           <USkeleton v-for="i in 3" :key="i" class="w-full h-10" />

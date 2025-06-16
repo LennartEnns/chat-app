@@ -9,6 +9,7 @@ declare
   _user1_id uuid;
   _members_count integer;
   _admins_count integer;
+  _user_group_role public.chatroom_role;
 begin
   select type from public.chatrooms c where c.id = cid into _cr_type;
   if _cr_type is null then
@@ -23,7 +24,11 @@ begin
       select count(1) from public.user_to_group utg where utg.chatroom_id = cid and utg.role = 'admin'
       into _admins_count;
       if _admins_count <= 1 then
-        raise exception 'Last admin cannot leave before appointing a new admin';
+        select role from public.user_to_group utg into _user_group_role
+        where utg.chatroom_id = cid and utg.user_id = (select auth.uid());
+        if _user_group_role = 'admin' then
+          raise exception 'Last admin cannot leave before appointing a new admin';
+        end if;
       end if;
     end if;
 

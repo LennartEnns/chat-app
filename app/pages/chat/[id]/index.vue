@@ -91,6 +91,7 @@ import type { EmojiExt } from 'vue3-emoji-picker';
 import { logPostgrestError } from '~~/errors/postgrestErrors';
 import { messageLimits } from '~~/validation/commonLimits';
 import chatroomRolesVis from '~/visualization/chatroomRoles';
+import { ModalChatroomLeave } from '#components';
 
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -108,6 +109,8 @@ const newMsgSelectionEnd = ref(0);
 const { isLight } = useSSRSafeTheme();
 const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
 
+const overlay = useOverlay();
+const leaveModal = overlay.create(ModalChatroomLeave);
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
@@ -238,7 +241,14 @@ async function onUpdateMessage(id: string | null, index: number, newContent: str
   updateMessage(id, index, newContent);
 }
 async function onLeaveChatroom() {
-  
+  const instance = leaveModal.open({
+    chatroomId: routeChatroomId.value,
+  });
+  const success = await instance.result;
+  if (!success) return;
+  // Remove chatroom from list and navigate to overview page
+  cachedChatroomDataObject.value = undefined;
+  navigateTo('/chat');
 }
 
 async function handleKeyDown(event: KeyboardEvent) {
