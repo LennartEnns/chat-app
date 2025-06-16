@@ -6,7 +6,8 @@ type CachedChatroomsArray = CachedChatroomData[];
   */
 export function chatroomsMapToArray(chatrooms: CachedChatroomsMap): CachedChatroomsArray {
   return Object.entries(chatrooms)
-    .map(([id, data]) => ({ id, ...data }))
+    .filter(([_, data]) => !!data)
+    .map(([id, data]) => ({ id, ...(data as NonNullable<typeof data>) }))
     .sort((a, b) => {
       // Move to end of list if null (should never be the case!)
       if (!a.last_activity) return -1;

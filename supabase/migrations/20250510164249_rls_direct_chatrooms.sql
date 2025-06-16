@@ -38,8 +38,8 @@ begin
   -- Case 1: User 1 is updating
   if
     (select auth.uid()) = old.user1_id
-    and new.user1_id in (old.user1_id, null) -- Can leave chatroom
-    and new.user2_id = old.user2_id -- Must stay the same
+    and new.user1_id = old.user1_id or new.user1_id is null -- Can leave chatroom
+    and (new.user2_id = old.user2_id or (new.user2_id is null and old.user2_id is null)) -- Must stay the same
     and new.chatroom_id = old.chatroom_id -- Must stay the same
   then
     return new;
@@ -47,14 +47,14 @@ begin
   -- Case 2: User 2 is updating
   elsif
     (select auth.uid()) = old.user2_id
-    and new.user1_id = old.user1_id -- Must stay the same
-    and new.user2_id in (old.user2_id, null) -- Can leave chatroom
+    and (new.user1_id = old.user1_id or (new.user1_id is null and old.user1_id is null)) -- Must stay the same
+    and new.user2_id = old.user2_id or new.user2_id is null -- Can leave chatroom
     and new.chatroom_id = old.chatroom_id -- Must stay the same
   then
     return new;
   end if;
 
-  raise exception 'Update operation not allowed';
+  raise exception 'Operation not allowed';
 end;
 $$;
 revoke all on function enforce_direct_chatrooms_update_policies() from authenticated, anon;

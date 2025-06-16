@@ -1,6 +1,5 @@
 <template>
   <UForm
-    id="invite-form"
     class="space-y-6"
     :schema="schema"
     :state="state"
@@ -81,7 +80,6 @@ const allowedInvRoles = computed<NonEmptyArray<Enums<"chatroom_role">>>(() =>
 );
 
 async function onSubmit() {
-  console.log("hello");
   const { data } = inviteUsersToGroupSchema.safeParse(state);
   if (data) {
     emit("submitForm", {

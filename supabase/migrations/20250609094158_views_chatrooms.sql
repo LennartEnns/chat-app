@@ -86,10 +86,15 @@ select
     where chatroom_id = cwla.id
     and created_at > utac.last_inside
   ) as number_new_messages,
-  gclacr.current_user_role
+  (
+    select utg.role
+    from public.user_to_group utg
+    where utg.chatroom_id = cwla.id
+      and utg.user_id = (select auth.uid())
+    limit 1
+  ) as current_user_role
 from public.chatrooms_with_last_activity cwla
-join public.user_to_abstract_chatroom utac on utac.chatroom_id = cwla.id and utac.user_id = (select auth.uid())
-join public.group_chatrooms_last_activity_current_role gclacr on gclacr.chatroom_id = cwla.id;
+join public.user_to_abstract_chatroom utac on utac.chatroom_id = cwla.id and utac.user_id = (select auth.uid());
 
 create or replace view public.group_chatroom_members
 with (security_invoker)

@@ -43,10 +43,14 @@
             }`"
             :chatroom-id="chatroom.id!"
             :name="chatroom.name!"
+            :has-other-user-left="chatroom.type! === 'direct' && !chatroom.other_user_id"
             :avatar-url="chatroom.avatarUrl"
             :last-msg="chatroom.last_message"
             :number-new-messages="chatroom.number_new_messages ?? 0"
           />
+          <div v-if="!chatroomsWithAvatarUrl || chatroomsWithAvatarUrl.length === 0" class="text-xl text-muted text-center mb-2">
+            No chatrooms
+          </div>
         </div>
         <div v-else-if="chatroomsListFetchingStatus === 'pending'" class="mt-1 w-full space-y-4">
           <USkeleton v-for="i in 3" :key="i" class="w-full h-10" />
@@ -91,6 +95,7 @@ import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
 
 const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
+const lastChatroomsFetch= useState<Date | undefined>('lastChatroomsFetch');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
@@ -194,13 +199,25 @@ const previewQuery = supabase
 
 async function getChatroomList(): Promise<Tables<'chatrooms_preview'>[]> {
   console.log("Fetching chatrooms...");
-  // Prefer using cached chatrooms if available
-  if (cachedChatrooms.value) {
-    console.log("Using cached chatrooms");
-    return chatroomsMapToArray(cachedChatrooms.value);
-  }
+  if (lastChatroomsFetch.value && cachedChatrooms.value) {
+    const { count } = await supabase.from('chatrooms')
+    .select('id', {
+      head: true,
+      count: 'exact',
+    })
+    .gte('created_at', lastChatroomsFetch.value.toISOString());
 
+    // Prefer using cached chatrooms if available and if there are no new chatrooms
+    if (count === 0) {
+      console.log("Using cached chatrooms");
+      return chatroomsMapToArray(cachedChatrooms.value);
+    }
+  }
+  lastChatroomsFetch.value = new Date();
+
+  console.log("Fetching from DB...")
   const { data, error } = await previewQuery;
+  console.log(data);
 
   if (error) {
     logPostgrestError(error, "chatrooms fetching");
@@ -217,8 +234,8 @@ async function getChatroomList(): Promise<Tables<'chatrooms_preview'>[]> {
 const { data: chatrooms, status: chatroomsListFetchingStatus, refresh: refreshChatroomsList } = await useLazyAsyncData('chatroomsPreviewList', getChatroomList);
 let refetchChatroomsOnStateUpdate = true;
 // Re-fetch chatroom previews from local state when it is updated
-watch(cachedChatrooms, (cached) => {
-  if (!cached || !refetchChatroomsOnStateUpdate) return;
+watch(cachedChatrooms, () => {
+  if (!refetchChatroomsOnStateUpdate) return;
   refreshChatroomsList();
 }, {
   deep: true,
