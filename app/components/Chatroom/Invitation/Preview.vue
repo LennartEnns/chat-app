@@ -82,7 +82,7 @@ async function onAcceptInvitation() {
   }
 
   // Open chatroom after adding user
-  operationFeedbackHandler.displaySuccess(`Entered '${props.invitation.group_name ?? 'new group'}'`);
+  operationFeedbackHandler.displaySuccess(`Entered ${props.invitation.group_name ? `'${props.invitation.group_name}'` : 'new group'}`);
   navigateTo(`/chat/${props.invitation.chatroom_id}`);
 }
 async function onRejectInvitation() {

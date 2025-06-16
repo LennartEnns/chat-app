@@ -12,6 +12,15 @@ on direct_chatrooms for insert to authenticated
 with check (
   user2_id is not null -- Required
 );
+-- Allow only inserts of chatroom_id and user2_id
+revoke insert
+on table public.direct_chatrooms
+from authenticated;
+
+grant insert (chatroom_id, user2_id)
+on table public.direct_chatrooms
+to authenticated;
+
 
 create policy "Members can update direct chatrooms"
 on direct_chatrooms for update to authenticated
@@ -62,37 +71,3 @@ using (
   or
   (select auth.uid()) = user2_id and user1_id is null
 );
-
--- Deletes a direct chatroom when it has no members anymore
-create function public.auto_delete_empty_direct_chatroom()
-returns trigger
-language plpgsql
-security definer set search_path = ''
-as $$
-begin
-  if
-    new.user1_id is null and
-    new.user2_id is null
-  then
-    delete from public.chatrooms
-    where id = old.chatroom_id;
-  end if;
-
-  return null;
-end;
-$$;
-revoke all on function public.auto_delete_empty_direct_chatroom() from authenticated, anon;
-
-create trigger auto_delete_empty_direct_chatroom
-  after update on public.direct_chatrooms
-  for each row
-  execute procedure public.auto_delete_empty_direct_chatroom();
-
--- Allow only inserts of chatroom_id and user2_id
-revoke insert
-on table public.direct_chatrooms
-from authenticated;
-
-grant insert (chatroom_id, user2_id)
-on table public.direct_chatrooms
-to authenticated;

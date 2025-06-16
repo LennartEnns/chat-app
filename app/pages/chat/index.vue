@@ -3,7 +3,7 @@
     <div :class="`mainContainer ${themedGlassContainer}`">
       <!-- Container for Desktop -->
       <div v-if="!isMobile">
-        <h1 class="headlineChat-desktop">You didn't open any chats yet</h1>
+        <h1 class="headlineChat-desktop">No chat open</h1>
         <USeparator :class="themedSeparator" color="primary" />
       </div>
 
