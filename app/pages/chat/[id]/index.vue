@@ -1,182 +1,278 @@
 <template>
   <NuxtLayout name="chat">
-    <!--Messaging column-->
     <div class="align-column">
-      <UCard class="profile-bar" variant="subtle">
-        <div class="flex items-center gap-2">
-          <UAvatar src="https://github.com/nuxt.png" />
-          <h1 class="text-black dark:text-white">Florian Steckchen</h1>
-        </div>
+      <UCard
+        class="profile-bar"
+        variant="subtle"
+        :ui="{
+          body: 'sm:py-2 py-2 sm:px-3 px-3',
+        }">
+        <UButton variant="ghost" class="flex items-center gap-2 m-0 p-1" @click="onHeaderClick">
+          <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
+          <ClientOnly>
+            <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
+          </ClientOnly>
+        </UButton>
       </UCard>
-      <div ref="messagesContainer" class="messages">
-        <!--example messages-->
-        <div :class="`message partner ${themedPartnerMessageColor}`">
-          <UAvatar
-            class="justify-self-center"
-            src="https://github.com/nuxt.png"
-          />
-          <div class="message-content">
-            <p>
-              User messages are now saved to the database and loaded on
-              page-reload. Start messaging today! **Note** If you want to test
-              this create a local chatroom and add your logged in user's ID to
-              it all via http://localhost:54323/. Afterwards change the
-              currently hardcoded chatroom_id to this chatroom's ID. Now you can
-              use the database!
-            </p>
-            <span class="message-time">12:48</span>
-          </div>
-        </div>
-        <div
-          v-for="(message, index) in userMessages"
-          :key="index"
-          :class="`message user ${themedUserMessageColor} whitespace-pre-line wrap-anywhere`"
-        >
-          <UAvatar class="justify-self-center" :src="userData.avatarUrl" />
-          <div class="message-content">
-            <p>{{ message.text }}</p>
-            <span class="message-time">{{ message.timestamp }}</span>
-          </div>
-        </div>
+      <div ref="messagesContainer" class="messages py-2 px-4 md:px-6">
+        <!-- Group by Hours-Minute-Time -->
+        <ChatroomMessage
+          v-for="(message, index) in messages"
+          :key = "index"
+          :message = "message"
+          :show-user-info="!!messages && (index === 0 || messages[index - 1]?.username !== message.username)"
+          :show-date-marker="!!messages && (index === 0 || !areDatesSame('day', messages[index - 1]?.created_at, message.created_at))"
+          :show-new-messages-marker="!!messages && index === (messages.length - numberNewMessagesFrozen)"
+          :show-hm-time="!!messages && (index >= (messages.length - 1) || !areDatesSame('minute', messages[index + 1]?.created_at, message.created_at))"
+          :show-own-msg-popover="!scrolling"
+          @delete="onDeleteMessage(message.id, index)"
+          @update="onUpdateMessage(message.id, index, $event)"
+        />
+        <UButton
+          v-if="!isAtBottom"
+          icon="i-lucide-arrow-down"
+          class="absolute w-min bottom-20 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
+          @click="scrollToBottom()" />
       </div>
-      <!--Text Input for new messages-->
-      <div class="write">
+      <div v-if="!isViewer" class="write">
         <UTextarea
+          ref="newMessageArea"
           v-model="newMessage"
           variant="subtle"
           class="w-full glassBG"
           placeholder="Write a message..."
+          size="xl"
           autoresize
-          :rows="2"
+          :rows="1"
           :maxrows="7"
-        />
-        <UButton :class="`${themedUserMessageColor}`" @click="sendMessage"
-          ><Icon name="ic:baseline-send"
-        /></UButton>
+          :maxlength="messageLimits.content"
+          :ui="{
+            trailing: 'flex flex-col justify-center'
+          }"
+          @click="saveCaret"
+          @keyup="saveCaret"
+        >
+          <template #trailing>
+            <UPopover
+              arrow
+              :content="{
+                align: 'center',
+                side: 'top',
+              }"
+            >
+              <UButton icon="i-lucide-smile" variant="ghost" size="lg" class="text-muted" />
+              <template #content>
+                <EmojiPicker :native="true" :theme="isLight ? 'light' : 'dark'" @select="onSelectEmoji" />
+              </template>
+            </UPopover>
+          </template>
+        </UTextarea>
+        <UButton :class="`${themedSendButtonColor}`" @click="onSendMessage">
+          <UIcon name="i-lucide-send-horizontal" size="xs" />
+        </UButton>
+      </div>
+      <div v-else class="flex flex-row flex-wrap justify-center items-center gap-x-2 dark:bg-neutral-800 light:bg-neutral-200 rounded-xl">
+        <UIcon :name="chatroomRolesVis.viewer.icon" class="text-xl" />
+        <div class="text-muted text-xl">
+          You are a Viewer
+        </div>
       </div>
     </div>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
-import {
-  getPostgrestErrorMessage,
-  logPostgrestError,
-} from "~~/errors/postgrestErrors";
+import EmojiPicker from 'vue3-emoji-picker';
+import 'vue3-emoji-picker/css'
+import type { EmojiExt } from 'vue3-emoji-picker';
+import { logPostgrestError } from '~~/errors/postgrestErrors';
+import { messageLimits } from '~~/validation/commonLimits';
+import chatroomRolesVis from '~/visualization/chatroomRoles';
 
-useFirstLoginDetector();
+const newMessage = ref<string>("");
+const messagesContainer = ref<HTMLElement | null>(null);
+const isAtBottom = ref(true);
+const bottomDetectionThreshold = 10;
+
+const scrolling = ref(false);
+const minTimeAfterScrolling = 100;
+let scrollingTimeout: NodeJS.Timeout | null = null;
+
+const newMessageArea = ref<{ $el: HTMLElement } | null>(null);
+const newMsgSelectionStart = ref(0);
+const newMsgSelectionEnd = ref(0);
+
 const { isLight } = useSSRSafeTheme();
-const operationFeedbackHandler = useOperationFeedbackHandler();
-const userData = useUserData();
-const supabase = useSupabaseClient();
+const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
 
+const supabase = useSupabaseClient();
+const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
 const routeChatroomId = computed(() => {
   const params = route.params;
   return params.id as string;
 });
+const isViewer = ref(false);
+const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
+lastChatroomState.value = routeChatroomId.value;
+const cachedChatroomDataObject = useCachedChatroom(routeChatroomId.value);
 
-const themedUserMessageColor = computed(() =>
-  isLight.value ? "user-light" : "user-dark"
-);
+const notFoundError = {
+  statusCode: 404,
+  message: "This chatroom does not exist",
+  data: {
+    headline: 'No Yapping Here!',
+  },
+}
+// If the chatroom does not exist, show error page
+async function checkExistsChatroom() {
+  const { count } = await supabase.from('chatrooms')
+    .select('id', {
+      count: "exact",
+      head: true,
+    })
+    .eq('id', routeChatroomId.value);
+  if (!count) showError(notFoundError);
+}
+await checkExistsChatroom();
 
-const themedPartnerMessageColor = computed(() =>
-  isLight.value ? "partner-light" : "partner-dark"
-);
+// Freeze number of messages in time before setting it to 0 for the new messages marker to not disappear
+const numberNewMessagesFrozen = cachedChatroomDataObject.value?.number_new_messages ?? 0;
 
-// messages and writing
-type DisplayedMessage = {
-  text: string;
-  timestamp: string;
-};
-const newMessage = ref<string>("");
-const userMessages = ref<DisplayedMessage[]>([]);
-const messagesContainer = ref<HTMLElement | null>(null);
+const chatroomPreview = computed(() => {
+  if (!cachedChatroomDataObject.value) return {
+    name: 'Chatroom',
+    avatarUrl: undefined,
+    numberNewMessages: 0,
+  };
+  const cpData = cachedChatroomDataObject.value;
+  return {
+    name: cpData.name!,
+    avatarUrl: getAbstractChatroomAvatarUrl(cpData.type!, routeChatroomId.value, cpData.other_user_id),
+  };
+});
 
-// Load messages from database and push to chat UI
-async function loadFromDatabase() {
-  const { data, error } = await supabase.from("messages").select("*");
+const { messages, sendMessage, deleteMessage, updateMessage } = useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
+watch(messages, (newMsgs, oldMsgs) => {
+  if (newMsgs && !oldMsgs && newMsgs.length > 0) {
+    scrollToBottom(true);
+  }
+});
 
-  if (error) {
-    logPostgrestError(error, "message fetching");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message fetching error")
-    );
+async function onHeaderClick() {
+  if (!cachedChatroomDataObject.value?.type) return;
+  const type = cachedChatroomDataObject.value.type;
+  if (type === 'direct') {
+    // Handle direct chatroom redirect
+    if (!cachedChatroomDataObject.value.other_user_id) return;
+    const otherUserId = cachedChatroomDataObject.value.other_user_id;
+
+    // Fetch other user name based on other_user_id
+    const { data, error } = await supabase.from('profiles')
+      .select('username')
+      .eq('user_id', otherUserId)
+      .maybeSingle();
+    if (error) {
+      logPostgrestError(error, 'username fetching');
+    }
+    if (!data) {
+      operationFeedbackHandler.displayError('Could not open user profile');
+      return;
+    }
+    navigateTo(`/profile/${data.username}`);
     return;
   }
-  data.forEach((element) => {
-    userMessages.value.push({
-      text: element.content,
-      timestamp: dateToHMTime(new Date(element.created_at)),
-    });
-  });
+
+  // Handle group chatroom redirect
+  navigateTo(`/chat/${routeChatroomId.value}/info`);
 }
 
-// Save messages to database
-async function saveToDatabase(message: string) {
-  const { error } = await supabase.from("messages").insert([
-    {
-      chatroom_id: routeChatroomId.value,
-      content: message,
-    },
-  ]);
+//////////////////////// <Logic for Emojis /> ////////////////////////
+function getNewMsgTextarea(): HTMLTextAreaElement | null {
+  return newMessageArea.value?.$el.querySelector('textarea') || null;
+}
+function saveCaret() {
+  const el = getNewMsgTextarea();
+  if (!el) return;
+  newMsgSelectionStart.value = el.selectionStart;
+  newMsgSelectionEnd.value = el.selectionEnd;
+}
+function insertEmoji(unicode: string) {
+  const el = getNewMsgTextarea();
+  if (!el) return;
 
-  if (error) {
-    logPostgrestError(error, "message insert");
-    operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown message upload error")
-    );
+  const before = newMessage.value.slice(0, newMsgSelectionEnd.value);
+  const after = newMessage.value.slice(newMsgSelectionEnd.value);
+  newMessage.value = before + unicode + after;
+
+  const newCaret = before.length + unicode.length
+  newMsgSelectionStart.value = newCaret;
+  newMsgSelectionEnd.value = newCaret;
+  nextTick(() => {
+    el.focus();
+    el.setSelectionRange(newCaret, newCaret);
+  })
+}
+async function onSelectEmoji(emoji: EmojiExt) {
+  insertEmoji(emoji.i);
+}
+
+//////////////////////// <Message Operations /> ////////////////////////
+async function onSendMessage() {
+  const msgTrimmed = newMessage.value.trim();
+  if (!isFalsy(msgTrimmed)) {
+    await sendMessage(msgTrimmed);
+    newMessage.value = '';
+    scrollToBottom();
   }
-
-  return null;
+}
+async function onDeleteMessage(id: string | null, index: number) {
+  if (!id) return;
+  deleteMessage(id, index);
+}
+async function onUpdateMessage(id: string | null, index: number, newContent: string) {
+  if (!id) return;
+  updateMessage(id, index, newContent);
 }
 
-// Push written message to chat UI & database
-async function sendMessage() {
-  if (newMessage.value.trim()) {
-    const timestamp = dateToHMTime(new Date());
-    saveToDatabase(newMessage.value.trim());
-    userMessages.value.push({
-      text: newMessage.value.trim(),
-      timestamp: timestamp,
-    });
-    newMessage.value = "";
-  }
-}
-
-// Enable using enter for sending a message
 async function handleKeyDown(event: KeyboardEvent) {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    sendMessage();
+    onSendMessage();
   }
 }
 
-// Scroll to the newest message
-async function scrollToBottom() {
-  await nextTick();
-  const component = messagesContainer.value;
-  if (component) {
-    component.scrollTop = component.scrollHeight;
-  }
+async function scrollToBottom(instant: boolean = false) {
+  await nextTick(() => {
+    const container = messagesContainer.value;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: instant ? 'instant' : 'smooth',
+      });
+    }
+  });
+}
+async function onContainerScroll() {
+  const el = messagesContainer.value;
+  if (!el) return;
+  isAtBottom.value = (el.scrollHeight - el.scrollTop - el.clientHeight) < bottomDetectionThreshold;
+  if (scrollingTimeout) clearTimeout(scrollingTimeout);
+  scrolling.value = true;
+  scrollingTimeout = setTimeout(() => {
+    scrolling.value = false;
+  }, minTimeAfterScrolling);
 }
 
-watch(
-  userMessages,
-  () => {
-    scrollToBottom();
-  },
-  { deep: true }
-);
-
-// on reload
 onMounted(() => {
+  isViewer.value = cachedChatroomDataObject.value?.current_user_role === 'viewer';
+  messagesContainer.value?.addEventListener('scroll', onContainerScroll);
   window.addEventListener("keydown", handleKeyDown);
-  loadFromDatabase();
-  scrollToBottom();
+  scrollToBottom(true);
 });
 
 onUnmounted(() => {
+  messagesContainer.value?.removeEventListener('scroll', onContainerScroll);
   window.removeEventListener("keydown", handleKeyDown);
 });
 </script>

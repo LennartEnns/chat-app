@@ -1,4 +1,6 @@
-create or replace view public.group_invitations_preview as
+create or replace view public.group_invitations_preview
+with (security_invoker)
+as
 select
   inv.*,
   (

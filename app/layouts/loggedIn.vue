@@ -7,13 +7,13 @@
       >
         <UButton
           v-if="isMobile"
-          :icon="buttonIcon"
+          :icon="mobileLeftButton.icon"
           color="neutral"
           variant="ghost"
           class="py-1 h-min self-center cursor-pointer"
           size="xl"
-          :label="buttonText"
-          @click="buttonTarget"
+          :label="mobileLeftButton.label"
+          @click="mobileLeftButton.onClick"
         />
         <UButton
           variant="ghost"
@@ -103,33 +103,52 @@
 
 <script lang="ts" setup>
 import type { NavigationMenuItem } from "@nuxt/ui";
+import type { CachedChatroomsMap } from "~/types/chatroom";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
 
+const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
+const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const route = useRoute();
-
+const drawerOpen = useOpenDrawer();
 const isMobile = useMobileDetector();
 const mobileMenuOpen = ref(false);
 
-const drawerOpen = useOpenDrawer();
-const buttonText = ref<string>("Back");
-const buttonIcon = ref<string>("i-lucide-arrow-left");
-
-async function buttonTarget() {
-  if (route.path === "/chat") {
-    drawerOpen.value = true;
-  } else {
-    navigateTo("/chat");
+const chatUrl = computed(() => lastChatroomState.value ? `/chat/${lastChatroomState.value}` : '/chat');
+const mobileLeftButton = computed(() => {
+  if (route.name === 'chat-id-info') {
+    return {
+      icon: 'i-lucide-arrow-left',
+      label: 'Back',
+      onClick: () => {
+        const chatroomId = route.params.id as string | null;
+        if (!chatroomId) navigateTo('/chat');
+        navigateTo(`/chat/${chatroomId}`);
+      },
+    };
   }
-}
-
-if (route.path === "/chat") {
-  buttonText.value = "Chats";
-  buttonIcon.value = "i-lucide-messages-square";
-}
+  const buttonData = {
+    icon: 'i-lucide-messages-square',
+    label: 'Chats',
+  };
+  if (route.name === 'chat' || route.name === 'chat-id') {
+    // These routes use the mobile drawer, so just open it
+    return {
+      ...buttonData,
+      onClick: () => drawerOpen.value = true,
+    }
+  }
+  // Default: Navigate to last chat, or to chat landing page if none exists
+  return {
+    ...buttonData,
+    label: 'Chat',
+    onClick: () => navigateTo(chatUrl.value),
+  }
+});
 
 async function logout(scope: "global" | "local" | "others") {
+  showLogoutModal.value = false;
   if (scope !== "others") {
     navigateTo("/");
   }
@@ -141,12 +160,16 @@ async function logout(scope: "global" | "local" | "others") {
     operationFeedbackHandler.displayError(
       getAuthErrorMessage(error, "Unexpected error during logout")
     );
-  } else if (scope === "others") {
+    return;
+  }
+  if (scope === "others") {
     operationFeedbackHandler.displaySuccess(
       "All other sessions have been terminated."
     );
-    showLogoutModal.value = false;
   }
+  // Clear state after successful logout
+  lastChatroomState.value = undefined;
+  cachedChatrooms.value = undefined;
 }
 
 async function onLogoutSelect() {
@@ -159,7 +182,10 @@ const items = ref<NavigationMenuItem[]>([
   {
     label: "Chat",
     icon: "i-lucide-messages-square",
-    to: "/chat",
+    onSelect: () => {
+      mobileMenuOpen.value = false;
+      navigateTo(chatUrl.value);
+    },
   },
   {
     label: "Settings",

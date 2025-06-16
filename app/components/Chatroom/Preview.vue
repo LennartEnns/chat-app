@@ -1,33 +1,55 @@
 <template>
-  <UButton variant="ghost" class="w-full p-0.5" @click="onUserSelect()">
-    <div class="flex max-w-full w-full">
+  <UButton variant="ghost" class="w-full p-1" @click="onChatroomSelect()">
+    <div class="flex items-center max-w-full w-full">
       <UAvatar :src="avatarUrl" icon="i-lucide-user" size="md" />
-      <div class="pl-3 flex flex-col flex-grow justify-start items-start">
-        <div class="font-bold text-neutral-600 dark:text-neutral-300">
+      <div class="pl-3 flex flex-col flex-grow justify-center items-start">
+        <div
+          class="font-bold w-full text-left text-neutral-600 dark:text-neutral-300 overflow-hidden line-clamp-1 text-ellipsis"
+        >
           {{ name }}
         </div>
-        <div class="font-light text-neutral-500" v-if="lastMsg">
+        <div
+          v-if="lastMsg"
+          class="font-light w-full text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
+        >
           {{ lastMsg }}
         </div>
       </div>
+      <UChip
+        v-if="numberNewMessages > 0"
+        :text="numberNewMessages"
+        size="3xl"
+        class="self-start mt-2 mr-2 light:text-error-500 dark:text-error-500"
+        :ui="{
+          base: 'px-1'
+        }"
+      />
     </div>
   </UButton>
 </template>
 
 <script lang="ts" setup>
-import type { UserSearchResult } from "~/types/userSearch";
-console.log("loaded");
 const props = defineProps<{
-  id: string;
-  name: string;
-  avatarUrl: string | undefined;
-  lastMsg: string | null;
+  chatroomId: string,
+  name: string,
+  avatarUrl: string | undefined,
+  lastMsg: string | null,
+  numberNewMessages: number,
 }>();
-console.log("Preview component loaded with props:", props.avatarUrl);
 
-// Handle user selection in the command palette
-async function onUserSelect() {
-  navigateTo(`/chat/${props.id}`);
+const drawerOpen = useOpenDrawer();
+const cachedChatroomDataObject = useCachedChatroom(props.chatroomId);
+
+async function onChatroomSelect() {
+  // When opening the chatroom, reset unread messages to 0 in the local state
+  setTimeout(() => {
+    if (cachedChatroomDataObject.value) {
+      console.log("Reset")
+      cachedChatroomDataObject.value = { ...cachedChatroomDataObject.value, number_new_messages: 0 };
+    }
+  }, 1000);
+  drawerOpen.value = false;
+  navigateTo(`/chat/${props.chatroomId}`);
 }
 </script>
 

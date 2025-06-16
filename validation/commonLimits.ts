@@ -9,3 +9,7 @@ export const groupChatroomLimits = {
     description: 255,
     imageSize: 300000, // Bytes
 }
+
+export const messageLimits = {
+    content: 511,
+}

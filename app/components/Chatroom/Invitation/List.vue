@@ -5,7 +5,7 @@
       {{ loading ? 'Loading invitations...' : 'No invitations' }}
     </div>
     <div v-else class="flex flex-col gap-4">
-      <ChatroomInvitationPreview v-for="(inv, index) in invitations" :key="index" :invitation="inv" />
+      <ChatroomInvitationPreview v-for="(inv, index) in invitations" :key="index" :invitation="inv" @rejected="emit('removeInvitation')" />
     </div>
   </div>
 </template>
@@ -18,6 +18,9 @@ defineProps<{
   loading?: boolean,
 }>();
 
+const emit = defineEmits<{
+  removeInvitation: [],
+}>();
 </script>
 
 <style>

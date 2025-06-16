@@ -17,15 +17,22 @@
             </template>
 
             <template v-else>
-                <UAvatarGroup :max="1">
-                <UChip 
-                    v-for="user in (chatroom as GroupChatroomData).users" 
-                    :key="user.id" 
-                    inset 
-                    color="primary">
-                    <UAvatar :src="user.avatarUrl" size="lg" />
-                </UChip>
-                </UAvatarGroup>
+                <template v-if="(chatroom as GroupChatroomData).avatar_url">
+                    <UChip inset color="primary">
+                        <UAvatar :src="(chatroom as GroupChatroomData).avatar_url" size="lg" />
+                    </UChip>
+                </template>
+                <template v-else>
+                    <UAvatarGroup :max="1">
+                        <UChip 
+                            v-for="user in (chatroom as GroupChatroomData).users" 
+                            :key="user.id" 
+                            inset 
+                            color="primary">
+                            <UAvatar :src="user.avatarUrl" size="lg" />
+                        </UChip>
+                    </UAvatarGroup>
+                </template>
             </template>
         </div>
 
@@ -47,6 +54,7 @@
                 class="newMessages custom-button-text"
                 :block="true"
                 :to="`/chat/${chatroom.chatroom_id}`"
+                @click="onUserSelect(chatroom.chatroom_id)"
             >
             {{ getChatroomDisplayName(chatroom) }}
             </UButton>
@@ -62,6 +70,10 @@ interface Props {
     title: string;
     chatrooms: (DirectChatroomData | GroupChatroomData)[];
     type: 'direct' | 'group';
+}
+
+async function onUserSelect(chatroom_id: string) {
+  navigateTo(`/chat/${chatroom_id}`);
 }
 
 const props = defineProps<Props>();

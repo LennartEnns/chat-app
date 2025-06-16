@@ -241,6 +241,46 @@ export type Database = {
         }
         Relationships: []
       }
+      user_to_abstract_chatroom: {
+        Row: {
+          chatroom_id: string
+          last_inside: string
+          user_id: string
+        }
+        Insert: {
+          chatroom_id: string
+          last_inside?: string
+          user_id?: string
+        }
+        Update: {
+          chatroom_id?: string
+          last_inside?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_to_abstract_chatroom_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_to_abstract_chatroom_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms_preview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_to_abstract_chatroom_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms_with_last_activity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_to_group: {
         Row: {
           chatroom_id: string
@@ -250,7 +290,7 @@ export type Database = {
         Insert: {
           chatroom_id: string
           role: Database["public"]["Enums"]["chatroom_role"]
-          user_id: string
+          user_id?: string
         }
         Update: {
           chatroom_id?: string
@@ -278,28 +318,14 @@ export type Database = {
     Views: {
       chatrooms_preview: {
         Row: {
+          current_user_role: Database["public"]["Enums"]["chatroom_role"] | null
           id: string | null
           last_activity: string | null
           last_message: string | null
           name: string | null
+          number_new_messages: number | null
           other_user_id: string | null
           type: Database["public"]["Enums"]["chatroom_type"] | null
-        }
-        Insert: {
-          id?: string | null
-          last_activity?: never
-          last_message?: never
-          name?: never
-          other_user_id?: never
-          type?: Database["public"]["Enums"]["chatroom_type"] | null
-        }
-        Update: {
-          id?: string | null
-          last_activity?: never
-          last_message?: never
-          name?: never
-          other_user_id?: never
-          type?: Database["public"]["Enums"]["chatroom_type"] | null
         }
         Relationships: []
       }
@@ -432,6 +458,40 @@ export type Database = {
           },
         ]
       }
+      messages_view: {
+        Row: {
+          chatroom_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_own: boolean | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms_preview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_chatroom_id_fkey"
+            columns: ["chatroom_id"]
+            isOneToOne: false
+            referencedRelation: "chatrooms_with_last_activity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       search_users: {
@@ -446,6 +506,10 @@ export type Database = {
           username: string
           displayname: string
         }[]
+      }
+      update_last_inside_chatroom: {
+        Args: { cid: string }
+        Returns: undefined
       }
     }
     Enums: {

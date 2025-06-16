@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="logged-in">
-    <div class="flex flex-col justify-center items-center pt-5">
+    <div class="flex flex-col justify-center items-center">
       <div class="glassContainer w-[41rem] max-w-[90%] md:max-w-[70%]">
         <UCard
           class="ring-0 bg-transparent h-full"

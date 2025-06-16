@@ -1,4 +1,6 @@
-create or replace view public.chatrooms_with_last_activity as
+create or replace view public.chatrooms_with_last_activity
+with (security_invoker)
+as
 select
   c.*,
   coalesce(
@@ -11,8 +13,26 @@ select
   ) as last_activity
 from public.chatrooms c;
 
+create or replace view public.group_chatrooms_last_activity_current_role
+with (security_invoker)
+as
+select
+  gc.*,
+  cwla.last_activity,
+  (
+    select utg.role
+    from public.user_to_group utg
+    where utg.chatroom_id = gc.chatroom_id
+      and utg.user_id = (select auth.uid())
+    limit 1
+  ) as current_user_role -- Role of current user in group
+from public.group_chatrooms gc
+join public.chatrooms_with_last_activity cwla on cwla.id = gc.chatroom_id;
+
 -- Use this to preview a list of all chats of a user
-create or replace view public.chatrooms_preview as
+create or replace view public.chatrooms_preview
+with (security_invoker)
+as
 select
   cwla.id, cwla.type, cwla.last_activity,
 
@@ -25,7 +45,7 @@ select
     from public.direct_chatrooms dc
     where dc.chatroom_id = cwla.id
   )
-  end as other_user_id, -- Only used for direct chatrooms
+  end as other_user_id, -- Only used for direct chatrooms (avatar fetching)
 
   case when cwla.type = 'group' then
     (
@@ -49,29 +69,31 @@ select
   as name,
 
   (
-    select msg.content
+    select case
+      when length(msg.content) > 30
+      then left(msg.content, 27) || '...'
+      else msg.content
+    end
     from public.messages msg
     where chatroom_id = cwla.id
     order by msg.created_at desc
     limit 1
-  ) as last_message
-from public.chatrooms_with_last_activity cwla;
+  ) as last_message,
 
-create or replace view public.group_chatrooms_last_activity_current_role as
-select
-  gc.*,
-  cwla.last_activity,
   (
-    select utg.role
-    from public.user_to_group utg
-    where utg.chatroom_id = gc.chatroom_id
-      and utg.user_id = (select auth.uid())
-    limit 1
-  ) as current_user_role -- Role of current user in group
-from public.group_chatrooms gc
-join public.chatrooms_with_last_activity cwla on cwla.id = gc.chatroom_id;
+    select count(1)
+    from public.messages
+    where chatroom_id = cwla.id
+    and created_at > utac.last_inside
+  ) as number_new_messages,
+  gclacr.current_user_role
+from public.chatrooms_with_last_activity cwla
+join public.user_to_abstract_chatroom utac on utac.chatroom_id = cwla.id and utac.user_id = (select auth.uid())
+join public.group_chatrooms_last_activity_current_role gclacr on gclacr.chatroom_id = cwla.id;
 
-create or replace view public.group_chatroom_members as
+create or replace view public.group_chatroom_members
+with (security_invoker)
+as
 select
   user_to_group.chatroom_id,
   pf.user_id,
