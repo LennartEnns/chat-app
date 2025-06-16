@@ -26,11 +26,20 @@
             </p>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
-            <div class="relative">
-              <p :class="`font-bold pb-5 ${themedSectionLabelClasses}`">
+            <p
+              v-if="!isEditingDescription"
+              :class="`font-bold pb-5 ${themedSectionLabelClasses}`"
+            >
+              Description
+            </p>
+            <div class="flex flex-row place-content-between">
+              <p
+                v-if="isEditingDescription"
+                :class="`font-bold pb-5 ${themedSectionLabelClasses}`"
+              >
                 Description
               </p>
-              <div class="flex flex-row size-fit absolute top-0 right-0">
+              <div class="flex flex-row size-fit">
                 <UButton
                   v-if="editMode"
                   :icon="isEditingDescription ? 'i-lucide-x' : 'i-lucide-pen'"
@@ -53,6 +62,7 @@
             <UTextarea
               v-if="isEditingDescription && editMode"
               class="w-50 md:w-70"
+              color="primary"
               :rows="14"
               :maxrows="14"
               autoresize
@@ -147,7 +157,7 @@
                 icon="i-lucide-x"
                 @click="toggleEdit"
               >
-                Cancel
+                Close
               </UButton>
             </div>
           </div>
@@ -160,94 +170,20 @@
         >
           <template #body>
             <div class="flex flex-col items-center px-5">
-              <div class="pb-5 text-neutral-700 dark:text-white">
-                <p :class="`font-bold ${themedSectionLabelClasses}`">
-                  Invitations
-                </p>
-              </div>
-              <div class="pb-5">
-                <div
-                  v-for="(invitation, index) in chatInvitations"
-                  :key="index"
-                  class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
-                >
-                  <UAvatar
-                    class="justify-self-center"
-                    icon="i-lucide-user"
-                    :src="
-                      (invitation.invitee_id &&
-                        getAvatarUrl(invitation.invitee_id)) ||
-                      undefined
-                    "
-                  />
-                  <div
-                    class="flex flex-col items-center justify-center truncate px-[0.6rem]"
-                  >
-                    <div class="truncate w-full text-center">
-                      {{ invitation.invitee_id }}
-                    </div>
-                  </div>
-                  <UButton
-                    v-if="!editMode"
-                    class="flex size-fit"
-                    size="xl"
-                    icon="i-lucide-pencil-line"
-                    @click="toggleEdit"
-                  >
-                    Edit
-                  </UButton>
-                  <UButton
-                    color="error"
-                    v-if="editMode"
-                    class="flex size-fit"
-                    size="xl"
-                    icon="i-lucide-x"
-                    @click="toggleEdit"
-                  >
-                    Cancel
-                  </UButton>
-                </div>
-              </div>
+              <InvitationColumn
+                :invitations="chatInvitations"
+                :editBoolean="editMode"
+                :text-theme="themedSectionLabelClasses"
+              />
             </div>
           </template>
         </UDrawer>
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
-          <div class="pb-5 text-neutral-700 pt-5 md:pt-0 dark:text-white">
-            <p
-              :class="`font-bold flex justify-center ${themedSectionLabelClasses}`"
-            >
-              Invitations
-            </p>
-          </div>
-          <div class="pb-5">
-            <div
-              v-for="(invitation, index) in chatInvitations"
-              :key="index"
-              class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
-            >
-              <UAvatar
-                class="justify-self-center"
-                icon="i-lucide-user"
-                :src="
-                  (invitation.invitee_id &&
-                    getAvatarUrl(invitation.invitee_id)) ||
-                  undefined
-                "
-              />
-              <div
-                class="flex flex-col items-center justify-center truncate px-[0.6rem]"
-              >
-                <div class="truncate w-full text-center">
-                  {{ invitation.invitee_username }}
-                </div>
-              </div>
-              <UButton
-                v-if="editMode"
-                icon="i-lucide-trash-2"
-                class="size-fit"
-              ></UButton>
-            </div>
-          </div>
+          <InvitationColumn
+            :invitations="chatInvitations"
+            :editBoolean="editMode"
+            :text-theme="themedSectionLabelClasses"
+          />
         </div>
       </div>
     </NuxtLayout>
@@ -261,6 +197,7 @@ import {
 } from "~~/errors/postgrestErrors";
 
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
+import InvitationColumn from "~/components/ChatInfo/InvitationColumn.vue";
 import type { Tables } from "~~/database.types";
 
 const { isLight } = useSSRSafeTheme();
