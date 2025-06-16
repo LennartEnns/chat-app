@@ -23,7 +23,8 @@
         v-if="numberNewMessages > 0"
         :text="numberNewMessages"
         size="3xl"
-        class="self-start mt-2 mr-2 light:text-error-500 dark:text-error-500"
+        inset
+        class="self-start light:text-error-500 dark:text-error-500"
         :ui="{
           base: 'px-1'
         }"
@@ -55,7 +56,7 @@ async function onChatroomSelect() {
     if (cachedChatroomDataObject.value) {
       cachedChatroomDataObject.value = { ...cachedChatroomDataObject.value, number_new_messages: 0 };
     }
-  }, 1000);
+  }, 500);
   drawerOpen.value = false;
   navigateTo(`/chat/${props.chatroomId}`);
 }

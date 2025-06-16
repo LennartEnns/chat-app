@@ -8,6 +8,11 @@ type DirectChatroomData = {
 };
 type GroupChatroomData = z.output<typeof createGroupChatroomSchema>;
 
+async function clearChatroomsCache() {
+  // Force chatrooms refetch by clearing in-memory cache
+  setTimeout(() => useState('chatrooms').value = undefined, 500);
+}
+
 /**
  * Central composable for reusable chatroom client actions
  */
@@ -48,6 +53,7 @@ export const useChatroomActions = () => {
       );
       return null;
     }
+    clearChatroomsCache();
     operationFeedbackHandler.displaySuccess('New chatroom has been created');
     return id;
   }
@@ -68,6 +74,7 @@ export const useChatroomActions = () => {
       );
       return null;
     }
+    clearChatroomsCache();
     operationFeedbackHandler.displaySuccess('New chatroom has been created');
 
     if (chatroomData.invitations.length === 0) return id;
@@ -90,6 +97,7 @@ export const useChatroomActions = () => {
       operationFeedbackHandler.displayError(error.message ?? 'Could not leave the chatroom');
       return false;
     }
+    clearChatroomsCache();
     operationFeedbackHandler.displaySuccess('Left the chatroom');
     return true;
   }

@@ -31,24 +31,28 @@
       <template #chats>
         <div
           v-if="chatroomsListFetchingStatus === 'success' || chatroomsListFetchingStatus === 'idle'"
-          class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
         >
-          <ChatroomPreview
-            v-for="(chatroom, index) in chatroomsWithAvatarUrl"
-            :key="index"
-            :class="`mb-2 glassBG  border-1 ${
-              routeChatroomId === chatroom.id
-                ? 'border-primary backdrop-brightness-110 dark:backdrop-brightness-250 '
-                : 'border-transparent dark:backdrop-brightness-150'
-            }`"
-            :chatroom-id="chatroom.id!"
-            :name="chatroom.name!"
-            :has-other-user-left="chatroom.type! === 'direct' && !chatroom.other_user_id"
-            :avatar-url="chatroom.avatarUrl"
-            :last-msg="chatroom.last_message"
-            :number-new-messages="chatroom.number_new_messages ?? 0"
-          />
-          <div v-if="!chatroomsWithAvatarUrl || chatroomsWithAvatarUrl.length === 0" class="text-xl text-muted text-center mb-2">
+          <div
+            v-if="!!chatroomsWithAvatarUrl && chatroomsWithAvatarUrl.length > 0"
+            class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
+          >
+            <ChatroomPreview
+              v-for="(chatroom, index) in chatroomsWithAvatarUrl"
+              :key="index"
+              :class="`mb-2 glassBG  border-1 ${
+                routeChatroomId === chatroom.id
+                  ? 'border-primary backdrop-brightness-110 dark:backdrop-brightness-250 '
+                  : 'border-transparent dark:backdrop-brightness-150'
+              }`"
+              :chatroom-id="chatroom.id!"
+              :name="chatroom.name!"
+              :has-other-user-left="chatroom.type! === 'direct' && !chatroom.other_user_id"
+              :avatar-url="chatroom.avatarUrl"
+              :last-msg="chatroom.last_message"
+              :number-new-messages="chatroom.number_new_messages ?? 0"
+            />
+          </div>
+          <div v-else class="text-lg text-muted text-center mt-4">
             No chatrooms
           </div>
         </div>
@@ -61,8 +65,8 @@
             Error loading chatrooms
           </div>
         </div>
-        <Skeleton class="mt-1" />
       </template>
+
       <template #invitations>
         <ChatroomInvitationList
           :invitations="inboundInvitations"
@@ -95,7 +99,6 @@ import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
 
 const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
-const lastChatroomsFetch= useState<Date | undefined>('lastChatroomsFetch');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
@@ -199,25 +202,14 @@ const previewQuery = supabase
 
 async function getChatroomList(): Promise<Tables<'chatrooms_preview'>[]> {
   console.log("Fetching chatrooms...");
-  if (lastChatroomsFetch.value && cachedChatrooms.value) {
-    const { count } = await supabase.from('chatrooms')
-    .select('id', {
-      head: true,
-      count: 'exact',
-    })
-    .gte('created_at', lastChatroomsFetch.value.toISOString());
-
-    // Prefer using cached chatrooms if available and if there are no new chatrooms
-    if (count === 0) {
-      console.log("Using cached chatrooms");
-      return chatroomsMapToArray(cachedChatrooms.value);
-    }
+  if (cachedChatrooms.value) {
+    // Prefer using cached chatrooms if available
+    console.log("Using cached chatrooms");
+    return chatroomsMapToArray(cachedChatrooms.value);
   }
-  lastChatroomsFetch.value = new Date();
 
   console.log("Fetching from DB...")
   const { data, error } = await previewQuery;
-  console.log(data);
 
   if (error) {
     logPostgrestError(error, "chatrooms fetching");
@@ -231,13 +223,16 @@ async function getChatroomList(): Promise<Tables<'chatrooms_preview'>[]> {
   return data;
 }
 
-const { data: chatrooms, status: chatroomsListFetchingStatus, refresh: refreshChatroomsList } = await useLazyAsyncData('chatroomsPreviewList', getChatroomList);
+const { data: chatrooms, status: chatroomsListFetchingStatus, refresh: refreshChatroomsList } = await useAsyncData('chatroomsPreviewList', getChatroomList, {
+  server: false,
+});
 let refetchChatroomsOnStateUpdate = true;
 // Re-fetch chatroom previews from local state when it is updated
 watch(cachedChatrooms, () => {
   if (!refetchChatroomsOnStateUpdate) return;
   refreshChatroomsList();
 }, {
+  immediate: true,
   deep: true,
 });
 watch(chatrooms, (rooms) => {

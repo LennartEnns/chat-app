@@ -151,13 +151,16 @@ async function checkExistsChatroom() {
 await checkExistsChatroom();
 
 // Freeze number of messages in time before setting it to 0 for the new messages marker to not disappear
-const numberNewMessagesFrozen = cachedChatroomDataObject.value?.number_new_messages ?? 0;
+const numberNewMessagesFrozen = ref(cachedChatroomDataObject.value?.number_new_messages ?? 0);
+async function removeNewMessagesMarker() {
+  // Make new messages marker disappear
+  numberNewMessagesFrozen.value = 0;
+}
 
 const chatroomPreview = computed(() => {
   if (!cachedChatroomDataObject.value) return {
     name: 'Chatroom',
     avatarUrl: undefined,
-    numberNewMessages: 0,
   };
   const cpData = cachedChatroomDataObject.value;
   return {
@@ -233,6 +236,7 @@ async function onSelectEmoji(emoji: EmojiExt) {
 
 //////////////////////// <Message Operations /> ////////////////////////
 async function onSendMessage() {
+  removeNewMessagesMarker();
   const msgTrimmed = newMessage.value.trim();
   if (!isFalsy(msgTrimmed)) {
     await sendMessage(msgTrimmed);
@@ -242,10 +246,12 @@ async function onSendMessage() {
 }
 async function onDeleteMessage(id: string | null, index: number) {
   if (!id) return;
+  removeNewMessagesMarker();
   deleteMessage(id, index);
 }
 async function onUpdateMessage(id: string | null, index: number, newContent: string) {
   if (!id) return;
+  removeNewMessagesMarker();
   updateMessage(id, index, newContent);
 }
 async function onLeaveChatroom() {
@@ -254,9 +260,7 @@ async function onLeaveChatroom() {
   });
   const success = await instance.result;
   if (!success) return;
-  // Force chatrooms refetch by clearing in-memory cache and navigate to overview page
-  useState('chatrooms').value = undefined;
-  nextTick(() => navigateTo('/chat'));
+  navigateTo('/chat');
 }
 
 async function handleKeyDown(event: KeyboardEvent) {
