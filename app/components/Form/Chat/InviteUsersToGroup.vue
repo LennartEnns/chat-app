@@ -1,6 +1,5 @@
 <template>
   <UForm
-    id="invite-form"
     class="space-y-6"
     :schema="schema"
     :state="state"

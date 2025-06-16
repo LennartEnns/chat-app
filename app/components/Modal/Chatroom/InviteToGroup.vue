@@ -14,7 +14,7 @@
         </template>
 
         <FormChatInviteUsersToGroup
-          id="invite-form"
+          ref="formRef"
           :preset-group="presetGroup"
           :preset-invitations="presetInvitations"
           @submit-form="onInvite"
@@ -26,8 +26,7 @@
               class="flex-1 flex justify-center"
               label="Invite"
               color="primary"
-              type="submit"
-              form="invite-form"
+              @click="onSubmitForm"
             />
             <UButton
               class="flex-1 flex justify-center"
@@ -60,6 +59,11 @@ defineProps<{
   presetInvitations?: UserInvitation[];
 }>();
 const emit = defineEmits<{ close: [] }>();
+
+const formRef = ref<{ $el: HTMLFormElement } | null>(null);
+async function onSubmitForm() {
+  formRef.value?.$el.requestSubmit();
+}
 
 async function onCancel() {
   emit("close");
