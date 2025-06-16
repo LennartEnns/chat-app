@@ -357,6 +357,7 @@ export type Database = {
           name: string | null
           role: Database["public"]["Enums"]["chatroom_role"] | null
           user_id: string | null
+          username: string | null
         }
         Relationships: [
           {

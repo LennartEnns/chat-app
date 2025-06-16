@@ -147,7 +147,9 @@
               </div>
               <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
                 <p class="truncate font-bold">
-                  {{ member.name }}
+                  <NuxtLink :to="`/profile/${member.username}`">{{
+                    member.name
+                  }}</NuxtLink>
                 </p>
                 <p class="line-clamp-2 leading-4">
                   {{ member.description ?? "Hey there! I am using YapSpace." }}
