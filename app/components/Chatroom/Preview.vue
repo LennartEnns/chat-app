@@ -13,10 +13,9 @@
           User has left
         </div>
         <div
-          v-if="lastMsg"
           class="font-light w-full text-left text-neutral-500 overflow-hidden line-clamp-1 text-ellipsis"
         >
-          {{ lastMsg }}
+          {{ lastMsg }}<br v-if="!lastMsg" />
         </div>
       </div>
       <UChip
@@ -26,7 +25,7 @@
         inset
         class="self-start light:text-error-500 dark:text-error-500"
         :ui="{
-          base: 'px-1'
+          base: 'px-1',
         }"
       />
     </div>
@@ -35,12 +34,12 @@
 
 <script lang="ts" setup>
 const props = defineProps<{
-  chatroomId: string,
-  name: string | undefined,
-  hasOtherUserLeft: boolean,
-  avatarUrl: string | undefined,
-  lastMsg: string | null,
-  numberNewMessages: number,
+  chatroomId: string;
+  name: string | undefined;
+  hasOtherUserLeft: boolean;
+  avatarUrl: string | undefined;
+  lastMsg: string | null;
+  numberNewMessages: number;
 }>();
 
 const drawerOpen = useOpenDrawer();
@@ -49,12 +48,19 @@ const route = useRoute();
 
 async function onChatroomSelect() {
   // Avoid page reload if chatroom is already selected
-  if (route.name === 'chat-id' && (route.params.id as string) === props.chatroomId) return;
+  if (
+    route.name === "chat-id" &&
+    (route.params.id as string) === props.chatroomId
+  )
+    return;
 
   // When opening the chatroom, reset unread messages to 0 in the local state
   setTimeout(() => {
     if (cachedChatroomDataObject.value) {
-      cachedChatroomDataObject.value = { ...cachedChatroomDataObject.value, number_new_messages: 0 };
+      cachedChatroomDataObject.value = {
+        ...cachedChatroomDataObject.value,
+        number_new_messages: 0,
+      };
     }
   }, 500);
   drawerOpen.value = false;
