@@ -245,7 +245,7 @@
         >
           <template #body>
             <div class="flex flex-col items-center px-5">
-              <InvitationColumn
+              <ChatroomInfoInvitationColumn
                 :invitations="chatInvitations"
                 :edit-boolean="editMode"
                 :text-theme="themedSectionLabelClasses"
@@ -254,7 +254,7 @@
           </template>
         </UDrawer>
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
-          <InvitationColumn
+          <ChatroomInfoInvitationColumn
             :invitations="chatInvitations"
             :edit-boolean="editMode"
             :text-theme="themedSectionLabelClasses"
@@ -292,7 +292,6 @@ import {
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
-import InvitationColumn from "~/components/ChatInfo/InvitationColumn.vue";
 import type { Enums, Tables } from "~~/database.types";
 import type { NonEmptyArray, RequireNonNull } from "~/types/tsUtils/helperTypes";
 import chatroomRolesVis from '~/visualization/chatroomRoles';
