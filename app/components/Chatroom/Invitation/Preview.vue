@@ -2,7 +2,14 @@
   <div key="index" class="flex flex-col items-center border-2 rounded-lg py-2">
     <span v-if="invitation.invitor_username" class="flex flex-row items-center gap-2">
       <div class="text-md text-highlighted">Invitor:</div>
-      <UAvatar :src="invitorAvatarUrl" size="2xs" />
+      <UAvatar
+        :src="invitorAvatarUrl"
+        icon="i-lucide-user"
+        size="2xs"
+        :ui="{
+          icon: 'text-lg',
+        }"
+      />
       <ULink :to="`/profile/${invitation.invitor_username}`" class="text-md flex flex-row items-center gap-1">
         {{ invitation.invitor_username }}
         <UIcon name="i-lucide-external-link" />

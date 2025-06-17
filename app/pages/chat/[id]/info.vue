@@ -373,7 +373,7 @@ const chatroom = ref<Chatroom>({
   description: "Loading description...",
   current_user_role: "member",
   avatarPath: avatarPath,
-  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, true),
+  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, false),
 });
 
 async function updateGroupDescription() {
