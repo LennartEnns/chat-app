@@ -335,6 +335,7 @@ const chatroom = ref<Chatroom>({
 async function updateGroupDescription() {
   toggleEdit();
   if (newDescription.value != chatroom.value.description) {
+    chatroom.value.description = newDescription.value!;
     const { error } = await supabase
       .from("group_chatrooms")
       .update({ description: newDescription.value })
@@ -356,6 +357,7 @@ async function updateGroupDescription() {
 async function updateGroupName() {
   toggleEdit();
   if (newName.value != chatroom.value.name) {
+    chatroom.value.name = newName.value!;
     const { error } = await supabase
       .from("group_chatrooms")
       .update({ name: newName.value })
