@@ -15,8 +15,8 @@
                   :editable="editMode"
                   :clearable="editMode"
                   styling="border-2 border-defaultNeutral-700 size-full"
-                  root_styling="relative h-70 w-70 md:h-50 md:w-50"
-                  icon_styling="border-2 border-defaultNeutral-700 size-full"
+                  rootStyling="relative h-70 w-70 md:h-50 md:w-50"
+                  iconStyling="border-2 border-defaultNeutral-700 size-full"
                 />
               </div>
             </div>
