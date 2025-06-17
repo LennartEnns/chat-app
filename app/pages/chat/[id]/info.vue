@@ -143,13 +143,49 @@
                 />
                 <div>
                   <UBadge
-                    class="font-bold rounded-full"
+                    v-if="!editMode"
+                    class="font-bold rounded-full cursor-pointer"
                     :color="getColor(member.role)"
                     :ui="{
                       base: 'max-w-11 h-5 text-[10px] flex justify-center',
                     }"
-                    >{{ member.role }}</UBadge
                   >
+                    {{ member.role }}
+                  </UBadge>
+                  <USelect
+                    v-if="editMode"
+                    trailing-icon=""
+                    variant="outline"
+                    v-model="chatMembers[index]!.role!"
+                    :items="availableRoles"
+                    @change="() => handleRoleChange(index)"
+                  >
+                    <!-- Trigger: badge showing current role -->
+                    <template #default="{ open }">
+                      <UBadge
+                        class="font-bold rounded-full cursor-pointer"
+                        :color="getColor(member.role)"
+                        :ui="{
+                          base: 'max-w-11 h-5 text-[10px] flex justify-center',
+                        }"
+                      >
+                        {{ member.role }}
+                      </UBadge>
+                    </template>
+
+                    <!-- Dropdown items: badges -->
+                    <template #item="{ item }">
+                      <UBadge
+                        class="font-bold rounded-full"
+                        :color="getColor(item)"
+                        :ui="{
+                          base: 'max-w-11 h-5 text-[10px] flex justify-center w-full',
+                        }"
+                      >
+                        {{ item }}
+                      </UBadge>
+                    </template>
+                  </USelect>
                 </div>
               </div>
               <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
@@ -258,7 +294,8 @@ import {
 
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import InvitationColumn from "~/components/ChatInfo/InvitationColumn.vue";
-import type { Tables } from "~~/database.types";
+import type { Enums, Tables } from "~~/database.types";
+import type { NonEmptyArray } from "~/types/tsUtils/helperTypes";
 
 const { isLight } = useSSRSafeTheme();
 
@@ -275,6 +312,13 @@ type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
   "id" | "invitee_id" | "as_role" | "invitee_username"
 >;
+
+const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
+  "member",
+  "admin",
+  "mod",
+  "viewer",
+];
 
 const chatInvitations = ref<ChatInvitation[]>([]);
 
@@ -471,6 +515,21 @@ async function removeMember(index: number, user_id: string | null) {
     );
   } else {
     operationFeedbackHandler.displaySuccess("Removed user from chatroom.");
+  }
+}
+
+async function handleRoleChange(index: number) {
+  const { error } = await supabase
+    .from("user_to_group")
+    .update({ role: chatMembers.value[index]?.role! })
+    .eq("user_id", chatMembers.value[index]?.user_id!);
+  if (error) {
+    logPostgrestError(error, "role update");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Could not update member role.")
+    );
+  } else {
+    operationFeedbackHandler.displaySuccess("Updated member role.");
   }
 }
 
