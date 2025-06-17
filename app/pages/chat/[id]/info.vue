@@ -14,8 +14,8 @@
                   :editable="editMode"
                   :clearable="editMode"
                   styling="border-2 border-defaultNeutral-700 size-full"
-                  root_styling=""
-                  icon_styling=""
+                  root-styling=""
+                  icon-styling=""
                 />
               </div>
             </div>
@@ -275,7 +275,7 @@ const chatroom = ref<Chatroom>({
   description: "Loading description...",
   current_user_role: "member",
   avatarPath: avatarPath,
-  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, true),
+  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, false),
 });
 
 const { data: chatroomInfoData } = await useAsyncData(

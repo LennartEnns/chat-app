@@ -53,7 +53,7 @@ async function onChatroomSelect() {
 
   // When opening the chatroom, reset unread messages to 0 in the local state
   setTimeout(() => {
-    if (cachedChatroomDataObject.value) {
+    if (cachedChatroomDataObject.value && cachedChatroomDataObject.value.number_new_messages !== 0) {
       cachedChatroomDataObject.value = { ...cachedChatroomDataObject.value, number_new_messages: 0 };
     }
   }, 500);

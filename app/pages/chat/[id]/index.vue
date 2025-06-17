@@ -8,7 +8,7 @@
         }"
       >
         <UButton variant="ghost" class="flex items-center m-0 py-1 px-2" @click="onHeaderClick">
-          <UAvatar :src="computedAvatarUrl" icon="i-lucide-user" />
+          <UAvatar :src="cachedChatroomDataObject?.avatarUrl" icon="i-lucide-user" />
           <ClientOnly>
             <div v-if="cachedChatroomDataObject">
                <h1 v-if="!hasOtherUserLeft" class="text-black dark:text-white">
@@ -165,10 +165,9 @@ const chatroomPreview = computed(() => {
   const cpData = cachedChatroomDataObject.value;
   return {
     name: cpData.name!,
-    avatarUrlRef: getAbstractChatroomAvatarUrl(cpData.type!, routeChatroomId.value, cpData.other_user_id),
+    avatarUrl: cachedChatroomDataObject.value.avatarUrl,
   };
 });
-const computedAvatarUrl = computed(() => chatroomPreview.value.avatarUrlRef.value);
 
 const { messages, sendMessage, deleteMessage, updateMessage } = useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
 watch(messages, (newMsgs, oldMsgs) => {
