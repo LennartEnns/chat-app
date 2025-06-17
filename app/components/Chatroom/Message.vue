@@ -12,12 +12,10 @@
   >
     {{ dateMarkerText }}
   </div>
-  <div
-    :class="`max-w-[90%] mt-2.5 flex flex-col items-center gap-2 ${messagePosition}`"
-  >
-    <div class="flex flex-row gap-1 w-full">
+  <div :class="`max-w-[90%] mt-2.5 flex flex-col gap-1 ${messagePosition}`">
+    <div v-if="message.is_own" class="flex flex-row gap-1 w-full justify-end">
       <UPopover
-        v-if="message.is_own && showOwnMsgPopover && !editingMessage"
+        v-if="showOwnMsgPopover && !editingMessage"
         v-model:open="popoverOpen"
         mode="hover"
         arrow
@@ -29,13 +27,11 @@
           content: 'rounded-xl',
         }"
       >
-        <!-- eslint-disable vue/no-v-html -->
         <div
           :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           @touchstart="popoverOpen = true"
           v-html="contentLinkified"
         />
-        <!-- eslint-enable -->
         <template #content>
           <div class="p-1 flex flex-row">
             <UButton
@@ -53,7 +49,7 @@
           </div>
         </template>
       </UPopover>
-      <div v-else-if="editingMessage">
+      <div v-else-if="editingMessage" class="flex-grow">
         <UTextarea
           id="editArea"
           v-model="newMessage"
@@ -84,25 +80,45 @@
       </div>
       <div
         v-else
-        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
         v-html="contentLinkified"
       />
-      <UButton
-        v-if="!message.is_own && showUserInfo && message.username"
-        variant="ghost"
-        class="ml-2 flex flex-row items-center gap-2 h-fit"
-        @click="onAvatarClick"
-      >
-        <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
-        <div class="text-muted whitespace-nowrap select-none">
+    </div>
+
+    <div
+      v-else
+      class="grid items-start"
+      :style="{ gridTemplateColumns: '40px 1fr' }"
+    >
+      <div class="flex justify-center">
+        <UButton
+          v-if="showUserInfo && message.username"
+          variant="ghost"
+          class="p-0 h-fit"
+          @click="onAvatarClick"
+        >
+          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
+        </UButton>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div
+          v-if="showUserInfo && message.username"
+          class="text-muted text-sm whitespace-nowrap select-none"
+        >
           {{ message.username }}
         </div>
-      </UButton>
+        <div
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          v-html="contentLinkified"
+        />
+      </div>
     </div>
+
     <div
       v-if="showHmTime"
       :class="`text-xs text-muted px-2 ${
-        message.is_own ? 'self-end' : 'self-start'
+        message.is_own ? 'self-end' : 'partner-timestamp'
       }`"
     >
       {{ displayedTime }}
