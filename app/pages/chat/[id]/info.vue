@@ -119,22 +119,22 @@
               @click="onInviteUser"
             />
           </div>
-          <div class="flex flex-wrap relative justify-center gap-3 p-5">
+          <div class="flex flex-wrap justify-center gap-3 p-5">
             <div
               v-for="(member, index) in chatMembers"
               :key="index"
-              class="ring-0 glassContainer text-neutral-700 dark:text-white member"
+              class="ring-0 glassContainer text-neutral-700 dark:text-white member relative"
             >
               <UButton
                 v-if="member.role != 'admin' && editMode"
                 icon="i-lucide-minus"
                 size="xs"
-                class="size-fit absolute"
+                class="size-fit absolute right-1 top-1"
                 @click="removeMember(index, member.user_id)"
               />
               <div class="flex flex-col items-center w-max">
                 <UAvatar
-                  class="mb-1 w-full h-11"
+                  class="mb-1 w-11 h-11"
                   icon="i-lucide-user"
                   :src="
                     (member.user_id && getAvatarUrl(member.user_id)) ||
@@ -147,13 +147,13 @@
                     class="font-bold rounded-full cursor-pointer"
                     :color="getColor(member.role)"
                     :ui="{
-                      base: 'max-w-11 h-5 text-[10px] flex justify-center',
+                      base: 'max-w-11 h-5 w-11 text-[10px] flex justify-center',
                     }"
                   >
                     {{ member.role }}
                   </UBadge>
                   <USelect
-                    v-if="editMode"
+                    v-if="editMode && member.role != 'admin'"
                     trailing-icon=""
                     variant="outline"
                     v-model="chatMembers[index]!.role!"
@@ -166,7 +166,7 @@
                         class="font-bold rounded-full cursor-pointer"
                         :color="getColor(member.role)"
                         :ui="{
-                          base: 'max-w-11 h-5 text-[10px] flex justify-center',
+                          base: 'max-w-11 w-11 h-5 text-[10px] flex justify-center',
                         }"
                       >
                         {{ member.role }}
