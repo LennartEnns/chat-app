@@ -85,16 +85,23 @@
       />
     </div>
 
-    <div v-else class="flex flex-row items-start gap-2">
-      <UButton
-        v-if="showUserInfo && message.username"
-        variant="ghost"
-        class="p-0 h-fit"
-        @click="onAvatarClick"
-      >
-        <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
-      </UButton>
-      <div :class="`flex flex-col gap-1 ${!showUserInfo ? 'ml-[40px]' : ''}`">
+    <div
+      v-else
+      class="grid items-start"
+      :style="{ gridTemplateColumns: '40px 1fr' }"
+    >
+      <div class="flex justify-center">
+        <UButton
+          v-if="showUserInfo && message.username"
+          variant="ghost"
+          class="p-0 h-fit"
+          @click="onAvatarClick"
+        >
+          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
+        </UButton>
+      </div>
+
+      <div class="flex flex-col gap-1">
         <div
           v-if="showUserInfo && message.username"
           class="text-muted text-sm whitespace-nowrap select-none"
