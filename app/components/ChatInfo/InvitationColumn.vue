@@ -20,7 +20,7 @@
         class="flex flex-col items-center justify-center truncate px-[0.6rem]"
       >
         <div class="flex flex-row items-center w-full">
-          <div class="truncate text-center">
+          <div class="truncate text-center font-bold">
             {{ invitation.invitee_username }}
           </div>
           <UBadge
