@@ -1,3 +1,5 @@
+
+-- This creates the circular reference and enforces your business rule.
 alter table public.chatrooms
   add constraint chatrooms_pinned_message_fkey
-  foreign key (pinned_message) references public.messages (id) on delete set null;
+  foreign key (id, pinned_message) references public.messages (chatroom_id, id) on delete set null;
