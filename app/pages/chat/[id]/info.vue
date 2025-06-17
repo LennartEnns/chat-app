@@ -100,9 +100,9 @@
             />
             <p
               v-if="!isEditingDescription"
-              class="w-full whitespace-pre-line wrap-anywhere"
+              :class="`w-full whitespace-pre-line wrap-anywhere ${isFalsy(chatroom.description) ? 'text-muted' : ''}`"
             >
-              {{ chatroom?.description || "No Description" }}
+              {{ chatroom.description || "No Description" }}
             </p>
           </div>
         </div>
@@ -177,14 +177,18 @@
                     <template #item="{ item }">
                       <UBadge
                         class="font-bold rounded-full"
-                        :color="chatroomRolesVis[member.role].color"
+                        :color="chatroomRolesVis[item].color"
                         :ui="{
-                          base: 'max-w-11 h-5 text-[10px] flex justify-center w-full',
+                          base: 'max-w-11 w-full h-5 text-[10px] flex justify-center',
                         }"
                       >
-                        {{ item }}
+                        {{ chatroomRolesVis[item].label }}
                       </UBadge>
                     </template>
+
+                    <template #content-bottom>
+                      <UButton icon="i-lucide-circle-help" variant="outline" color="info" class="text-muted flex justify-center" @click="rolesHelpModal.open()" />
+                  </template>
                   </USelect>
                 </div>
               </div>
@@ -292,6 +296,7 @@ import {
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
+import RolesInfo from "~/components/Modal/Chatroom/RolesInfo.vue";
 import type { Enums, Tables } from "~~/database.types";
 import type { NonEmptyArray, RequireNonNull } from "~/types/tsUtils/helperTypes";
 import chatroomRolesVis from '~/visualization/chatroomRoles';
@@ -300,8 +305,9 @@ type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
   "id" | "invitee_id" | "as_role" | "invitee_username"
 >;
+type CRViewNonNullable = RequireNonNull<Tables<"group_chatrooms_last_activity_current_role">, 'chatroom_id' | 'name'>;
 type Chatroom = Omit<
-  Tables<"group_chatrooms_last_activity_current_role">,
+  CRViewNonNullable,
   "last_activity" | "avatarUrl"
 > & {
   avatarPath: string;
@@ -316,14 +322,15 @@ const open = ref(false);
 const supabase = useSupabaseClient();
 
 const overlay = useOverlay();
+const rolesHelpModal = overlay.create(RolesInfo);
 const inviteModal = overlay.create(InviteToGroup);
 
 const chatMembers = ref<ChatroomMember[]>([]);
 
 const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
-  "member",
   "admin",
   "mod",
+  "member",
   "viewer",
 ];
 
@@ -424,28 +431,27 @@ const { data: chatroomInfoData } = await useAsyncData(
 );
 async function loadChatInfo() {
   const { data, error } = await supabase
-    .from("group_chatrooms")
-    .select("name, description")
+    .from("group_chatrooms_last_activity_current_role")
+    .select("name, description, current_user_role")
     .eq("chatroom_id", chatroom.value.chatroom_id!)
     .single();
 
   if (error) {
     logPostgrestError(error, "chat-info fetching");
     operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown chat-info fetching error")
+      getPostgrestErrorMessage(error, "Could not load chatroom info")
     );
     return null;
   }
   return data;
 }
-
 watch(
   chatroomInfoData,
   (data) => {
     if (!data) {
       return;
     }
-    chatroom.value.name = data.name;
+    chatroom.value.name = data.name!;
     chatroom.value.description = data.description;
     newDescription.value = chatroom.value.description;
     newName.value = chatroom.value.name;
