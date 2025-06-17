@@ -4,7 +4,7 @@
   </div>
   <div class="pb-5">
     <div
-      v-for="(invitation, index) in props.invitations"
+      v-for="(invitation, index) in keepInvites"
       :key="index"
       class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation mb-2"
     >
@@ -36,7 +36,7 @@
       <UButton
         icon="i-lucide-trash-2"
         class="size-fit"
-        @click="deleteInvite(invitation.id)"
+        @click="deleteInvite(index, invitation.id)"
       />
     </div>
   </div>
@@ -52,12 +52,21 @@ import {
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 
+const props = defineProps<{
+  invitations: ChatInvitation[];
+  editBoolean: boolean;
+  textTheme: string;
+}>();
+
+const keepInvites = ref<ChatInvitation[]>(props.invitations);
+
 type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
   "id" | "invitee_id" | "as_role" | "invitee_username"
 >;
 
-async function deleteInvite(id: string | null) {
+async function deleteInvite(index: number, id: string | null) {
+  keepInvites.value = keepInvites.value.toSpliced(index, 1);
   const { error } = await supabase
     .from("group_invitations")
     .delete()
@@ -71,12 +80,6 @@ async function deleteInvite(id: string | null) {
     operationFeedbackHandler.displaySuccess("Deleted Chatroom Invitation.");
   }
 }
-
-const props = defineProps<{
-  invitations: ChatInvitation[];
-  editBoolean: boolean;
-  textTheme: string;
-}>();
 </script>
 
 <style></style>

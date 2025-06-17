@@ -127,10 +127,10 @@
             >
               <UButton
                 v-if="member.role != 'admin' && editMode"
-                icon="i-lucide-trash-2"
+                icon="i-lucide-minus"
                 size="xs"
                 class="size-fit absolute"
-                @click="removeMember(member.user_id)"
+                @click="removeMember(index, member.user_id)"
               />
               <div class="flex flex-col items-center w-max">
                 <UAvatar
@@ -456,7 +456,8 @@ async function onInviteUser() {
   });
 }
 
-async function removeMember(user_id: string | null) {
+async function removeMember(index: number, user_id: string | null) {
+  chatMembers.value = chatMembers.value.toSpliced(index, 1);
   const { error } = await supabase
     .from("user_to_group")
     .delete()
