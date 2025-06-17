@@ -80,7 +80,7 @@
       </div>
       <div
         v-else
-        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
         v-html="contentLinkified"
       />
     </div>
