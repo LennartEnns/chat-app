@@ -472,6 +472,7 @@ async function loadChatMembers() {
   data.forEach((element) => {
     chatMembers.value.push(element);
   });
+  chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
 }
 
 async function loadChatInvitations() {
