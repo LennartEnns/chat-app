@@ -15,8 +15,8 @@
                   :editable="editMode"
                   :clearable="editMode"
                   styling="border-2 border-defaultNeutral-700 size-full"
-                  rootStyling="relative h-70 w-70 md:h-50 md:w-50"
-                  iconStyling="border-2 border-defaultNeutral-700 size-full"
+                  root-styling="relative h-70 w-70 md:h-50 md:w-50"
+                  icon-styling="border-2 border-defaultNeutral-700 size-full"
                 />
               </div>
             </div>
@@ -30,9 +30,9 @@
             </p>
             <UInput
               v-if="isEditingName && editMode"
+              v-model="newName"
               size="xl"
               class="flex w-fit"
-              v-model="newName"
             />
             <UButton
               v-if="editMode"
@@ -88,13 +88,13 @@
             </div>
             <UTextarea
               v-if="isEditingDescription && editMode"
+              v-model="newDescription"
               class="w-90 md:w-65 lg:w-70"
               color="primary"
               :rows="8"
               :maxrows="8"
-              :maxLength="255"
+              :max-length="255"
               autoresize
-              v-model="newDescription"
               variant="outline"
               placeholder="Tell the world what this group is about..."
             />
@@ -145,31 +145,31 @@
                   <UBadge
                     v-if="!editMode"
                     class="font-bold rounded-full cursor-pointer"
-                    :color="getColor(member.role)"
+                    :color="chatroomRolesVis[member.role].color"
                     :ui="{
                       base: 'max-w-11 h-5 w-11 text-[10px] flex justify-center',
                     }"
                   >
-                    {{ member.role }}
+                    {{ chatroomRolesVis[member.role].label }}
                   </UBadge>
                   <USelect
                     v-if="editMode && member.role != 'admin'"
+                    v-model="chatMembers[index]!.role"
                     trailing-icon=""
                     variant="outline"
-                    v-model="chatMembers[index]!.role!"
                     :items="availableRoles"
                     @change="() => handleRoleChange(index)"
                   >
                     <!-- Trigger: badge showing current role -->
-                    <template #default="{ open }">
+                    <template #default>
                       <UBadge
                         class="font-bold rounded-full cursor-pointer"
-                        :color="getColor(member.role)"
+                        :color="chatroomRolesVis[member.role].color"
                         :ui="{
                           base: 'max-w-11 w-11 h-5 text-[10px] flex justify-center',
                         }"
                       >
-                        {{ member.role }}
+                        {{ chatroomRolesVis[member.role].label }}
                       </UBadge>
                     </template>
 
@@ -177,7 +177,7 @@
                     <template #item="{ item }">
                       <UBadge
                         class="font-bold rounded-full"
-                        :color="getColor(item)"
+                        :color="chatroomRolesVis[member.role].color"
                         :ui="{
                           base: 'max-w-11 h-5 text-[10px] flex justify-center w-full',
                         }"
@@ -206,9 +206,9 @@
                 <UTooltip text="View invitations">
                   <UButton
                     class="flex size-fit mb-3"
-                    @click="openDrawer"
                     color="primary"
                     trailing-icon="i-lucide-chevron-left"
+                    @click="openDrawer"
                   />
                 </UTooltip>
               </div>
@@ -238,16 +238,16 @@
         </div>
         <!-- Invitations Column-->
         <UDrawer
+          v-model:open="open"
           :handle="false"
           direction="right"
-          v-model:open="open"
           class="hidden md:block lg:hidden"
         >
           <template #body>
             <div class="flex flex-col items-center px-5">
               <InvitationColumn
                 :invitations="chatInvitations"
-                :editBoolean="editMode"
+                :edit-boolean="editMode"
                 :text-theme="themedSectionLabelClasses"
               />
             </div>
@@ -256,7 +256,7 @@
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
           <InvitationColumn
             :invitations="chatInvitations"
-            :editBoolean="editMode"
+            :edit-boolean="editMode"
             :text-theme="themedSectionLabelClasses"
           />
           <div class="md:hidden p-10">
@@ -291,11 +291,24 @@ import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
-
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import InvitationColumn from "~/components/ChatInfo/InvitationColumn.vue";
 import type { Enums, Tables } from "~~/database.types";
-import type { NonEmptyArray } from "~/types/tsUtils/helperTypes";
+import type { NonEmptyArray, RequireNonNull } from "~/types/tsUtils/helperTypes";
+import chatroomRolesVis from '~/visualization/chatroomRoles';
+
+type ChatInvitation = Pick<
+  Tables<"group_invitations_preview">,
+  "id" | "invitee_id" | "as_role" | "invitee_username"
+>;
+type Chatroom = Omit<
+  Tables<"group_chatrooms_last_activity_current_role">,
+  "last_activity" | "avatarUrl"
+> & {
+  avatarPath: string;
+  avatarUrl: Ref<string | undefined>;
+};
+type ChatroomMember = RequireNonNull<Tables<"group_chatroom_members">, 'role' | 'user_id'>;
 
 const { isLight } = useSSRSafeTheme();
 
@@ -306,12 +319,7 @@ const supabase = useSupabaseClient();
 const overlay = useOverlay();
 const inviteModal = overlay.create(InviteToGroup);
 
-const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
-
-type ChatInvitation = Pick<
-  Tables<"group_invitations_preview">,
-  "id" | "invitee_id" | "as_role" | "invitee_username"
->;
+const chatMembers = ref<ChatroomMember[]>([]);
 
 const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
   "member",
@@ -356,14 +364,6 @@ async function toggleEditName() {
 
 const newDescription = ref<string | null>();
 const newName = ref<string>();
-
-type Chatroom = Omit<
-  Tables<"group_chatrooms_last_activity_current_role">,
-  "last_activity" | "avatarUrl"
-> & {
-  avatarPath: string;
-  avatarUrl: Ref<string | undefined>;
-};
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
 
@@ -470,7 +470,7 @@ async function loadChatMembers() {
     return;
   }
   data.forEach((element) => {
-    chatMembers.value.push(element);
+    chatMembers.value.push((element as ChatroomMember));
   });
   chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
 }
@@ -520,10 +520,13 @@ async function removeMember(index: number, user_id: string | null) {
 }
 
 async function handleRoleChange(index: number) {
+  if (!chatMembers.value[index]) return;
+  const newRole = chatMembers.value[index].role;
+  const userId = chatMembers.value[index].user_id;
   const { error } = await supabase
     .from("user_to_group")
-    .update({ role: chatMembers.value[index]?.role! })
-    .eq("user_id", chatMembers.value[index]?.user_id!);
+    .update({ role: newRole })
+    .eq("user_id", userId);
   if (error) {
     logPostgrestError(error, "role update");
     operationFeedbackHandler.displayError(
