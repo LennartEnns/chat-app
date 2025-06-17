@@ -7,3 +7,6 @@ create table if not exists messages (
 
   constraint content_length_check check (length(content) <= 511)
 );
+
+-- Enable realtime event listening for message operations
+alter publication supabase_realtime add table messages;

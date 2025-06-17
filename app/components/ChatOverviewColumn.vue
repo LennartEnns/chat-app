@@ -248,19 +248,28 @@ watch(chatrooms, (rooms) => {
   immediate: true,
 });
 
-const chatroomsWithAvatarUrl = computed(() =>
-  chatrooms.value?.map((chatroom) => {
-    const avatarUrl = getAbstractChatroomAvatarUrl(
+const { data: chatroomAvatarRefs } = await useLazyAsyncData('chatroomsAvatarUrls', async () => {
+  if (!chatrooms.value || chatrooms.value.length === 0) return ({});
+  return Object.fromEntries(
+    chatrooms.value.map((chatroom) =>
+    [chatroom.id!, getAbstractChatroomAvatarUrl(
       chatroom.type!,
       chatroom.id!,
       chatroom.other_user_id
-    );
+    )])
+  );
+}, {
+    immediate: true,
+    server: false,
+    watch: [chatrooms],
+  }
+);
+const chatroomsWithAvatarUrl = computed(() => {
+  return chatrooms.value?.map((chatroom) => {
     return {
       ...chatroom,
-      avatarUrl,
+      avatarUrl: chatroomAvatarRefs.value ? chatroomAvatarRefs.value[chatroom.id!]?.value : undefined,
     };
-  })
-);
+  });
+});
 </script>
-
-<style></style>
