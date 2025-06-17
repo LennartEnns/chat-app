@@ -28,7 +28,7 @@
         }"
       >
         <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           @touchstart="popoverOpen = true"
           v-html="contentLinkified"
         />
@@ -109,7 +109,7 @@
           {{ message.username }}
         </div>
         <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           v-html="contentLinkified"
         />
       </div>
@@ -184,7 +184,7 @@ const themedMessageColor = computed(() => {
   return props.message.is_own ? "user-dark" : "partner-dark";
 });
 const speechBubbleLook = computed(() =>
-  props.message.is_own ? "rounded-tl-xs" : "rounded-tr-xs"
+  props.message.is_own ? "rounded-tr-xs" : "rounded-tl-xs"
 );
 const displayedTime = computed(() => dateToHMTime(props.message.created_at));
 

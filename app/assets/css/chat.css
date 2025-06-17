@@ -105,7 +105,9 @@
 
 .profile-bar {
   margin-bottom: auto;
-  justify-content: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   border-radius: 2px;
   z-index: 10;
 }

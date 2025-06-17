@@ -4,9 +4,13 @@
       <UAvatar :src="avatarUrl" icon="i-lucide-user" size="md" />
       <div class="pl-3 flex flex-col flex-grow justify-center items-start">
         <div
+          v-if="!hasOtherUserLeft"
           class="font-bold w-full text-left text-neutral-600 dark:text-neutral-300 overflow-hidden line-clamp-1 text-ellipsis"
         >
           {{ name }}
+        </div>
+        <div v-else class="italic w-full text-left text-muted">
+          User has left
         </div>
         <div
           v-if="lastMsg"
@@ -31,7 +35,8 @@
 <script lang="ts" setup>
 const props = defineProps<{
   chatroomId: string,
-  name: string,
+  name: string | undefined,
+  hasOtherUserLeft: boolean,
   avatarUrl: string | undefined,
   lastMsg: string | null,
   numberNewMessages: number,
@@ -39,8 +44,12 @@ const props = defineProps<{
 
 const drawerOpen = useOpenDrawer();
 const cachedChatroomDataObject = useCachedChatroom(props.chatroomId);
+const route = useRoute();
 
 async function onChatroomSelect() {
+  // Avoid page reload if chatroom is already selected
+  if (route.name === 'chat-id' && (route.params.id as string) === props.chatroomId) return;
+
   // When opening the chatroom, reset unread messages to 0 in the local state
   setTimeout(() => {
     if (cachedChatroomDataObject.value) {
