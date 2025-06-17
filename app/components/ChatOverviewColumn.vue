@@ -12,7 +12,6 @@
       </ModalSearchUser>
 
       <UButton
-        class=""
         color="primary"
         variant="solid"
         icon="i-lucide-message-circle-plus"
@@ -25,7 +24,8 @@
       class="mt-1 md:mt-2 w-full"
       :ui="{
         trigger: 'grow',
-        content: 'overflow-y-scroll',
+        root: 'overflow-y-auto',
+        content: 'overflow-y-auto',
       }"
       @update:model-value="onTabSelected"
     >

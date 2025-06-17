@@ -9,4 +9,4 @@ create table if not exists chatrooms (
   type chatroom_type not null,
   created_at timestamptz not null default now(),
   pinned_message uuid null
-) 
+);

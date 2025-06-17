@@ -7,7 +7,7 @@
       <!--Mobile UI drawer for choosing chats-->
       <UDrawer v-if="isMobile" v-model:open="drawerOpen" direction="bottom">
         <template #body>
-          <ChatOverviewColumn />
+          <ChatOverviewColumn class="max-h-[80dvh]" />
         </template>
       </UDrawer>
       <!--Desktop column for choosing chats-->
