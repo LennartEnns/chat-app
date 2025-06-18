@@ -110,6 +110,10 @@ const props = defineProps<{
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 
+// For better integration with forms
+const { emitFormChange } = useFormField();
+watch(selectedGroup, () => emitFormChange());
+
 const searchModalOpen = ref(false);
 const searchTerm = ref("");
 const allGroups = ref<SelectedGroup[]>([]);
@@ -182,5 +186,3 @@ async function onOpenUpdate(open: boolean) {
   if (!open) searchModalOpen.value = false;
 }
 </script>
-
-<style></style>

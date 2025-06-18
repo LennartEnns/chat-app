@@ -86,6 +86,12 @@ const props = defineProps<{
 
 const supabase = useSupabaseClient();
 
+// For better integration with forms
+const { emitFormChange } = useFormField();
+watch(invitations, () => emitFormChange(), {
+  deep: true,
+});
+
 // When we suddenly have less allowed roles, switch invalid invitation roles to the first allowed role
 watch(
   () => props.allowedRoles,

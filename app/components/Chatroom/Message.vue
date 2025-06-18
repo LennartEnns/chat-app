@@ -27,8 +27,9 @@
           content: 'rounded-xl',
         }"
       >
+        <!-- eslint-disable vue/no-v-html -->
         <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           @touchstart="popoverOpen = true"
           v-html="contentLinkified"
         />
@@ -109,7 +110,7 @@
           {{ message.username }}
         </div>
         <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           v-html="contentLinkified"
         />
       </div>
@@ -118,7 +119,7 @@
     <div
       v-if="showHmTime"
       :class="`text-xs text-muted px-2 ${
-        message.is_own ? 'self-end' : 'partner-timestamp'
+        message.is_own ? 'self-end' : 'self-start ml-9'
       }`"
     >
       {{ displayedTime }}

@@ -6,6 +6,15 @@ const scrollTopTreshold = 50; // px
 const messagesChunkSize = 20; // Load max. 20 messages at once
 const alwaysFutureDate = new Date(86400000000000);
 
+async function waitForScrollHeightChange(container: HTMLElement, oldHeight: number) {
+  const maxTries = 40; // Generous timeout for even the 
+  let tries = 0;
+  while (tries < maxTries && container.scrollHeight === oldHeight) {
+    await new Promise((resolve) => setTimeout(resolve, 16)); // wait ~1 frame
+    tries++;
+  }
+}
+
 export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Ref<HTMLElement | null>) => {
   const supabase = useSupabaseClient();
   const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -46,14 +55,15 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
     // New messages are in descending order, so insert each one at the start of messages
     newMessages.forEach((newMsg) => messages.value!.unshift(newMsg));
     // Adjust scrollTop to keep the view "pinned"
-    await nextTick(() => {
-      if (!messagesContainer.value) return;
-      const container = messagesContainer.value;
-      const newScrollHeight = container.scrollHeight;
-      container.scrollTo({
-        top: container.scrollTop + (newScrollHeight - oldScrollHeight),
-        behavior: 'instant', // Override smooth scrolling
-      });
+    if (!messagesContainer.value) return;
+    const container = messagesContainer.value;
+
+    // Ensure to only scroll after the messages have been inserted!
+    await waitForScrollHeightChange(container, oldScrollHeight);
+    const newScrollHeight = container.scrollHeight;
+    container.scrollTo({
+      top: container.scrollTop + (newScrollHeight - oldScrollHeight),
+      behavior: 'instant', // Override smooth scrolling
     });
   }
   async function fetchEarlierMessages(checkBeforeTime: boolean) {
