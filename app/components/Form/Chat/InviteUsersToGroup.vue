@@ -48,8 +48,9 @@ const state = reactive<Partial<Schema>>({
   group: props.presetGroup ?? undefined,
   invitations: undefined,
 });
+
 watch(
-  invitations.value,
+  invitations,
   (invs) => {
     // Type conversion is justified by this check!
     if (invs.length === 0) {

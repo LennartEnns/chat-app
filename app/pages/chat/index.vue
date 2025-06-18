@@ -27,6 +27,7 @@
         />
       </div>
     </div>
+    <ChatroomGroupSelector v-model="groupTest" :allowed-current-user-roles="['admin', 'mod']" />
   </NuxtLayout>
 </template>
 
@@ -36,7 +37,7 @@ import {
 } from "~~/errors/postgrestErrors";
 import { logStorageError } from "~~/errors/storageErrors";
 import type { DirectChatroomData, GroupChatroomData } from "~/types/chatroom";
-
+const groupTest = ref(undefined);
 export interface UserData {
   id: string,
   email: string,

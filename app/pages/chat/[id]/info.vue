@@ -299,7 +299,7 @@ import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import RolesInfo from "~/components/Modal/Chatroom/RolesInfo.vue";
 import type { Enums, Tables } from "~~/database.types";
 import type { NonEmptyArray, RequireNonNull } from "~/types/tsUtils/helperTypes";
-import chatroomRolesVis from '~/visualization/chatroomRoles';
+import chatroomRolesVis from "~/visualization/chatroomRoles";
 
 type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
@@ -322,8 +322,8 @@ const open = ref(false);
 const supabase = useSupabaseClient();
 
 const overlay = useOverlay();
-const rolesHelpModal = overlay.create(RolesInfo);
 const inviteModal = overlay.create(InviteToGroup);
+const rolesHelpModal = overlay.create(RolesInfo);
 
 const chatMembers = ref<ChatroomMember[]>([]);
 
@@ -453,6 +453,7 @@ watch(
     }
     chatroom.value.name = data.name!;
     chatroom.value.description = data.description;
+    chatroom.value.current_user_role = data.current_user_role;
     newDescription.value = chatroom.value.description;
     newName.value = chatroom.value.name;
   },

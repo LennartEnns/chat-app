@@ -63,6 +63,8 @@ watch(() => props.editable || props.clearable, async (val) => {
     existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
     checkedExists.value = true;
   }
+}, {
+  immediate: true,
 });
 watch(
   () => props.src,
