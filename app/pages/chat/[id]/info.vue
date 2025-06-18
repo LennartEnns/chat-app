@@ -2,6 +2,7 @@
   <UApp>
     <NuxtLayout name="logged-in" :class="`${isLight ? 'base' : false}`">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-full">
+        <!-- Chat Info Column-->
         <div class="flex flex-col items-center p-5 overflow-hidden">
           <div class="pt-10 pb-5">
             <div class="h-70 w-70 md:h-50 md:w-50">
@@ -14,32 +15,105 @@
                   :editable="editMode"
                   :clearable="editMode"
                   styling="border-2 border-defaultNeutral-700 size-full"
-                  root_styling=""
-                  icon_styling=""
+                  root-styling="relative h-70 w-70 md:h-50 md:w-50"
+                  icon-styling="border-2 border-defaultNeutral-700 size-full"
                 />
               </div>
             </div>
           </div>
-          <div class="py-5">
-            <p class="text-[40px] font-bold text-neutral-700 dark:text-white">
+          <div class="py-5 flex flex-row">
+            <p
+              v-if="!isEditingName"
+              class="text-[40px] font-bold text-neutral-700 dark:text-white"
+            >
               {{ chatroom.name }}
             </p>
+            <UInput
+              v-if="isEditingName && editMode"
+              v-model="newName"
+              size="xl"
+              class="flex w-fit"
+            />
+            <UButton
+              v-if="editMode"
+              :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pen'"
+              size="xl"
+              variant="ghost"
+              color="neutral"
+              class="cursor-pointer self-center"
+              @click="toggleEditName"
+            />
+            <UButton
+              v-if="editMode && isEditingName"
+              size="xl"
+              class="ml-2 self-center"
+              @click="updateGroupName"
+            >
+              Save
+            </UButton>
           </div>
           <div class="py-5 text-center text-neutral-700 dark:text-white">
-            <p class="font-bold pb-5">Description:</p>
-            <p class="line-clamp-10 w-full text-justify">
-              {{ chatroom?.description || "No Description" }}
+            <p
+              v-if="!isEditingDescription"
+              :class="`font-bold pb-5 ${themedSectionLabelClasses}`"
+            >
+              Description
+            </p>
+            <div class="flex flex-row place-content-between">
+              <p
+                v-if="isEditingDescription"
+                :class="`font-bold pb-5 ${themedSectionLabelClasses}`"
+              >
+                Description
+              </p>
+              <div class="flex flex-row size-fit">
+                <UButton
+                  v-if="editMode"
+                  :icon="isEditingDescription ? 'i-lucide-x' : 'i-lucide-pen'"
+                  size="sm"
+                  variant="ghost"
+                  color="neutral"
+                  class="cursor-pointer self-center"
+                  @click="toggleEditDescription"
+                />
+                <UButton
+                  v-if="editMode && isEditingDescription"
+                  size="sm"
+                  class="ml-2 self-center"
+                  @click="updateGroupDescription()"
+                >
+                  Save
+                </UButton>
+              </div>
+            </div>
+            <UTextarea
+              v-if="isEditingDescription && editMode"
+              v-model="newDescription"
+              class="w-90 md:w-65 lg:w-70"
+              color="primary"
+              :rows="8"
+              :maxrows="8"
+              :max-length="255"
+              autoresize
+              variant="outline"
+              placeholder="Tell the world what this group is about..."
+            />
+            <p
+              v-if="!isEditingDescription"
+              :class="`w-full whitespace-pre-line wrap-anywhere ${isFalsy(chatroom.description) ? 'text-muted' : ''}`"
+            >
+              {{ chatroom.description || "No Description" }}
             </p>
           </div>
         </div>
+        <!-- Members Column-->
         <div
           class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
           <div class="pb-5 text-neutral-700 dark:text-white">
-            <p class="font-bold">Members</p>
+            <p :class="`font-bold ${themedSectionLabelClasses}`">Members</p>
             <UButton
-              v-if="editMode"
-              class="flex size-fit absolute top-0 right-5"
+              class="flex size-fit absolute top-0 right-5 mt-3 md:mt-0"
               size="md"
               icon="i-lucide-user-plus"
               @click="onInviteUser"
@@ -49,11 +123,18 @@
             <div
               v-for="(member, index) in chatMembers"
               :key="index"
-              class="ring-0 glassContainer text-neutral-700 dark:text-white member"
+              class="ring-0 glassContainer text-neutral-700 dark:text-white member relative"
             >
+              <UButton
+                v-if="member.role != 'admin' && editMode"
+                icon="i-lucide-minus"
+                size="xs"
+                class="size-fit absolute right-1 top-1"
+                @click="removeMember(index, member.user_id)"
+              />
               <div class="flex flex-col items-center w-max">
                 <UAvatar
-                  class="mb-1 w-full h-11"
+                  class="mb-1 w-11 h-11"
                   icon="i-lucide-user"
                   :src="
                     (member.user_id && getAvatarUrl(member.user_id)) ||
@@ -62,17 +143,60 @@
                 />
                 <div>
                   <UBadge
-                    class="font-bold rounded-full"
+                    v-if="!editMode"
+                    class="font-bold rounded-full cursor-pointer"
+                    :color="chatroomRolesVis[member.role].color"
                     :ui="{
-                      base: 'max-w-11 h-5 text-[10px] flex justify-center',
+                      base: 'max-w-11 h-5 w-11 text-[10px] flex justify-center',
                     }"
-                    >{{ member.role }}</UBadge
                   >
+                    {{ chatroomRolesVis[member.role].label }}
+                  </UBadge>
+                  <USelect
+                    v-if="editMode && member.role != 'admin'"
+                    v-model="chatMembers[index]!.role"
+                    trailing-icon=""
+                    variant="outline"
+                    :items="availableRoles"
+                    @change="() => handleRoleChange(index)"
+                  >
+                    <!-- Trigger: badge showing current role -->
+                    <template #default>
+                      <UBadge
+                        class="font-bold rounded-full cursor-pointer"
+                        :color="chatroomRolesVis[member.role].color"
+                        :ui="{
+                          base: 'max-w-11 w-11 h-5 text-[10px] flex justify-center',
+                        }"
+                      >
+                        {{ chatroomRolesVis[member.role].label }}
+                      </UBadge>
+                    </template>
+
+                    <!-- Dropdown items: badges -->
+                    <template #item="{ item }">
+                      <UBadge
+                        class="font-bold rounded-full"
+                        :color="chatroomRolesVis[item].color"
+                        :ui="{
+                          base: 'max-w-11 w-full h-5 text-[10px] flex justify-center',
+                        }"
+                      >
+                        {{ chatroomRolesVis[item].label }}
+                      </UBadge>
+                    </template>
+
+                    <template #content-bottom>
+                      <UButton icon="i-lucide-circle-help" variant="outline" color="info" class="text-muted flex justify-center" @click="rolesHelpModal.open()" />
+                  </template>
+                  </USelect>
                 </div>
               </div>
               <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
                 <p class="truncate font-bold">
-                  {{ member.name }}
+                  <NuxtLink :to="`/profile/${member.username}`">{{
+                    member.name
+                  }}</NuxtLink>
                 </p>
                 <p class="line-clamp-2 leading-4">
                   {{ member.description ?? "Hey there! I am using YapSpace." }}
@@ -86,9 +210,9 @@
                 <UTooltip text="View invitations">
                   <UButton
                     class="flex size-fit mb-3"
-                    @click="openDrawer"
                     color="primary"
                     trailing-icon="i-lucide-chevron-left"
+                    @click="openDrawer"
                   />
                 </UTooltip>
               </div>
@@ -99,9 +223,9 @@
                 class="flex size-fit"
                 size="xl"
                 icon="i-lucide-pencil-line"
-                @click="enabeleEdit"
+                @click="toggleEdit"
               >
-                Edit
+                Edit Group
               </UButton>
               <UButton
                 v-if="editMode"
@@ -109,102 +233,56 @@
                 class="flex size-fit"
                 size="xl"
                 icon="i-lucide-x"
-                @click="disableEdit"
+                @click="toggleEdit"
               >
-                Cancel
+                Close
               </UButton>
             </div>
           </div>
         </div>
+        <!-- Invitations Column-->
         <UDrawer
+          v-model:open="open"
           :handle="false"
           direction="right"
-          v-model:open="open"
           class="hidden md:block lg:hidden"
         >
           <template #body>
             <div class="flex flex-col items-center px-5">
-              <div class="pb-5 text-neutral-700 dark:text-white">
-                <p class="font-bold">Invitations</p>
-              </div>
-              <div class="pb-5">
-                <div
-                  v-for="(invitation, index) in chatInvitations"
-                  :key="index"
-                  class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
-                >
-                  <UAvatar
-                    class="justify-self-center"
-                    icon="i-lucide-user"
-                    :src="
-                      (invitation.invitee_id &&
-                        getAvatarUrl(invitation.invitee_id)) ||
-                      undefined
-                    "
-                  />
-                  <div
-                    class="flex flex-col items-center justify-center truncate px-[0.6rem]"
-                  >
-                    <div class="truncate w-full text-center">
-                      {{ invitation.invitee_id }}
-                    </div>
-                  </div>
-                  <UButton
-                    v-if="!editMode"
-                    class="flex size-fit"
-                    size="xl"
-                    icon="i-lucide-pencil-line"
-                    @click="enabeleEdit"
-                  >
-                    Edit
-                  </UButton>
-                  <UButton
-                    color="error"
-                    v-if="editMode"
-                    class="flex size-fit"
-                    size="xl"
-                    icon="i-lucide-x"
-                    @click="disableEdit"
-                  >
-                    Cancel
-                  </UButton>
-                </div>
-              </div>
+              <ChatroomInfoInvitationColumn
+                :invitations="chatInvitations"
+                :edit-boolean="editMode"
+                :text-theme="themedSectionLabelClasses"
+              />
             </div>
           </template>
         </UDrawer>
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
-          <div class="pb-5 text-neutral-700 pt-5 md:pt-0 dark:text-white">
-            <p class="font-bold flex justify-center">Invitations</p>
-          </div>
-          <div class="pb-5">
-            <div
-              v-for="(invitation, index) in chatInvitations"
-              :key="index"
-              class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation"
+          <ChatroomInfoInvitationColumn
+            :invitations="chatInvitations"
+            :edit-boolean="editMode"
+            :text-theme="themedSectionLabelClasses"
+          />
+          <div class="md:hidden p-10">
+            <UButton
+              v-if="!editMode"
+              class="flex size-fit"
+              size="xl"
+              icon="i-lucide-pencil-line"
+              @click="toggleEdit"
             >
-              <UAvatar
-                class="justify-self-center"
-                icon="i-lucide-user"
-                :src="
-                  (invitation.invitee_id &&
-                    getAvatarUrl(invitation.invitee_id)) ||
-                  undefined
-                "
-              />
-              <div
-                class="flex flex-col items-center justify-center truncate px-[0.6rem]"
-              >
-                <div class="truncate w-full text-center">
-                  {{ invitation.invitee_username }}
-                </div>
-              </div>
-              <UButton
-                v-if="editMode"
-                icon="i-lucide-trash-2"
-                class="size-fit"
-              ></UButton>
-            </div>
+              Edit Group
+            </UButton>
+            <UButton
+              v-if="editMode"
+              color="error"
+              class="flex size-fit"
+              size="xl"
+              icon="i-lucide-x"
+              @click="toggleEdit"
+            >
+              Close
+            </UButton>
           </div>
         </div>
       </div>
@@ -217,9 +295,25 @@ import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
-
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
-import type { Tables } from "~~/database.types";
+import RolesInfo from "~/components/Modal/Chatroom/RolesInfo.vue";
+import type { Enums, Tables } from "~~/database.types";
+import type { NonEmptyArray, RequireNonNull } from "~/types/tsUtils/helperTypes";
+import chatroomRolesVis from '~/visualization/chatroomRoles';
+
+type ChatInvitation = Pick<
+  Tables<"group_invitations_preview">,
+  "id" | "invitee_id" | "as_role" | "invitee_username"
+>;
+type CRViewNonNullable = RequireNonNull<Tables<"group_chatrooms_last_activity_current_role">, 'chatroom_id' | 'name'>;
+type Chatroom = Omit<
+  CRViewNonNullable,
+  "last_activity" | "avatarUrl"
+> & {
+  avatarPath: string;
+  avatarUrl: Ref<string | undefined>;
+};
+type ChatroomMember = RequireNonNull<Tables<"group_chatroom_members">, 'role' | 'user_id'>;
 
 const { isLight } = useSSRSafeTheme();
 
@@ -228,18 +322,27 @@ const open = ref(false);
 const supabase = useSupabaseClient();
 
 const overlay = useOverlay();
+const rolesHelpModal = overlay.create(RolesInfo);
 const inviteModal = overlay.create(InviteToGroup);
 
-const chatMembers = ref<Tables<"group_chatroom_members">[]>([]);
+const chatMembers = ref<ChatroomMember[]>([]);
 
-type ChatInvitation = Pick<
-  Tables<"group_invitations_preview">,
-  "id" | "invitee_id" | "as_role" | "invitee_username"
->;
+const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
+  "admin",
+  "mod",
+  "member",
+  "viewer",
+];
 
 const chatInvitations = ref<ChatInvitation[]>([]);
 
+const themedSectionLabelClasses = computed(() =>
+  isLight.value ? "text-primary-900" : "text-primary-400"
+);
+
 const editMode = ref<boolean>(false);
+const isEditingDescription = ref<boolean>();
+const isEditingName = ref<boolean>(false);
 
 const route = useRoute();
 const routeChatroomId = computed(() => {
@@ -251,21 +354,22 @@ async function openDrawer() {
   open.value = true;
 }
 
-async function enabeleEdit() {
-  editMode.value = true;
+async function toggleEdit() {
+  editMode.value = !editMode.value;
+  toggleEditDescription();
+  toggleEditName();
 }
 
-async function disableEdit() {
-  editMode.value = false;
+async function toggleEditDescription() {
+  isEditingDescription.value = !isEditingDescription.value;
 }
 
-type Chatroom = Omit<
-  Tables<"group_chatrooms_last_activity_current_role">,
-  "last_activity" | "avatarUrl"
-> & {
-  avatarPath: string;
-  avatarUrl: Ref<string | undefined>;
-};
+async function toggleEditName() {
+  isEditingName.value = !isEditingName.value;
+}
+
+const newDescription = ref<string | null>();
+const newName = ref<string>();
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
 
@@ -275,8 +379,49 @@ const chatroom = ref<Chatroom>({
   description: "Loading description...",
   current_user_role: "member",
   avatarPath: avatarPath,
-  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, true),
+  avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, false),
 });
+
+async function updateGroupDescription() {
+  toggleEdit();
+  if (newDescription.value != chatroom.value.description) {
+    chatroom.value.description = newDescription.value!;
+    const { error } = await supabase
+      .from("group_chatrooms")
+      .update({ description: newDescription.value })
+      .eq("chatroom_id", chatroom.value.chatroom_id!);
+    if (error) {
+      logPostgrestError(error, "chatroom update");
+      operationFeedbackHandler.displayError(
+        getPostgrestErrorMessage(
+          error,
+          "Could not update chatroom description."
+        )
+      );
+    } else {
+      operationFeedbackHandler.displaySuccess("Updated chatroom description.");
+    }
+  }
+}
+
+async function updateGroupName() {
+  toggleEdit();
+  if (newName.value != chatroom.value.name) {
+    chatroom.value.name = newName.value!;
+    const { error } = await supabase
+      .from("group_chatrooms")
+      .update({ name: newName.value })
+      .eq("chatroom_id", chatroom.value.chatroom_id!);
+    if (error) {
+      logPostgrestError(error, "chatroom update");
+      operationFeedbackHandler.displayError(
+        getPostgrestErrorMessage(error, "Could not update chatroom name.")
+      );
+    } else {
+      operationFeedbackHandler.displaySuccess("Updated chatroom name.");
+    }
+  }
+}
 
 const { data: chatroomInfoData } = await useAsyncData(
   "chatroomInfoData",
@@ -286,29 +431,30 @@ const { data: chatroomInfoData } = await useAsyncData(
 );
 async function loadChatInfo() {
   const { data, error } = await supabase
-    .from("group_chatrooms")
-    .select("name, description")
+    .from("group_chatrooms_last_activity_current_role")
+    .select("name, description, current_user_role")
     .eq("chatroom_id", chatroom.value.chatroom_id!)
     .single();
 
   if (error) {
     logPostgrestError(error, "chat-info fetching");
     operationFeedbackHandler.displayError(
-      getPostgrestErrorMessage(error, "Unknown chat-info fetching error")
+      getPostgrestErrorMessage(error, "Could not load chatroom info")
     );
     return null;
   }
   return data;
 }
-
 watch(
   chatroomInfoData,
   (data) => {
     if (!data) {
       return;
     }
-    chatroom.value.name = data.name;
+    chatroom.value.name = data.name!;
     chatroom.value.description = data.description;
+    newDescription.value = chatroom.value.description;
+    newName.value = chatroom.value.name;
   },
   {
     immediate: true,
@@ -329,8 +475,9 @@ async function loadChatMembers() {
     return;
   }
   data.forEach((element) => {
-    chatMembers.value.push(element);
+    chatMembers.value.push((element as ChatroomMember));
   });
+  chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
 }
 
 async function loadChatInvitations() {
@@ -359,6 +506,40 @@ async function onInviteUser() {
       current_user_role: chatroom.value.current_user_role,
     },
   });
+}
+
+async function removeMember(index: number, user_id: string | null) {
+  chatMembers.value = chatMembers.value.toSpliced(index, 1);
+  const { error } = await supabase
+    .from("user_to_group")
+    .delete()
+    .eq("user_id", user_id!);
+  if (error) {
+    logPostgrestError(error, "member removal");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Could not remove user from chatroom.")
+    );
+  } else {
+    operationFeedbackHandler.displaySuccess("Removed user from chatroom.");
+  }
+}
+
+async function handleRoleChange(index: number) {
+  if (!chatMembers.value[index]) return;
+  const newRole = chatMembers.value[index].role;
+  const userId = chatMembers.value[index].user_id;
+  const { error } = await supabase
+    .from("user_to_group")
+    .update({ role: newRole })
+    .eq("user_id", userId);
+  if (error) {
+    logPostgrestError(error, "role update");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Could not update member role.")
+    );
+  } else {
+    operationFeedbackHandler.displaySuccess("Updated member role.");
+  }
 }
 
 onMounted(() => {

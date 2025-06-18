@@ -38,19 +38,30 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          pinned_message: string | null
           type: Database["public"]["Enums"]["chatroom_type"]
         }
         Insert: {
           created_at?: string
           id?: string
+          pinned_message?: string | null
           type: Database["public"]["Enums"]["chatroom_type"]
         }
         Update: {
           created_at?: string
           id?: string
+          pinned_message?: string | null
           type?: Database["public"]["Enums"]["chatroom_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chatrooms_pinned_message_fkey"
+            columns: ["id", "pinned_message"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["chatroom_id", "id"]
+          },
+        ]
       }
       direct_chatrooms: {
         Row: {
@@ -334,21 +345,32 @@ export type Database = {
           created_at: string | null
           id: string | null
           last_activity: string | null
+          pinned_message: string | null
           type: Database["public"]["Enums"]["chatroom_type"] | null
         }
         Insert: {
           created_at?: string | null
           id?: string | null
           last_activity?: never
+          pinned_message?: string | null
           type?: Database["public"]["Enums"]["chatroom_type"] | null
         }
         Update: {
           created_at?: string | null
           id?: string | null
           last_activity?: never
+          pinned_message?: string | null
           type?: Database["public"]["Enums"]["chatroom_type"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chatrooms_pinned_message_fkey"
+            columns: ["id", "pinned_message"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["chatroom_id", "id"]
+          },
+        ]
       }
       group_chatroom_members: {
         Row: {
@@ -357,6 +379,7 @@ export type Database = {
           name: string | null
           role: Database["public"]["Enums"]["chatroom_role"] | null
           user_id: string | null
+          username: string | null
         }
         Relationships: [
           {

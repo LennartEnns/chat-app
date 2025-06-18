@@ -104,6 +104,7 @@ select
   pf.user_id,
   user_to_group.role,
   pf.description,
+  pf.username,
   coalesce(pf.displayname, pf.username) as name
 from public.profiles pf
 join public.user_to_group on pf.user_id = user_to_group.user_id;

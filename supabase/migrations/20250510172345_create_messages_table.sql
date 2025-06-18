@@ -8,3 +8,6 @@ create table if not exists messages (
   constraint content_length_check check (length(content) <= 511),
   constraint messages_chatroom_id_id_key unique (chatroom_id, id)
 );
+
+-- Enable realtime event listening for message operations
+alter publication supabase_realtime add table messages;

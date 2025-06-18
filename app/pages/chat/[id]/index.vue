@@ -17,7 +17,10 @@
           class="flex items-center m-0 py-1 px-2"
           @click="onHeaderClick"
         >
-          <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
+          <UAvatar
+            :src="cachedChatroomDataObject?.avatarUrl"
+            icon="i-lucide-user"
+          />
           <ClientOnly>
             <div v-if="cachedChatroomDataObject">
               <h1 v-if="!hasOtherUserLeft" class="text-black dark:text-white">
@@ -224,16 +227,10 @@ const chatroomPreview = computed(() => {
   if (!cachedChatroomDataObject.value)
     return {
       name: "Chatroom",
-      avatarUrl: undefined,
     };
   const cpData = cachedChatroomDataObject.value;
   return {
     name: cpData.name!,
-    avatarUrl: getAbstractChatroomAvatarUrl(
-      cpData.type!,
-      routeChatroomId.value,
-      cpData.other_user_id
-    ),
   };
 });
 
@@ -367,6 +364,19 @@ async function onContainerScroll() {
   }, minTimeAfterScrolling);
 }
 
+const testChannel = supabase
+  .channel("messages-insert")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public,",
+      table: "messages",
+    },
+    (payload) => console.log(payload)
+  )
+  .subscribe();
+
 onMounted(() => {
   isViewer.value =
     cachedChatroomDataObject.value?.current_user_role === "viewer";
@@ -378,6 +388,7 @@ onMounted(() => {
 onUnmounted(() => {
   messagesContainer.value?.removeEventListener("scroll", onContainerScroll);
   window.removeEventListener("keydown", handleKeyDown);
+  testChannel.unsubscribe();
 });
 const pinnedMsgReq = await supabase
   .from("chatrooms")
