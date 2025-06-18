@@ -17,5 +17,5 @@ export interface GroupChatroomData {
 }
 
 
-export type CachedChatroomData = Tables<'chatrooms_preview'>;
+export type CachedChatroomData = Tables<'chatrooms_preview'> & { avatarUrl: string | undefined };
 export type CachedChatroomsMap = Record<NonNullable<Tables<'chatrooms_preview'>['id']>, Omit<CachedChatroomData, 'id'> | undefined>

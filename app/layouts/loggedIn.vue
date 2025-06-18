@@ -150,7 +150,7 @@ const mobileLeftButton = computed(() => {
 async function logout(scope: "global" | "local" | "others") {
   showLogoutModal.value = false;
   if (scope !== "others") {
-    navigateTo("/");
+    await navigateTo("/");
   }
   const { error } = await supabase.auth.signOut({
     scope,
@@ -166,10 +166,11 @@ async function logout(scope: "global" | "local" | "others") {
     operationFeedbackHandler.displaySuccess(
       "All other sessions have been terminated."
     );
+  } else {
+    // Clear state after successful logout
+    lastChatroomState.value = undefined;
+    cachedChatrooms.value = undefined;
   }
-  // Clear state after successful logout
-  lastChatroomState.value = undefined;
-  cachedChatrooms.value = undefined;
 }
 
 async function onLogoutSelect() {

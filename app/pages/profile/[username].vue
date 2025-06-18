@@ -32,8 +32,8 @@
                 default-icon="i-lucide-user"
                 :editable="isOwnProfile"
                 :clearable="isOwnProfile"
-                root_styling="size-26 md:size-32"
-                icon_styling="size-9/12"
+                root-styling="size-26 md:size-32"
+                icon-styling="size-9/12"
                 styling="border-2"
               />
             </div>
@@ -159,6 +159,7 @@
                         : ''
                     }`"
                   >
+                    <!-- eslint-disable vue/no-v-html -->
                     <div
                       v-if="!isOwnProfile || !isEditingDescription"
                       :class="`whitespace-pre-line wrap-anywhere ${
@@ -166,13 +167,9 @@
                           ? themedWeakColor
                           : themedTextsColor
                       }`"
-                    >
-                      {{
-                        isFalsy(profileData.description)
-                          ? "Empty"
-                          : profileData.description
-                      }}
-                    </div>
+                      v-html="descriptionLinkified"
+                    />
+                    <!-- eslint-enable -->
                     <UTextarea
                       v-else
                       v-model="newDescription"
@@ -250,6 +247,9 @@ const isEditingDescription = ref(false);
 const newDescription = ref("");
 const descriptionChanged = computed(
   () => userData.description !== newDescription.value
+);
+const descriptionLinkified = useLinkifiedText(
+  computed(() => isFalsy(profileData.value?.description) ? 'Empty' : profileData.value!.description!)
 );
 
 const descriptionRowCount = computed(() =>

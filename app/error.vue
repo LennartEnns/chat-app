@@ -12,12 +12,20 @@
         alt="Lost astronaut floating in space"
         role="img">
     </div>
-    <UButton 
-    :class="`${themedUserColor}`"
-    size="lg"
-    @click="handleError"
-    > Go Back
-  </UButton>
+    <div class="flex flex-row gap-6">
+      <UButton 
+        :class="`${themedUserColor}`"
+        size="lg"
+        @click="handleError"
+        > Go Back
+      </UButton>
+      <UButton 
+        :class="`${themedUserColor}`"
+        size="lg"
+        @click="reloadNuxtApp()"
+        > Try Again
+      </UButton>
+    </div>
   </div>
 </template>
 

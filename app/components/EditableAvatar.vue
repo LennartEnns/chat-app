@@ -5,7 +5,7 @@
         :src="srcModified"
         :icon="defaultIcon"
         :class="props.styling"
-        :ui="{ root: props.root_styling, icon: props.icon_styling }"
+        :ui="{ root: props.rootStyling, icon: props.iconStyling }"
       />
       <div v-if="editable" class="avatar-overlay">
         <UIcon name="i-lucide-camera" size="xx-large" />
@@ -15,7 +15,7 @@
           style="position: absolute; width: 100%; height: 100%; opacity: 0"
           accept="image/*"
           @change="startCroppingAvatar"
-        />
+        >
       </div>
     </div>
     <UButton
@@ -40,8 +40,8 @@ const props = defineProps<{
   editable: boolean;
   clearable: boolean;
   styling: string;
-  root_styling: string;
-  icon_styling: string;
+  rootStyling: string;
+  iconStyling: string;
 }>();
 
 const emit = defineEmits<{
@@ -54,11 +54,16 @@ const overlay = useOverlay();
 const croppingModal = overlay.create(CropAvatar);
 
 const existsAvatarImage = ref(false);
+const checkedExists = ref(false);
 const srcModified = ref(props.src);
-// Value only needed if image might be updated by the user
-if (!props.editable && !props.clearable) {
-  existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
-}
+
+// Value only needed if image might be updated/cleared by the user
+watch(() => props.editable || props.clearable, async (val) => {
+  if (val && !checkedExists.value) {
+    existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
+    checkedExists.value = true;
+  }
+});
 watch(
   () => props.src,
   (newVal) => {
