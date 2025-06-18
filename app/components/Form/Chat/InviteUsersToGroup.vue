@@ -52,7 +52,6 @@ const state = reactive<Partial<Schema>>({
 watch(
   invitations,
   (invs) => {
-    console.log(invs)
     // Type conversion is justified by this check!
     if (invs.length === 0) {
       state.invitations = [];
