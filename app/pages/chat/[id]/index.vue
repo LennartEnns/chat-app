@@ -10,6 +10,11 @@
         <UButton
           variant="ghost"
           class="flex items-center m-0 py-1 px-2"
+          @click="pinMsg('2577f1c0-bd83-4ae4-8a7e-c5c6a17224b4')"
+        ></UButton>
+        <UButton
+          variant="ghost"
+          class="flex items-center m-0 py-1 px-2"
           @click="onHeaderClick"
         >
           <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
@@ -376,10 +381,27 @@ onUnmounted(() => {
 });
 const pinnedMsgReq = await supabase
   .from("chatrooms")
-  .select("pinned_message")
+  .select("pinned_message_id")
   .eq("id", routeChatroomId.value);
-const pinnedMsg = await pinnedMsgReq.data?.[0]?.pinned_message;
+
+async function pinMsg(msg: string) {
+  console.log("Pinning message:", msg);
+
+  try {
+    const { error } = await supabase
+      .from("chatrooms")
+      .update({ pinned_message_id: msg })
+      .eq("id", routeChatroomId.value);
+    if (error) {
+      throw error;
+    }
+  } catch (err: any) {
+    console.error("Error updating data:", err);
+  }
+}
+const pinnedMsg = await pinnedMsgReq.data?.[0]?.pinned_message_id;
 console.log(pinnedMsg);
+console.log(await supabase.from("chatrooms").select("*"));
 </script>
 
 <style>
