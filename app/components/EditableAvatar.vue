@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts" setup>
-import CropAvatar from "./Modal/CropAvatar.vue";
+import CropAvatar from "~/components/Modal/CropAvatar.vue";
 
 const props = defineProps<{
   src: string | undefined;

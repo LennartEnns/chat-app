@@ -165,7 +165,7 @@ async function loadGroups() {
     operationFeedbackHandler.displayError("Error loading groups");
   } else if (data) {
     // Type conversion justified as chatroom_id returned from view will never be null
-    // allGroups.value = data as SelectedGroup[];
+    allGroups.value = data as SelectedGroup[]; // HERE IT BREAKS!!!!
     groupsLoaded = true;
   }
   loadingGroups.value = false;
