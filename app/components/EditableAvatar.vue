@@ -54,11 +54,16 @@ const overlay = useOverlay();
 const croppingModal = overlay.create(CropAvatar);
 
 const existsAvatarImage = ref(false);
+const checkedExists = ref(false);
 const srcModified = ref(props.src);
+
 // Value only needed if image might be updated/cleared by the user
-if (props.editable || props.clearable) {
-  existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
-}
+watch(() => props.editable || props.clearable, async (val) => {
+  if (val && !checkedExists.value) {
+    existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
+    checkedExists.value = true;
+  }
+});
 watch(
   () => props.src,
   (newVal) => {
