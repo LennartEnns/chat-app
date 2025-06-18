@@ -376,12 +376,6 @@ onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
   testChannel.unsubscribe();
 });
-const pinnedMsgReq = await supabase
-  .from("chatrooms")
-  .select("pinned_message")
-  .eq("id", routeChatroomId.value);
-const pinnedMsg = await pinnedMsgReq.data?.[0]?.pinned_message;
-console.log(pinnedMsg);
 </script>
 
 <style>
