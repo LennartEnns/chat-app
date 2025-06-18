@@ -52,13 +52,9 @@ const isMobile = useMobileDetector();
 const {isLight} = useSSRSafeTheme();
 const supabase = useSupabaseClient();
 const userData = useUserData();
-const { data } = await supabase.auth.getSession();
-const sessionData: string | undefined = data.session?.user.updated_at;
-const convertedSessionData = sessionData ? new Date(sessionData) : null;
 
 const directChatrooms = ref<DirectChatroomData[]>([]);
 const groupChatrooms = ref<GroupChatroomData[]>([]);
-const { data: last_activity } = await supabase.from("user_to_abstract_chatroom").select("last_inside").eq("user_id", userData.id);
 const themedGlassContainer = computed(() =>
   isLight.value ? "mainGlassContainer-dark" : "mainGlassContainer-light"
 );
@@ -71,7 +67,6 @@ const themedSeparatorMobile = computed(() =>
 
 if(isMobile){
 
-  // Get last activity // any sollte noch geändert werden, temporäre Lösung
   async function getLastActivity(chatroom_id: string): Promise<string | undefined>{
     const { data: last_activity } = await supabase.from("user_to_abstract_chatroom").select("last_inside").eq("user_id", userData.id).eq("chatroom_id", chatroom_id).single();
     return last_activity?.last_inside;
@@ -146,25 +141,6 @@ if(isMobile){
     return null;
   }
 
-  // async function getGroupChatroomData2(){
-  //   const { data, error } = await supabase.from("chatrooms_preview").select("*").eq("other_user_id", userData.id);
-
-  //   if(error){
-  //     logPostgrestError(error, "group chatroom fetching");
-  //     return;
-  //   }
-  //   for(const element of data){
-  //     const avatarUrl = await getAvatarUrl(element.id!, "group");
-  //     groupChatrooms.value.push({
-  //       chatroom_id: element.id!,
-  //       name: element.name!,
-  //       avatar_url: avatarUrl?.avatarUrl,
-  //       new_messages: element.number_new_messages!,
-  //       users: users
-  //     })
-  //   }
-  // }
-
   // Get data from direct chats
   async function getDirectChatroomData(){
     const { data, error } = await supabase.from("direct_chatrooms").select("*").or(`user1_id.eq.${userData.id},user2_id.eq.${userData.id}`);
@@ -228,19 +204,6 @@ if(isMobile){
       };
     }
     return null;
-  }
-
-  async function getGroupChatroomName(chatroom_id: string): Promise<string> {
-    const { data, error } = await supabase.from("group_chatrooms").select("name").eq("chatroom_id", chatroom_id);
-    if (error) {
-      logPostgrestError(error, "No chatroom name");
-      return "Unnamed Group";
-    }
-    if (!data || data.length === 0) {
-      console.log("No data found");
-      return "Unnamed Group";
-    }
-    return data[0]?.name || "Unnamed Group";
   }
 
   async function getOtherUsers(element:{chatroom_id: string;}): Promise<UserData[]>{
