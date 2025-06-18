@@ -5,8 +5,6 @@ create table if not exists messages (
   content text not null,
   created_at timestamptz not null default now(),
 
-  constraint content_length_check check (length(content) <= 511), -- <-- Comma added to separate constraints
-
-  -- This constraint is CRITICAL for the final step to work.
+  constraint content_length_check check (length(content) <= 511),
   constraint messages_chatroom_id_id_key unique (chatroom_id, id)
 );
