@@ -9,6 +9,3 @@ create table if not exists messages (
   -- This constraint is CRITICAL for the final step to work.
   constraint messages_chatroom_id_id_key unique (chatroom_id, id)
 );
-
--- Enable realtime event listening for message operations
-alter publication supabase_realtime add table messages;

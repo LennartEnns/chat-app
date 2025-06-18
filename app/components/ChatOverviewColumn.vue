@@ -95,14 +95,17 @@
 <script lang="ts" setup>
 import type { UserSearchResult } from "~/types/userSearch";
 import type { InvitationPreview } from "~/types/invitations/invitationsPreview";
-import type { CachedChatroomsMap } from '~/types/chatroom';
 import type { TabsItem } from "@nuxt/ui";
-import type { Tables } from "~~/database.types";
+import type { AsyncDataRequestStatus } from "#app";
 import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
+import type { CachedChatroomData } from "~/types/chatroom";
 
-const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
-const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
+defineProps<{
+  chatroomsListFetchingStatus: AsyncDataRequestStatus,
+  chatroomsWithAvatarUrl?: CachedChatroomData[],
+}>();
+
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
@@ -191,7 +194,6 @@ async function onCreateChat() {
       navigateTo(`/chat/${res.id}`);
     } else {
       // Open new group chatroom if the user clicks on Chats button
-      lastChatroomState.value = res.id;
       navigateTo(`/chat/${res.id}/info`);
     }
   }
@@ -200,99 +202,4 @@ async function onRemoveInvitation() {
   // When an invitation has been rejected, reload all invitations
   refreshFetchInvitations();
 }
-
-const previewQuery = supabase
-  .from("chatrooms_preview")
-  .select("*")
-  .order("last_activity", { ascending: false });
-
-const refreshChatroomsOnStateUpdate = ref(true);
-const fetchingChatroomsFromDB = ref(false);
-
-async function getChatroomList(): Promise<Tables<'chatrooms_preview'>[]> {
-  console.log("Fetching chatrooms...");
-  if (cachedChatrooms.value) {
-    // Prefer using cached chatrooms if available
-    console.log("Using cached chatrooms");
-    return chatroomsMapToArray(cachedChatrooms.value);
-  }
-
-  console.log("Fetching from DB...")
-  fetchingChatroomsFromDB.value = true;
-  const { data, error } = await previewQuery;
-
-  if (error) {
-    logPostgrestError(error, "chatrooms fetching");
-    operationFeedbackHandler.displayError("Could not load chatrooms");
-    return [];
-  }
-  if (!data || data.length === 0) {
-    return [];
-  }
-
-  return data;
-}
-
-const { data: chatrooms, status: chatroomsListFetchingStatus, refresh: refreshChatroomsList } = await useLazyAsyncData('chatroomsPreviewList', getChatroomList, {
-  server: false,
-  immediate: true,
-});
-// Re-fetch chatroom previews from local state when it is updated
-watch(cachedChatrooms, () => {
-  if (!refreshChatroomsOnStateUpdate.value) return;
-
-  console.log("Refreshing chatrooms from local state");
-  refreshChatroomsList();
-}, {
-  immediate: false,
-  deep: true,
-});
-
-// Loads the avatar URLs whenever the chatroom list changes.
-// Prefer cached URLs
-const { data: chatroomAvatarRefs } = await useLazyAsyncData('chatroomsAvatarUrls', async () => {
-  if (!chatrooms.value || chatrooms.value.length === 0) return ({});
-  if (cachedChatrooms.value) {
-    // Load avatar urls from cache
-    return Object.fromEntries(
-      Object.entries(cachedChatrooms.value).map(([id, data]) => [id, ref(data?.avatarUrl)])
-    );
-  }
-
-  return Object.fromEntries(
-    chatrooms.value.map((chatroom) =>
-    [chatroom.id!, getAbstractChatroomAvatarUrl(
-      chatroom.type!,
-      chatroom.id!,
-      chatroom.other_user_id
-    )])
-  );
-}, {
-    immediate: false,
-    server: false,
-    watch: [() => chatrooms.value?.map((room) => room.id)],
-  }
-);
-const chatroomsWithAvatarUrl = computed(() => {
-  return chatroomAvatarRefs.value ? chatrooms.value?.map((chatroom) => ({
-      ...chatroom,
-      avatarUrl: chatroomAvatarRefs.value![chatroom.id!]?.value,
-    })
-  ) : undefined;
-});
-
-// Caches the chatrooms if and only if they have just been fetched from the DB (not from cache)
-watch(chatroomsWithAvatarUrl, (rooms) => {
-  if (!rooms || !fetchingChatroomsFromDB.value) return;
-  fetchingChatroomsFromDB.value = false;
-
-  // Cache newly fetched chatrooms in shared state
-  console.log("Caching chatrooms...");
-  // Ignore this state change to avoid unnecessary refetch/reactive loop
-  refreshChatroomsOnStateUpdate.value = false;
-  cachedChatrooms.value = chatroomsArrayToMap(rooms);
-  nextTick(() => refreshChatroomsOnStateUpdate.value = true);
-}, {
-  immediate: false,
-});
 </script>
