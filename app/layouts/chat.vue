@@ -11,6 +11,7 @@
             class="max-h-[80dvh]"
             :chatrooms-list-fetching-status="chatroomsListFetchingStatus"
             :chatrooms-with-avatar-url="chatroomsWithAvatarUrl"
+            @refresh-chats="onRefreshChats"
           />
         </template>
       </UDrawer>
@@ -19,6 +20,7 @@
         v-if="!isMobile"
         :chatrooms-list-fetching-status="chatroomsListFetchingStatus"
         :chatrooms-with-avatar-url="chatroomsWithAvatarUrl"
+        @refresh-chats="onRefreshChats"
       />
       <slot />
     </div>
@@ -133,6 +135,10 @@ watch(chatroomsWithAvatarUrl, (rooms) => {
 }, {
   immediate: false,
 });
+
+async function onRefreshChats() {
+  cachedChatrooms.value = undefined;
+}
 </script>
 
 <style>

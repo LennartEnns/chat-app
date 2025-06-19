@@ -30,6 +30,10 @@
       @update:model-value="onTabSelected"
     >
       <template #chats>
+        <UButton
+          icon="i-lucide-refresh-ccw" label="Refresh" variant="subtle"
+          class="w-full flex justify-center mb-2" :disabled="!refreshingAllowed"
+          @click="onRefreshChatList" />
         <ClientOnly>
           <div
             v-if="chatroomsListFetchingStatus === 'success' || chatroomsListFetchingStatus === 'idle'"
@@ -71,6 +75,10 @@
       </template>
 
       <template #invitations>
+        <UButton
+          icon="i-lucide-refresh-ccw" label="Refresh" variant="subtle"
+          class="w-full flex justify-center" :disabled="!refreshingAllowed"
+          @click="onRefreshInvitations" />
         <ChatroomInvitationList
           :invitations="inboundInvitations"
           :loading="invitationsPreviewPending"
@@ -106,15 +114,23 @@ defineProps<{
   chatroomsWithAvatarUrl?: CachedChatroomData[],
 }>();
 
+const emit = defineEmits<{
+  refreshChats: [],
+}>();
+
 const routeChatroomId = useRouteIdParam();
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
+const toast = useToast();
 const userData = useUserData();
 const overlay = useOverlay();
 const createChatroomModal = overlay.create(CreateChatroom);
 
+const refreshTimeout = 1000;
+const refreshingAllowed = ref(true);
+
 // First only do a head query to avoid unnecessary data fetching
-const { data: existUnhandledInvitations } = await useLazyAsyncData(
+const { data: existUnhandledInvitations, refresh: refreshExistUnhandledInvitations } = await useLazyAsyncData(
   "existUnhandledInvitations",
   async () => {
     const { count } = await supabase
@@ -138,6 +154,9 @@ const {
 } = await useLazyAsyncData(
   "inboundInvitations",
   async () => {
+    // Could also be undefined, this is why I seemingly made this "beginner mistake"
+    if (existUnhandledInvitations.value === false) return [];
+
     const { data, error } = await supabase
       .from("group_invitations_preview")
       .select(
@@ -153,6 +172,7 @@ const {
   },
   {
     immediate: false,
+    server: false,
   }
 );
 
@@ -195,5 +215,32 @@ async function onCreateChat() {
 async function onRemoveInvitation() {
   // When an invitation has been rejected, reload all invitations
   refreshFetchInvitations();
+}
+
+// Prevent spamming the refresh buttons
+async function debounceRefresh() {
+  refreshingAllowed.value = false;
+  setTimeout(() => refreshingAllowed.value = true, refreshTimeout);
+}
+async function onRefreshInvitations() {
+  if (!refreshingAllowed.value) return;
+  refreshingAllowed.value = false;
+  await refreshExistUnhandledInvitations();
+  if (!existUnhandledInvitations.value) {
+    toast.add({
+      color: 'info',
+      title: 'No new invitations',
+    });
+    debounceRefresh();
+    return;
+  }
+  await refreshFetchInvitations();
+  debounceRefresh();
+}
+async function onRefreshChatList() {
+  if (!refreshingAllowed.value) return;
+  refreshingAllowed.value = false;
+  emit('refreshChats');
+  debounceRefresh();
 }
 </script>
