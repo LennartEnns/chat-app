@@ -1,3 +1,6 @@
+.hidden {
+  display: none;
+}
 .base {
   background-color: rgba(255, 255, 255, 0.4);
 }
@@ -130,4 +133,10 @@
 }
 .chat span img {
   height: max-content;
+}
+.multimedia {
+  position: absolute;
+  margin-left: 60rem;
+  overflow-y: auto;
+  z-index: 3;
 }
