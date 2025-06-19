@@ -105,7 +105,6 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 import type { CachedChatroomsMap } from "~/types/chatroom";
 import { getAuthErrorMessage, logAuthError } from "~~/errors/authErrors";
-import type { RealtimeChannel } from '@supabase/supabase-js'
 
 const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
 const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');

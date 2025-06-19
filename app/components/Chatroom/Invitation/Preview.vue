@@ -63,6 +63,7 @@ const emit = defineEmits<{
 }>();
 
 const supabase = useSupabaseClient();
+const { joinGroupWithInvitation } = useChatroomActions();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const overlay = useOverlay();
 const rolesInfoModal = overlay.create(ModalChatroomRolesInfo);
@@ -72,25 +73,8 @@ const invitorAvatarUrl = computed(() => getAvatarUrl(props.invitation.invitor_id
 async function onShowRolesInfo() {
   rolesInfoModal.open();
 }
-
 async function onAcceptInvitation() {
-  if (!props.invitation.chatroom_id) return;
-
-  // Try to insert the user into user_to_group with the specified role
-  const { error } = await supabase.from('user_to_group')
-    .insert({
-      chatroom_id: props.invitation.chatroom_id,
-      role: props.invitation.as_role,
-    });
-  if (error) {
-    logPostgrestError(error, 'invitation accept');
-    operationFeedbackHandler.displayError('Could not add you to the group');
-    return;
-  }
-
-  // Open chatroom after adding user
-  operationFeedbackHandler.displaySuccess(`Entered ${props.invitation.group_name ? `'${props.invitation.group_name}'` : 'new group'}`);
-  navigateTo(`/chat/${props.invitation.chatroom_id}`);
+  joinGroupWithInvitation(props.invitation);
 }
 async function onRejectInvitation() {
   // Try to delete the invitation

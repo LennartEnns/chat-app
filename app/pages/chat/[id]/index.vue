@@ -166,17 +166,13 @@ const overlay = useOverlay();
 const leaveModal = overlay.create(ModalChatroomLeave);
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
-const route = useRoute();
 const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
-
-const routeChatroomId = computed(() => {
-  const params = route.params;
-  return params.id as string;
-});
-const isViewer = ref<boolean | undefined>(undefined);
+const routeChatroomId = useRouteIdParam();
 
 // Save as last opened chatroom in shared state
 lastChatroomState.value = routeChatroomId.value;
+
+const isViewer = ref<boolean | undefined>(undefined);
 
 const cachedChatroomDataObject = useCachedChatroom(routeChatroomId.value);
 watchEffect(() => {
