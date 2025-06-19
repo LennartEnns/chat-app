@@ -3,7 +3,7 @@
     <UButton
       color="neutral"
       variant="link"
-      icon="i-heroicons-question-mark-circle"
+      icon="i-lucide-circle-help"
       size="sm"
       class="w-4 h-4 text-gray cursor-pointer"
       @click="open = true"

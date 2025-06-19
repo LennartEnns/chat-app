@@ -49,6 +49,7 @@ import PasswordToggleInput from "../../Input/PasswordToggleInput.vue";
 import ForgotPassword from "~/components/Modal/ForgotPassword.vue";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 
+const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const { requestPasswordReset } = useFlowActions();
@@ -67,6 +68,8 @@ const usingUsernameLogin = computed(
 
 const successRedirectPath = "/chat";
 function onLoginSuccess() {
+  // Clear last chatroom id to avoid navigating to an invalid chatroom
+  lastChatroomState.value = undefined;
   navigateTo(successRedirectPath);
 }
 

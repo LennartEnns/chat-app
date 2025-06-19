@@ -1,27 +1,41 @@
-import type { Message } from "~/types/messages/messageLoading";
-import { logPostgrestError } from "~~/errors/postgrestErrors";
+import type { CachedChatroomsMap } from '~/types/chatroom';
+import type { Message } from '~/types/messages/messageLoading';
+import { logPostgrestError } from '~~/errors/postgrestErrors';
 
 const scrollTopTreshold = 50; // px
 const messagesChunkSize = 20; // Load max. 20 messages at once
 const alwaysFutureDate = new Date(86400000000000);
 
-export const useLazyFetchedMessages = (
-  chatroomId: string,
-  messagesContainer: Ref<HTMLElement | null>,
-) => {
+async function waitForScrollHeightChange(container: HTMLElement, oldHeight: number) {
+  const maxTries = 40; // Generous timeout for even the 
+  let tries = 0;
+  while (tries < maxTries && container.scrollHeight === oldHeight) {
+    await new Promise((resolve) => setTimeout(resolve, 16)); // wait ~1 frame
+    tries++;
+  }
+}
+
+export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Ref<HTMLElement | null>) => {
   const supabase = useSupabaseClient();
   const operationFeedbackHandler = useOperationFeedbackHandler();
-  const containerScrollTop = ref(0);
-  const almostAtTheTop = computed(() =>
-    containerScrollTop.value <= scrollTopTreshold
-  );
+  const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
+  const cachedChatroom = computed(() => cachedChatrooms.value ? cachedChatrooms.value[chatroomId] : undefined);
 
-  const { data: messages } = useAsyncData(
-    `chatMessages-${chatroomId}`,
-    async () => {
-      return (await fetchEarlierMessages(false)).toReversed();
-    },
-  );
+  const containerScrollTop = ref(0);
+  const almostAtTheTop = computed(() => containerScrollTop.value <= scrollTopTreshold);
+
+  // Causes the corresponding database field to be set to the current time
+  // Should be called after potentially new messages have been fetched or after sending a message
+  async function updateLastInsideChatroom() {
+    await supabase.rpc('update_last_inside_chatroom', { cid: chatroomId });
+  }
+
+  const { data: messages } = useLazyAsyncData(`chatMessages-${chatroomId}`, async () => {
+    const msgs = (await fetchEarlierMessages(false)).toReversed();
+    updateLastInsideChatroom();
+
+    return msgs;
+  });
   function getEarliestMessageTime() {
     return (!messages.value || messages.value.length === 0)
       ? alwaysFutureDate
@@ -42,14 +56,15 @@ export const useLazyFetchedMessages = (
     // New messages are in descending order, so insert each one at the start of messages
     newMessages.forEach((newMsg) => messages.value!.unshift(newMsg));
     // Adjust scrollTop to keep the view "pinned"
-    await nextTick(() => {
-      if (!messagesContainer.value) return;
-      const container = messagesContainer.value;
-      const newScrollHeight = container.scrollHeight;
-      container.scrollTo({
-        top: container.scrollTop + (newScrollHeight - oldScrollHeight),
-        behavior: "instant", // Override smooth scrolling
-      });
+    if (!messagesContainer.value) return;
+    const container = messagesContainer.value;
+
+    // Ensure to only scroll after the messages have been inserted!
+    await waitForScrollHeightChange(container, oldScrollHeight);
+    const newScrollHeight = container.scrollHeight;
+    container.scrollTo({
+      top: container.scrollTop + (newScrollHeight - oldScrollHeight),
+      behavior: 'instant', // Override smooth scrolling
     });
   }
   async function fetchEarlierMessages(checkBeforeTime: boolean) {
@@ -110,7 +125,7 @@ export const useLazyFetchedMessages = (
       operationFeedbackHandler.displayError("Could not send the message");
       return;
     }
-    messages.value?.push({
+    const newMessage = {
       id: newId,
       content,
       created_at: new Date(),
@@ -119,7 +134,15 @@ export const useLazyFetchedMessages = (
       user_id: null,
       username: null,
       is_own: true,
-    });
+    };
+    updateLastInsideChatroom();
+    // Update chatroom state
+    if (cachedChatroom.value) {
+      // Insert was performed, so update last activity
+      cachedChatroom.value.last_activity = new Date().toISOString();
+      cachedChatroom.value.last_message = content;
+    }
+    messages.value?.push(newMessage);
   }
   async function deleteMessage(id: string, index: number) {
     // Request deletion
@@ -135,6 +158,10 @@ export const useLazyFetchedMessages = (
 
     // Remove message from local list after successful deletion
     messages.value = messages.value?.toSpliced(index, 1);
+    if (cachedChatroom.value && index === messages.value?.length) {
+      // Last message deleted => Update chatroom state
+      cachedChatroom.value.last_message = messages.value[messages.value.length - 1]?.content ?? null;
+    }
   }
   async function updateMessage(id: string, index: number, newContent: string) {
     // Request update
@@ -158,6 +185,10 @@ export const useLazyFetchedMessages = (
       content: newContent,
     };
     messages.value = messages.value.toSpliced(index, 1, newMsg); // Remove old + insert new
+    if (cachedChatroom.value && index === messages.value.length - 1) {
+      // Last message updated => Update chatroom state
+      cachedChatroom.value.last_message = newContent;
+    }
   }
 
   return {

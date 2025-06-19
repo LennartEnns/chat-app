@@ -12,7 +12,6 @@
       </ModalSearchUser>
 
       <UButton
-        class=""
         color="primary"
         variant="solid"
         icon="i-lucide-message-circle-plus"
@@ -25,28 +24,52 @@
       class="mt-1 md:mt-2 w-full"
       :ui="{
         trigger: 'grow',
+        root: 'overflow-y-auto',
+        content: 'overflow-y-auto',
       }"
       @update:model-value="onTabSelected"
     >
       <template #chats>
-        <div
-          class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
-        >
-          <ChatroomPreview
-            v-for="(chatroom, index) in chatroomsWithAvatarUrl"
-            :key="index"
-            :class="`mb-2 glassBG  border-1 ${
-              routeChatroomId === chatroom.id
-                ? 'border-primary backdrop-brightness-110 dark:backdrop-brightness-250 '
-                : 'border-transparent dark:backdrop-brightness-150'
-            }`"
-            :chatroom-id="chatroom.id!"
-            :name="chatroom.name!"
-            :avatar-url="chatroom.avatarUrl"
-            :last-msg="chatroom.last_message"
-          />
-        </div>
+        <ClientOnly>
+          <div
+            v-if="chatroomsListFetchingStatus === 'success' || chatroomsListFetchingStatus === 'idle'"
+          >
+            <div
+              v-if="!!chatroomsWithAvatarUrl && chatroomsWithAvatarUrl.length > 0"
+              class="mt-1 w-full glassBG border-accented border-1 rounded-md pt-2 px-2 gap-5"
+            >
+              <ChatroomPreview
+                v-for="(chatroom, index) in chatroomsWithAvatarUrl"
+                :key="index"
+                :class="`mb-2 glassBG  border-1 ${
+                  routeChatroomId === chatroom.id
+                    ? 'border-primary backdrop-brightness-110 dark:backdrop-brightness-250 '
+                    : 'border-transparent dark:backdrop-brightness-150'
+                }`"
+                :chatroom-id="chatroom.id!"
+                :name="chatroom.name!"
+                :has-other-user-left="chatroom.type! === 'direct' && !chatroom.other_user_id"
+                :avatar-url="chatroom.avatarUrl"
+                :last-msg="chatroom.last_message"
+                :number-new-messages="chatroom.number_new_messages ?? 0"
+              />
+            </div>
+            <div v-else class="text-lg text-muted text-center mt-4">
+              No chatrooms
+            </div>
+          </div>
+          <div v-else-if="chatroomsListFetchingStatus === 'pending'" class="mt-1 w-full space-y-4">
+            <USkeleton v-for="i in 3" :key="i" class="w-full h-10" />
+          </div>
+          <div v-else class="flex flex-row gap-x-2 items-center justify-center flex-wrap">
+            <UIcon name="i-lucide-x-circle" size="xl" class="text-error" />
+            <div class="text-error text-lg">
+              Error loading chatrooms
+            </div>
+          </div>
+        </ClientOnly>
       </template>
+
       <template #invitations>
         <ChatroomInvitationList
           :invitations="inboundInvitations"
@@ -73,29 +96,30 @@
 import type { UserSearchResult } from "~/types/userSearch";
 import type { InvitationPreview } from "~/types/invitations/invitationsPreview";
 import type { TabsItem } from "@nuxt/ui";
+import type { AsyncDataRequestStatus } from "#app";
 import CreateChatroom from "~/components/Modal/Chatroom/Create.vue";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
+import type { CachedChatroomData } from "~/types/chatroom";
 
+defineProps<{
+  chatroomsListFetchingStatus: AsyncDataRequestStatus,
+  chatroomsWithAvatarUrl?: CachedChatroomData[],
+}>();
+
+const routeChatroomId = useRouteIdParam();
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const userData = useUserData();
 const overlay = useOverlay();
 const createChatroomModal = overlay.create(CreateChatroom);
 
-const route = useRoute();
-
-const routeChatroomId = computed(() => {
-  const params = route.params;
-  return params.id as string;
-});
-
 // First only do a head query to avoid unnecessary data fetching
-const { data: existUnhandledInvitations } = await useAsyncData(
+const { data: existUnhandledInvitations } = await useLazyAsyncData(
   "existUnhandledInvitations",
   async () => {
     const { count } = await supabase
       .from("group_invitations")
-      .select("*", {
+      .select("id", {
         count: "exact",
         head: true,
       })
@@ -111,7 +135,7 @@ const {
   execute: executeFetchInvitations,
   refresh: refreshFetchInvitations,
   pending: invitationsPreviewPending,
-} = await useAsyncData(
+} = await useLazyAsyncData(
   "inboundInvitations",
   async () => {
     const { data, error } = await supabase
@@ -163,6 +187,7 @@ async function onCreateChat() {
     if (res.type === "direct") {
       navigateTo(`/chat/${res.id}`);
     } else {
+      // Open new group chatroom if the user clicks on Chats button
       navigateTo(`/chat/${res.id}/info`);
     }
   }
@@ -171,47 +196,4 @@ async function onRemoveInvitation() {
   // When an invitation has been rejected, reload all invitations
   refreshFetchInvitations();
 }
-
-const previewQuery = supabase
-  .from("chatrooms_preview")
-  .select("*")
-  .order("last_activity", { ascending: false });
-
-async function getChatroomList(): Promise<
-  Awaited<typeof previewQuery>["data"]
-> {
-  const { data, error } = await previewQuery;
-
-  if (error) {
-    logPostgrestError(error, "chatrooms fetching");
-    operationFeedbackHandler.displayError("Could not load chatrooms");
-    return [];
-  }
-  if (!data || data.length === 0) {
-    return [];
-  }
-
-  return data;
-}
-
-const { data: chatrooms } = await useAsyncData(
-  "chatroomsPreviewList",
-  getChatroomList
-);
-
-const chatroomsWithAvatarUrl = computed(() =>
-  chatrooms.value?.map((chatroom) => {
-    const avatarUrl = getAbstractChatroomAvatarUrl(
-      chatroom.type!,
-      chatroom.id!,
-      chatroom.other_user_id
-    );
-    return {
-      ...chatroom,
-      avatarUrl,
-    };
-  })
-);
 </script>
-
-<style></style>

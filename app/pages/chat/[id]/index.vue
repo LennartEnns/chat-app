@@ -2,23 +2,71 @@
   <NuxtLayout name="chat">
     <div class="align-column">
       <UCard
-        class="profile-bar"
         variant="subtle"
         :ui="{
-          body: 'sm:py-2 py-2 sm:px-3 px-3',
-        }">
-        <UButton variant="ghost" class="flex items-center gap-2 m-0 p-1" @click="onHeaderClick">
-          <UAvatar :src="chatroomPreview.avatarUrl" icon="i-lucide-user" />
-          <h1 class="text-black dark:text-white">{{ chatroomPreview.name }}</h1>
+          body: 'sm:py-2 py-2 sm:px-3 px-3 flex flex-row',
+        }"
+      >
+        <UButton variant="ghost" class="flex items-center m-0 py-1 px-2" @click="onHeaderClick">
+          <UAvatar :src="cachedChatroomDataObject?.avatarUrl" icon="i-lucide-user" />
+          <ClientOnly>
+            <div v-if="cachedChatroomDataObject">
+              <h1 v-if="!hasOtherUserLeft" class="text-black dark:text-white">
+                {{ chatroomPreview.name }}
+              </h1>
+              <h1 v-else class="text-muted italic">User has left</h1>
+            </div>
+          </ClientOnly>
         </UButton>
+        <div class="grow" />
+        <ClientOnly>
+          <UButton
+            v-if="!hasOtherUserLeft"
+            label="Details"
+            icon="i-lucide-external-link"
+            variant="ghost"
+            @click="onHeaderClick"
+          />
+          <UButton
+            :label="hasOtherUserLeft ? 'Delete' : 'Leave'"
+            :icon="hasOtherUserLeft ? 'i-lucide-trash-2' : 'i-lucide-log-out'"
+            color="error"
+            variant="ghost"
+            @click="onLeaveChatroom"
+          />
+        </ClientOnly>
       </UCard>
-      <div ref="messagesContainer" class="messages py-2 px-2 md:px-4">
+      <div ref="messagesContainer" class="messages py-2 px-4 md:px-6">
         <!-- Group by Hours-Minute-Time -->
         <ChatroomMessage
           v-for="(message, index) in messages"
-          :key = "index"
-          :message = "message"
-          :show-hm-time="!!messages && (index === (messages.length - 1) || messages[index + 1]?.created_at.getMinutes() !== message.created_at.getMinutes())"
+          :key="index"
+          :message="message"
+          :show-user-info="
+            !!messages &&
+            (index === 0 || messages[index - 1]?.username !== message.username)
+          "
+          :show-date-marker="
+            !!messages &&
+            (index === 0 ||
+              !areDatesSame(
+                'day',
+                messages[index - 1]?.created_at,
+                message.created_at
+              ))
+          "
+          :show-new-messages-marker="
+            !!messages && index === messages.length - numberNewMessagesFrozen
+          "
+          :show-hm-time="
+            !!messages &&
+            (index >= messages.length - 1 ||
+              !areDatesSame(
+                'minute',
+                messages[index + 1]?.created_at,
+                message.created_at
+              ))
+          "
           :show-own-msg-popover="!scrolling"
           @delete="onDeleteMessage(message.id, index)"
           @update="onUpdateMessage(message.id, index, $event)"
@@ -26,10 +74,11 @@
         <UButton
           v-if="!isAtBottom"
           icon="i-lucide-arrow-down"
-          class="absolute w-min bottom-28 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
-          @click="scrollToBottom()" />
+          class="absolute w-min bottom-20 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
+          @click="scrollToBottom()"
+        />
       </div>
-      <div class="write">
+      <div v-if="isViewer !== undefined && !isViewer" class="write">
         <UTextarea
           ref="newMessageArea"
           v-model="newMessage"
@@ -40,8 +89,9 @@
           autoresize
           :rows="1"
           :maxrows="7"
+          :maxlength="messageLimits.content"
           :ui="{
-            trailing: 'flex justify-center items-center'
+            trailing: 'flex flex-col justify-center',
           }"
           @click="saveCaret"
           @keyup="saveCaret"
@@ -109,9 +159,18 @@
                 side: 'top',
               }"
             >
-              <UButton icon="i-lucide-smile" variant="ghost" size="lg" class="text-muted" />
+              <UButton
+                icon="i-lucide-smile"
+                variant="ghost"
+                size="lg"
+                class="text-muted"
+              />
               <template #content>
-                <EmojiPicker :native="true" :theme="isLight ? 'light' : 'dark'" @select="onSelectEmoji" />
+                <EmojiPicker
+                  :native="true"
+                  :theme="isLight ? 'light' : 'dark'"
+                  @select="onSelectEmoji"
+                />
               </template>
             </UPopover>
           </template>
@@ -119,6 +178,13 @@
         <UButton :class="`${themedSendButtonColor}`" @click="onSendMessage">
           <UIcon name="i-lucide-send-horizontal" size="xs" />
         </UButton>
+      </div>
+      <div
+        v-else-if="isViewer"
+        class="flex flex-row flex-wrap justify-center items-center gap-x-2 dark:bg-neutral-800 light:bg-neutral-200 rounded-xl"
+      >
+        <UIcon :name="chatroomRolesVis.viewer.icon" class="text-xl" />
+        <div class="text-muted text-xl">You are a Viewer</div>
       </div>
       <!-- UModal for Image Preview -->
       <UModal v-model:open="showImagePreview" v-if="selectedImage" class="z-[1000]">
@@ -166,11 +232,14 @@
 </template>
 
 <script setup lang="ts">
-import EmojiPicker from 'vue3-emoji-picker';
-import 'vue3-emoji-picker/css'
-import type { EmojiExt } from 'vue3-emoji-picker';
-import { logPostgrestError } from '~~/errors/postgrestErrors';
+import EmojiPicker from "vue3-emoji-picker";
+import "vue3-emoji-picker/css";
+import type { EmojiExt } from "vue3-emoji-picker";
+import { logPostgrestError } from "~~/errors/postgrestErrors";
+import { messageLimits } from "~~/validation/commonLimits";
+import chatroomRolesVis from "~/visualization/chatroomRoles";
 import type { Message } from '~/types/messages/messageLoading';
+import { ModalChatroomLeave } from "#components";
 
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -186,89 +255,104 @@ const newMsgSelectionStart = ref(0);
 const newMsgSelectionEnd = ref(0);
 
 const { isLight } = useSSRSafeTheme();
-const themedSendButtonColor = computed(() => isLight.value ? 'user-light' : 'user-dark')
+const themedSendButtonColor = computed(() =>
+  isLight.value ? "user-light" : "user-dark"
+);
 
+const overlay = useOverlay();
+const leaveModal = overlay.create(ModalChatroomLeave);
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const operationFeedbackHandler = useOperationFeedbackHandler();
-const route = useRoute();
-const routeChatroomId = computed(() => {
-  const params = route.params;
-  return params.id as string;
-});
-const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
+const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
+const routeChatroomId = useRouteIdParam();
+
+// Save as last opened chatroom in shared state
 lastChatroomState.value = routeChatroomId.value;
+
+const isViewer = ref<boolean | undefined>(undefined);
+
+const cachedChatroomDataObject = useCachedChatroom(routeChatroomId.value);
+watchEffect(() => {
+  if (cachedChatroomDataObject.value) {
+    isViewer.value = cachedChatroomDataObject.value.current_user_role === "viewer";
+  };
+  scrollToBottom(true);
+});
+
+const hasOtherUserLeft = computed(
+  () =>
+    !!cachedChatroomDataObject.value &&
+    cachedChatroomDataObject.value.type === "direct" &&
+    !cachedChatroomDataObject.value.other_user_id
+);
 
 const notFoundError = {
   statusCode: 404,
   message: "This chatroom does not exist",
   data: {
-    headline: 'No Yapping Here!',
+    headline: "No Yapping Here!",
   },
+};
+// If the chatroom does not exist, show error page
+async function checkExistsChatroom() {
+  const { count } = await supabase
+    .from("chatrooms")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("id", routeChatroomId.value);
+  if (!count) showError(notFoundError);
 }
-const unknownError = {
-  statusCode: 500,
-  message: "Unknown error loading your chatroom",
-  data: {
-    headline: 'Oh no!',
-  },
-}
-const { data: chatroomPreviewData, error: chatroomPreviewError } = useAsyncData(`chatroomPreviewData-${routeChatroomId.value}`, async () => {
-  const { data, error } = await supabase.from('chatrooms_preview')
-    .select('name, type, other_user_id')
-    .eq('id', routeChatroomId.value)
-    .maybeSingle();
+await checkExistsChatroom();
 
-  if (error) {
-    throw createError(error.code === '22P02' ? notFoundError : unknownError);
-  }
-  else if (!data) throw createError(notFoundError);
-  return data;
-});
+// Freeze number of messages in time before setting it to 0 for the new messages marker to not disappear
+const numberNewMessagesFrozen = ref(
+  cachedChatroomDataObject.value?.number_new_messages ?? 0
+);
+async function removeNewMessagesMarker() {
+  // Make new messages marker disappear
+  numberNewMessagesFrozen.value = 0;
+}
+
 const chatroomPreview = computed(() => {
-  if (!chatroomPreviewData.value) return {
+  if (!cachedChatroomDataObject.value) return {
     name: 'Chatroom',
-    avatarUrl: undefined,
   };
-  const cpData = chatroomPreviewData.value;
+  const cpData = cachedChatroomDataObject.value;
   return {
     name: cpData.name!,
-    avatarUrl: getAbstractChatroomAvatarUrl(cpData.type!, routeChatroomId.value, cpData.other_user_id),
   };
 });
-watch(chatroomPreviewError, (error) => {
-  if (error) {
-    showError(error);
-  }
-}, {
-  immediate: true,
-});
 
-const { messages, sendMessage, deleteMessage, updateMessage } = useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
-watch(messages, (_, old) => {
-  if (!old) {
+const { messages, sendMessage, deleteMessage, updateMessage } =
+  useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
+watch(messages, (newMsgs, oldMsgs) => {
+  if (newMsgs && !oldMsgs && newMsgs.length > 0) {
     scrollToBottom(true);
   }
 });
 
 async function onHeaderClick() {
-  if (!chatroomPreviewData.value?.type) return;
-  const type = chatroomPreviewData.value.type;
-  if (type === 'direct') {
+  if (!cachedChatroomDataObject.value?.type) return;
+  const type = cachedChatroomDataObject.value.type;
+  if (type === "direct") {
     // Handle direct chatroom redirect
-    if (!chatroomPreviewData.value.other_user_id) return;
-    const otherUserId = chatroomPreviewData.value.other_user_id;
+    if (!cachedChatroomDataObject.value.other_user_id) return;
+    const otherUserId = cachedChatroomDataObject.value.other_user_id;
 
     // Fetch other user name based on other_user_id
-    const { data, error } = await supabase.from('profiles')
-      .select('username')
-      .eq('user_id', otherUserId)
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("user_id", otherUserId)
       .maybeSingle();
     if (error) {
-      logPostgrestError(error, 'username fetching');
+      logPostgrestError(error, "username fetching");
     }
     if (!data) {
-      operationFeedbackHandler.displayError('Could not open user profile');
+      operationFeedbackHandler.displayError("Could not open user profile");
       return;
     }
     navigateTo(`/profile/${data.username}`);
@@ -540,7 +624,7 @@ async function onHeaderClick() {
 
 //////////////////////// <Logic for Emojis /> ////////////////////////
 function getNewMsgTextarea(): HTMLTextAreaElement | null {
-  return newMessageArea.value?.$el.querySelector('textarea') || null;
+  return newMessageArea.value?.$el.querySelector("textarea") || null;
 }
 function saveCaret() {
   const el = getNewMsgTextarea();
@@ -556,13 +640,13 @@ function insertEmoji(unicode: string) {
   const after = newMessage.value.slice(newMsgSelectionEnd.value);
   newMessage.value = before + unicode + after;
 
-  const newCaret = before.length + unicode.length
+  const newCaret = before.length + unicode.length;
   newMsgSelectionStart.value = newCaret;
   newMsgSelectionEnd.value = newCaret;
   nextTick(() => {
     el.focus();
     el.setSelectionRange(newCaret, newCaret);
-  })
+  });
 }
 async function onSelectEmoji(emoji: EmojiExt) {
   insertEmoji(emoji.i);
@@ -570,20 +654,35 @@ async function onSelectEmoji(emoji: EmojiExt) {
 
 //////////////////////// <Message Operations /> ////////////////////////
 async function onSendMessage() {
+  removeNewMessagesMarker();
   const msgTrimmed = newMessage.value.trim();
   if (!isFalsy(msgTrimmed)) {
     await sendMessage(msgTrimmed);
-    newMessage.value = '';
+    newMessage.value = "";
     scrollToBottom();
   }
 }
 async function onDeleteMessage(id: string | null, index: number) {
   if (!id) return;
+  removeNewMessagesMarker();
   deleteMessage(id, index);
 }
-async function onUpdateMessage(id: string | null, index: number, newContent: string) {
+async function onUpdateMessage(
+  id: string | null,
+  index: number,
+  newContent: string
+) {
   if (!id) return;
+  removeNewMessagesMarker();
   updateMessage(id, index, newContent);
+}
+async function onLeaveChatroom() {
+  const instance = leaveModal.open({
+    chatroomId: routeChatroomId.value,
+  });
+  const success = await instance.result;
+  if (!success) return;
+  navigateTo("/chat");
 }
 
 async function handleKeyDown(event: KeyboardEvent) {
@@ -599,7 +698,7 @@ async function scrollToBottom(instant: boolean = false) {
     if (container) {
       container.scrollTo({
         top: container.scrollHeight,
-        behavior: instant ? 'instant' : 'smooth',
+        behavior: instant ? "instant" : "smooth",
       });
     }
   });
@@ -607,7 +706,8 @@ async function scrollToBottom(instant: boolean = false) {
 async function onContainerScroll() {
   const el = messagesContainer.value;
   if (!el) return;
-  isAtBottom.value = (el.scrollHeight - el.scrollTop - el.clientHeight) < bottomDetectionThreshold;
+  isAtBottom.value =
+    el.scrollHeight - el.scrollTop - el.clientHeight < bottomDetectionThreshold;
   if (scrollingTimeout) clearTimeout(scrollingTimeout);
   scrolling.value = true;
   scrollingTimeout = setTimeout(() => {
@@ -616,13 +716,12 @@ async function onContainerScroll() {
 }
 
 onMounted(() => {
-  messagesContainer.value?.addEventListener('scroll', onContainerScroll);
+  messagesContainer.value?.addEventListener("scroll", onContainerScroll);
   window.addEventListener("keydown", handleKeyDown);
-  scrollToBottom(true);
 });
 
 onUnmounted(() => {
-  messagesContainer.value?.removeEventListener('scroll', onContainerScroll);
+  messagesContainer.value?.removeEventListener("scroll", onContainerScroll);
   window.removeEventListener("keydown", handleKeyDown);
 });
 </script>

@@ -14,9 +14,10 @@
         </template>
 
         <FormChatInviteUsersToGroup
+          ref="formRef"
           :preset-group="presetGroup"
           :preset-invitations="presetInvitations"
-          @submit="onInvite"
+          @submit-form="onInvite"
         />
 
         <template #footer>
@@ -25,10 +26,13 @@
               class="flex-1 flex justify-center"
               label="Invite"
               color="primary"
-              type="submit"
-              form="invite-form"
+              @click="onSubmitForm"
             />
-            <UButton class="flex-1 flex justify-center" variant="outline" @click="onCancel">
+            <UButton
+              class="flex-1 flex justify-center"
+              variant="outline"
+              @click="onCancel"
+            >
               Cancel
             </UButton>
           </div>
@@ -39,31 +43,43 @@
 </template>
 
 <script lang="ts" setup>
-import type * as z from 'zod';
-import type { SelectedGroup, UserInvitation } from '~/types/invitations/groupInvitationCreation';
-import type { inviteUsersToGroupSchema } from '~~/validation/schemas/input/inputChatroomSchemas';
+import type * as z from "zod";
+import type {
+  SelectedGroup,
+  UserInvitation,
+} from "~/types/invitations/groupInvitationCreation";
+import type { inviteUsersToGroupSchema } from "~~/validation/schemas/input/inputChatroomSchemas";
 
 const { inviteUsers } = useChatroomActions();
 
 // Use these group/users when opening the modal.
 // Useful for providing pre-set values in various contexts, i.e. the context of a group/user
 defineProps<{
-  presetGroup?: SelectedGroup,
-  presetInvitations?: UserInvitation[],
+  presetGroup?: SelectedGroup;
+  presetInvitations?: UserInvitation[];
 }>();
 const emit = defineEmits<{ close: [] }>();
+
+const formRef = ref<{ $el: HTMLFormElement } | null>(null);
+async function onSubmitForm() {
+  formRef.value?.$el.requestSubmit();
+}
 
 async function onCancel() {
   emit("close");
 }
-async function onInvite(invitationData: z.output<typeof inviteUsersToGroupSchema>) {
-  const success = await inviteUsers(invitationData.invitations.map((inv) => {
-    const { isInvalid, ...invDb } = inv;
-    return {
-      chatroom_id: invitationData.group.chatroom_id,
-    ...invDb,
-    }
-  }));
+async function onInvite(
+  invitationData: z.output<typeof inviteUsersToGroupSchema>
+) {
+  const success = await inviteUsers(
+    invitationData.invitations.map((inv) => {
+      const { isInvalid, ...invDb } = inv;
+      return {
+        chatroom_id: invitationData.group.chatroom_id,
+        ...invDb,
+      };
+    })
+  );
 
   if (success) {
     emit("close");
@@ -71,6 +87,4 @@ async function onInvite(invitationData: z.output<typeof inviteUsersToGroupSchema
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

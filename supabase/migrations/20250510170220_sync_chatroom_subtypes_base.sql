@@ -8,7 +8,7 @@ as $$
 declare _new_id uuid;
 begin
   if exists (select 1 from public.chatrooms where id = new.chatroom_id) then
-    raise exception 'Cannot insert existing chatroom';
+    raise exception 'A chatroom with this ID already exists';
   end if;
   select coalesce(new.chatroom_id, gen_random_uuid()) into _new_id;
   insert into public.chatrooms (id, type)
@@ -36,7 +36,8 @@ begin
   or exists (select 1 from public.direct_chatrooms where 
     (user2_id = new.user1_id and user1_id = new.user2_id)) -- Edge case
   then
-    raise exception 'Cannot insert existing chatroom';
+    raise sqlstate '23505' -- Uniqueness violation code
+      using message = 'A chatroom with this user already exists';
   end if;
   select coalesce(new.chatroom_id, gen_random_uuid()) into _new_id;
   insert into public.chatrooms (id, type)

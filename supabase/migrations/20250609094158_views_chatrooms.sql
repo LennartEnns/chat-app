@@ -13,6 +13,22 @@ select
   ) as last_activity
 from public.chatrooms c;
 
+create or replace view public.group_chatrooms_last_activity_current_role
+with (security_invoker)
+as
+select
+  gc.*,
+  cwla.last_activity,
+  (
+    select utg.role
+    from public.user_to_group utg
+    where utg.chatroom_id = gc.chatroom_id
+      and utg.user_id = (select auth.uid())
+    limit 1
+  ) as current_user_role -- Role of current user in group
+from public.group_chatrooms gc
+join public.chatrooms_with_last_activity cwla on cwla.id = gc.chatroom_id;
+
 -- Use this to preview a list of all chats of a user
 create or replace view public.chatrooms_preview
 with (security_invoker)
@@ -62,24 +78,23 @@ select
     where chatroom_id = cwla.id
     order by msg.created_at desc
     limit 1
-  ) as last_message
-from public.chatrooms_with_last_activity cwla;
+  ) as last_message,
 
-create or replace view public.group_chatrooms_last_activity_current_role
-with (security_invoker)
-as
-select
-  gc.*,
-  cwla.last_activity,
+  (
+    select count(1)
+    from public.messages
+    where chatroom_id = cwla.id
+    and created_at > utac.last_inside
+  ) as number_new_messages,
   (
     select utg.role
     from public.user_to_group utg
-    where utg.chatroom_id = gc.chatroom_id
+    where utg.chatroom_id = cwla.id
       and utg.user_id = (select auth.uid())
     limit 1
-  ) as current_user_role -- Role of current user in group
-from public.group_chatrooms gc
-join public.chatrooms_with_last_activity cwla on cwla.id = gc.chatroom_id;
+  ) as current_user_role
+from public.chatrooms_with_last_activity cwla
+join public.user_to_abstract_chatroom utac on utac.chatroom_id = cwla.id and utac.user_id = (select auth.uid());
 
 create or replace view public.group_chatroom_members
 with (security_invoker)
@@ -88,8 +103,8 @@ select
   user_to_group.chatroom_id,
   pf.user_id,
   user_to_group.role,
+  pf.description,
   pf.username,
-  pf.displayname,
-  pf.description
+  coalesce(pf.displayname, pf.username) as name
 from public.profiles pf
 join public.user_to_group on pf.user_id = user_to_group.user_id;

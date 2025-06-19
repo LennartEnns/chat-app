@@ -1,8 +1,21 @@
 <template>
-  <div :class="`max-w-[90%] mt-2.5 flex flex-col items-center gap-2 ${messagePosition}`">
-    <div class="flex flex-row gap-1 w-full">
+  <USeparator
+    v-if="showNewMessagesMarker"
+    label="New Messages"
+    color="primary"
+    class="w-full my-2"
+  />
+  <div
+    v-if="showDateMarker"
+    ref="dateMarker"
+    class="text-muted text-sm border-1 rounded-xl self-center py-1 px-3"
+  >
+    {{ dateMarkerText }}
+  </div>
+  <div :class="`max-w-[90%] mt-2.5 flex flex-col gap-1 ${messagePosition}`">
+    <div v-if="message.is_own" class="flex flex-row gap-1 w-full justify-end">
       <UPopover
-        v-if="message.is_own && showOwnMsgPopover && !editingMessage"
+        v-if="showOwnMsgPopover && !editingMessage"
         v-model:open="popoverOpen"
         mode="hover"
         arrow
@@ -11,7 +24,7 @@
           side: 'left',
         }"
         :ui="{
-          content: 'rounded-xl'
+          content: 'rounded-xl',
         }"
       >
         <!-- Bild-Nachricht -->
@@ -31,15 +44,24 @@
           @touchstart="popoverOpen = true"
           v-html="contentLinkified"
         />
-        <!-- eslint-enable -->
         <template #content>
           <div class="p-1 flex flex-row">
-            <UButton icon="i-lucide-trash-2" variant="ghost" color="error" @click="emit('delete')" />
-            <UButton icon="i-lucide-edit" variant="ghost" color="primary" @click="onEditMessage" />
+            <UButton
+              icon="i-lucide-trash-2"
+              variant="ghost"
+              color="error"
+              @click="emit('delete')"
+            />
+            <UButton
+              icon="i-lucide-edit"
+              variant="ghost"
+              color="primary"
+              @click="onEditMessage"
+            />
           </div>
         </template>
       </UPopover>
-      <div v-else-if="editingMessage">
+      <div v-else-if="editingMessage" class="flex-grow">
         <UTextarea
           id="editArea"
           v-model="newMessage"
@@ -70,31 +92,74 @@
       </div>
       <div
         v-else
-        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
         v-html="contentLinkified"
       />
-      <UButton v-if="!message.is_own && message.username" variant="ghost" class="ml-2 flex flex-row items-center gap-2 h-fit" @click="onAvatarClick">
-        <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
-        <div class="text-muted whitespace-nowrap select-none">{{ message.username }}</div>
-      </UButton>
     </div>
-    <div v-if="showHmTime" :class="`text-xs text-muted px-2 ${message.is_own ? 'self-end' : 'self-start'}`">{{ displayedTime }}</div>
+
+    <div
+      v-else
+      class="grid items-start"
+      :style="{ gridTemplateColumns: '40px 1fr' }"
+    >
+      <div class="flex justify-center">
+        <UButton
+          v-if="showUserInfo && message.username"
+          variant="ghost"
+          class="p-0 h-fit"
+          @click="onAvatarClick"
+        >
+          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" :alt="usernameInitials" />
+        </UButton>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div
+          v-if="showUserInfo && message.username"
+          class="text-muted text-sm whitespace-nowrap select-none"
+        >
+          {{ message.username }}
+        </div>
+        <div
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          v-html="contentLinkified"
+        />
+      </div>
+    </div>
+
+    <div
+      v-if="showHmTime"
+      :class="`text-xs text-muted px-2 ${
+        message.is_own ? 'self-end' : 'self-start ml-9'
+      }`"
+    >
+      {{ displayedTime }}
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import type { Message } from "~/types/messages/messageLoading";
 
+const dateMarker = ref<HTMLElement | null>(null);
+
 const props = defineProps<{
-  message: Message,
-  showHmTime: boolean,
-  showOwnMsgPopover: boolean,
+  message: Message;
+  showUserInfo: boolean;
+  showNewMessagesMarker: boolean;
+  showDateMarker: boolean;
+  showHmTime: boolean;
+  showOwnMsgPopover: boolean;
 }>();
 
 const emit = defineEmits<{
-  delete: [],
-  update: [value: string],
+  delete: [];
+  update: [value: string];
 }>();
+
+const dateMarkerText = computed(() =>
+  getDateUserText(props.message.created_at)
+);
 
 const editMsgButtonArea = ref<HTMLElement | null>(null);
 const popoverOpen = ref(false);
@@ -102,26 +167,40 @@ const editingMessage = ref(false);
 const newMessage = ref("");
 const showImageModal = ref(false);
 const newMessageSanitized = computed(() => newMessage.value.trim());
-const messageContentChanged = computed(() => newMessageSanitized.value !== props.message.content);
-const disableMessageUpdate = computed(() => newMessageSanitized.value.length === 0 || !messageContentChanged.value);
-
-// If not user ID is given, we will assume this is the user's own message
-const avatarUrl = computed(() => props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined);
-const contentLinkified = useLinkifiedText(computed(() => props.message.content));
+const messageContentChanged = computed(
+  () => newMessageSanitized.value !== props.message.content
+);
+const disableMessageUpdate = computed(
+  () => newMessageSanitized.value.length === 0 || !messageContentChanged.value
+);
+const avatarUrl = computed(() =>
+  props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined
+);
+// Used for displaying user's "initials" if they have no avatar image
+const usernameInitials = computed(() => props.message.username?.slice(0, 2).split('').join(' '));
+const contentLinkified = useLinkifiedText(
+  computed(() => props.message.content)
+);
 
 // Make message bigger if it's just a single emoji
 const singleEmojiRegex = /^[\p{Extended_Pictographic}\u200D]+$/u;
-const msgSize = computed(() => singleEmojiRegex.test(props.message.content) ? 'text-4xl' : '');
+const msgSize = computed(() =>
+  singleEmojiRegex.test(props.message.content) ? "text-4xl" : ""
+);
 
 const { isLight } = useSSRSafeTheme();
-const messagePosition = computed(() => props.message.is_own ? 'user' : 'partner')
+const messagePosition = computed(() =>
+  props.message.is_own ? "user" : "partner"
+);
 const themedMessageColor = computed(() => {
   if (isLight.value) {
-    return props.message.is_own ? 'user-light' : 'partner-light';
+    return props.message.is_own ? "user-light" : "partner-light";
   }
-  return props.message.is_own ? 'user-dark' : 'partner-dark';
+  return props.message.is_own ? "user-dark" : "partner-dark";
 });
-const speechBubbleLook = computed(() => props.message.is_own ? 'rounded-tl-xs' : 'rounded-tr-xs');
+const speechBubbleLook = computed(() =>
+  props.message.is_own ? "rounded-tr-xs" : "rounded-tl-xs"
+);
 const displayedTime = computed(() => dateToHMTime(props.message.created_at));
 
 const openImageModal = () => {
@@ -132,7 +211,7 @@ watch(() => props.showOwnMsgPopover, (show) => {
   if (!show) {
     popoverOpen.value = false;
   }
-})
+);
 async function onEditMessage() {
   popoverOpen.value = false;
   newMessage.value = props.message.content;
@@ -140,7 +219,7 @@ async function onEditMessage() {
 }
 async function onUpdateMessage() {
   editingMessage.value = false;
-  emit('update', newMessageSanitized.value);
+  emit("update", newMessageSanitized.value);
 }
 async function onAvatarClick() {
   if (!props.message.username) return;
@@ -154,23 +233,25 @@ async function handleEditAreaBlur() {
     if (!editMsgButtonArea.value?.contains(active)) {
       editingMessage.value = false;
     }
-  })
+  });
 }
 async function attachEditAreaEventHandler() {
-  document
-    .getElementById("editArea")
-    ?.addEventListener("keydown", (e: KeyboardEvent) => {
+  document.getElementById("editArea")?.addEventListener(
+    "keydown",
+    (e: KeyboardEvent) => {
       if (e.code === "Enter") {
-        newMessage.value += '\n';
+        newMessage.value += "\n";
       } else if (e.code === "Escape") {
         editingMessage.value = false;
       }
-    }, {
+    },
+    {
       once: false,
-    });
+    }
+  );
 }
 </script>
 
 <style>
-@import url('~/assets/css/chat.css');
+@import url("~/assets/css/chat.css");
 </style>

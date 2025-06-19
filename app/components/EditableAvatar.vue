@@ -2,29 +2,24 @@
   <div class="avatar">
     <div class="avatar-container">
       <UAvatar
-        class="border-2"
         :src="srcModified"
         :icon="defaultIcon"
-        :ui="{ root: 'size-26 md:size-32', icon: 'size-9/12' }"
+        :class="props.styling"
+        :ui="{ root: props.rootStyling, icon: props.iconStyling }"
       />
       <div v-if="editable" class="avatar-overlay">
         <UIcon name="i-lucide-camera" size="xx-large" />
         Edit Picture
         <input
           type="file"
-          style="
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-          "
+          style="position: absolute; width: 100%; height: 100%; opacity: 0"
           accept="image/*"
           @change="startCroppingAvatar"
         >
       </div>
     </div>
     <UButton
-      v-if="clearable && existsSrc"
+      v-if="clearable && existsAvatarImage"
       label="Clear Avatar"
       variant="ghost"
       class="cursor-pointer mt-1"
@@ -35,19 +30,22 @@
 </template>
 
 <script lang="ts" setup>
-import CropAvatar from './Modal/CropAvatar.vue';
+import CropAvatar from "~/components/Modal/CropAvatar.vue";
 
 const props = defineProps<{
-  src: string | undefined,
-  bucketName: string,
-  filepath: string,
-  defaultIcon: string,
-  editable: boolean,
-  clearable: boolean,
+  src: string | undefined;
+  bucketName: string;
+  filepath: string;
+  defaultIcon: string;
+  editable: boolean;
+  clearable: boolean;
+  styling: string;
+  rootStyling: string;
+  iconStyling: string;
 }>();
 
 const emit = defineEmits<{
-  clear: [],
+  clear: [];
 }>();
 
 const supabase = useSupabaseClient();
@@ -55,11 +53,25 @@ const operationFeedbackHandler = useOperationFeedbackHandler();
 const overlay = useOverlay();
 const croppingModal = overlay.create(CropAvatar);
 
-const existsSrc = ref(false);
+const existsAvatarImage = ref(false);
+const checkedExists = ref(false);
 const srcModified = ref(props.src);
-watch(() => props.src, (newVal) => {
-  srcModified.value = newVal;
+
+// Value only needed if image might be updated/cleared by the user
+watch(() => props.editable || props.clearable, async (val) => {
+  if (val && !checkedExists.value) {
+    existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
+    checkedExists.value = true;
+  }
+}, {
+  immediate: true,
 });
+watch(
+  () => props.src,
+  (newVal) => {
+    srcModified.value = newVal;
+  }
+);
 
 async function startCroppingAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -72,9 +84,13 @@ async function startCroppingAvatar(event: Event) {
   });
   const result = await instance.result;
   if (result) {
-    const success = await uploadAvatarBlob(result, props.bucketName, props.filepath);
+    const success = await uploadAvatarBlob(
+      result,
+      props.bucketName,
+      props.filepath
+    );
     if (success) {
-      existsSrc.value = true;
+      existsAvatarImage.value = true;
       srcModified.value = URL.createObjectURL(result);
     }
   }
@@ -86,20 +102,11 @@ async function clearAvatar() {
   if (error) {
     operationFeedbackHandler.displayError("Could not clear avatar.");
   } else {
-    existsSrc.value = false;
+    existsAvatarImage.value = false;
     srcModified.value = undefined;
-    emit('clear');
+    emit("clear");
   }
 }
-
-onNuxtReady(async () => {
-  // Value only needed if image might be updated by the user
-  if (!props.editable && !props.clearable) return;
-  const { data } = await supabase.storage
-    .from(props.bucketName)
-    .exists(props.filepath);
-  existsSrc.value = data;
-});
 </script>
 
 <style>

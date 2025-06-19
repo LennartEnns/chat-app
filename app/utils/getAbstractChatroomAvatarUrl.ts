@@ -4,10 +4,10 @@ export default (
   otherUserId: string | null
 ) => {
   return type === "direct"
-    ? (otherUserId ? getAvatarUrl(otherUserId) : undefined)
+    ? ref(otherUserId ? getAvatarUrl(otherUserId) : undefined)
     : useCachedSignedImageUrl(
         "chatroom_avatars",
         getGroupAvatarPath(id),
         true
-      ).value;
+      );
 }

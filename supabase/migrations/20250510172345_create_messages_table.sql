@@ -4,5 +4,9 @@ create table if not exists messages (
   chatroom_id uuid not null references public.chatrooms(id) on delete cascade,
   message_type text default 'text',
   content text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+
+  constraint content_length_check check (length(content) <= 511),
+  -- This constraint is CRITICAL for the final step to work.
+  constraint messages_chatroom_id_id_key unique (chatroom_id, id)
 );
