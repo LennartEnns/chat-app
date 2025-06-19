@@ -98,7 +98,7 @@
           class="p-0 h-fit"
           @click="onAvatarClick"
         >
-          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
+          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" :alt="usernameInitials" />
         </UButton>
       </div>
 
@@ -164,6 +164,8 @@ const disableMessageUpdate = computed(
 const avatarUrl = computed(() =>
   props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined
 );
+// Used for displaying user's "initials" if they have no avatar image
+const usernameInitials = computed(() => props.message.username?.slice(0, 2).split('').join(' '));
 const contentLinkified = useLinkifiedText(
   computed(() => props.message.content)
 );

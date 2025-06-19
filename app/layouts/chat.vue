@@ -49,8 +49,8 @@ const fetchingChatroomsFromDB = ref(false);
 
 async function getChatroomList(): Promise<ChatroomsPreviews> {
   console.log("Fetching chatrooms...");
+  // Prefer using cached chatrooms if cache exists and the opened chatroom is available in cache
   if (cachedChatrooms.value) {
-    // Prefer using cached chatrooms if available
     console.log("Using cached chatrooms");
     return chatroomsMapToArray(cachedChatrooms.value);
   }

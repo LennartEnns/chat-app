@@ -63,7 +63,7 @@
       class="p-1 space-y-1 border-1 border-accented rounded-lg border-t-0 rounded-t-none"
     >
       <div class="flex flex-row items-center justify-start gap-3">
-        <UAvatar :src="selectedGroupAvatarUrl" icon="i-lucide-user" size="sm" />
+        <UAvatar :src="selectedGroupAvatarUrl" icon="i-lucide-users" size="sm" />
         <span>
           {{ selectedGroup.name }}
         </span>
