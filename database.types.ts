@@ -38,30 +38,19 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          pinned_message: string | null
           type: Database["public"]["Enums"]["chatroom_type"]
         }
         Insert: {
           created_at?: string
           id?: string
-          pinned_message?: string | null
           type: Database["public"]["Enums"]["chatroom_type"]
         }
         Update: {
           created_at?: string
           id?: string
-          pinned_message?: string | null
           type?: Database["public"]["Enums"]["chatroom_type"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "chatrooms_pinned_message_fkey"
-            columns: ["id", "pinned_message"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["chatroom_id", "id"]
-          },
-        ]
+        Relationships: []
       }
       direct_chatrooms: {
         Row: {
@@ -345,32 +334,21 @@ export type Database = {
           created_at: string | null
           id: string | null
           last_activity: string | null
-          pinned_message: string | null
           type: Database["public"]["Enums"]["chatroom_type"] | null
         }
         Insert: {
           created_at?: string | null
           id?: string | null
           last_activity?: never
-          pinned_message?: string | null
           type?: Database["public"]["Enums"]["chatroom_type"] | null
         }
         Update: {
           created_at?: string | null
           id?: string | null
           last_activity?: never
-          pinned_message?: string | null
           type?: Database["public"]["Enums"]["chatroom_type"] | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "chatrooms_pinned_message_fkey"
-            columns: ["id", "pinned_message"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["chatroom_id", "id"]
-          },
-        ]
+        Relationships: []
       }
       group_chatroom_members: {
         Row: {

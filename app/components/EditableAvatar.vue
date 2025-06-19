@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts" setup>
-import CropAvatar from "./Modal/CropAvatar.vue";
+import CropAvatar from "~/components/Modal/CropAvatar.vue";
 
 const props = defineProps<{
   src: string | undefined;
@@ -63,6 +63,8 @@ watch(() => props.editable || props.clearable, async (val) => {
     existsAvatarImage.value = props.src ? await existsSrc(props.src) : false;
     checkedExists.value = true;
   }
+}, {
+  immediate: true,
 });
 watch(
   () => props.src,

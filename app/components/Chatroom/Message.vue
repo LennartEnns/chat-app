@@ -27,8 +27,9 @@
           content: 'rounded-xl',
         }"
       >
+        <!-- eslint-disable vue/no-v-html -->
         <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           @touchstart="popoverOpen = true"
           v-html="contentLinkified"
         />
@@ -97,7 +98,7 @@
           class="p-0 h-fit"
           @click="onAvatarClick"
         >
-          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" />
+          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" :alt="usernameInitials" />
         </UButton>
       </div>
 
@@ -109,7 +110,7 @@
           {{ message.username }}
         </div>
         <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           v-html="contentLinkified"
         />
       </div>
@@ -118,7 +119,7 @@
     <div
       v-if="showHmTime"
       :class="`text-xs text-muted px-2 ${
-        message.is_own ? 'self-end' : 'partner-timestamp'
+        message.is_own ? 'self-end' : 'self-start ml-9'
       }`"
     >
       {{ displayedTime }}
@@ -163,6 +164,8 @@ const disableMessageUpdate = computed(
 const avatarUrl = computed(() =>
   props.message.user_id ? getAvatarUrl(props.message.user_id) : undefined
 );
+// Used for displaying user's "initials" if they have no avatar image
+const usernameInitials = computed(() => props.message.username?.slice(0, 2).split('').join(' '));
 const contentLinkified = useLinkifiedText(
   computed(() => props.message.content)
 );

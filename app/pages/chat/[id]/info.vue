@@ -242,7 +242,7 @@
         </div>
         <!-- Invitations Column-->
         <UDrawer
-          v-model:open="open"
+          v-model:open="drawerOpen"
           :handle="false"
           direction="right"
           class="hidden md:block lg:hidden"
@@ -299,7 +299,7 @@ import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import RolesInfo from "~/components/Modal/Chatroom/RolesInfo.vue";
 import type { Enums, Tables } from "~~/database.types";
 import type { NonEmptyArray, RequireNonNull } from "~/types/tsUtils/helperTypes";
-import chatroomRolesVis from '~/visualization/chatroomRoles';
+import chatroomRolesVis from "~/visualization/chatroomRoles";
 
 type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
@@ -315,16 +315,17 @@ type Chatroom = Omit<
 };
 type ChatroomMember = RequireNonNull<Tables<"group_chatroom_members">, 'role' | 'user_id'>;
 
+const routeChatroomId = useRouteIdParam();
 const { isLight } = useSSRSafeTheme();
-
 const operationFeedbackHandler = useOperationFeedbackHandler();
-const open = ref(false);
 const supabase = useSupabaseClient();
+const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
 
 const overlay = useOverlay();
-const rolesHelpModal = overlay.create(RolesInfo);
 const inviteModal = overlay.create(InviteToGroup);
+const rolesHelpModal = overlay.create(RolesInfo);
 
+const drawerOpen = ref(false);
 const chatMembers = ref<ChatroomMember[]>([]);
 
 const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
@@ -344,14 +345,11 @@ const editMode = ref<boolean>(false);
 const isEditingDescription = ref<boolean>();
 const isEditingName = ref<boolean>(false);
 
-const route = useRoute();
-const routeChatroomId = computed(() => {
-  const params = route.params;
-  return params.id as string;
-});
+// Save as last opened chatroom in shared state
+lastChatroomState.value = routeChatroomId.value;
 
 async function openDrawer() {
-  open.value = true;
+  drawerOpen.value = true;
 }
 
 async function toggleEdit() {
@@ -453,6 +451,7 @@ watch(
     }
     chatroom.value.name = data.name!;
     chatroom.value.description = data.description;
+    chatroom.value.current_user_role = data.current_user_role;
     newDescription.value = chatroom.value.description;
     newName.value = chatroom.value.name;
   },

@@ -54,11 +54,6 @@
   align-self: flex-end;
 }
 
-.partner-timestamp {
-  margin-left: 30px;
-  align-self: flex-start;
-}
-
 .user-dark {
   background-color: color-mix(in srgb, var(--ui-primary) 55%, transparent);
   color: white;

@@ -78,7 +78,7 @@
           @click="scrollToBottom()"
         />
       </div>
-      <div v-if="!isViewer" class="write">
+      <div v-if="isViewer !== undefined && !isViewer" class="write">
         <UTextarea
           ref="newMessageArea"
           v-model="newMessage"
@@ -125,7 +125,7 @@
         </UButton>
       </div>
       <div
-        v-else
+        v-else-if="isViewer"
         class="flex flex-row flex-wrap justify-center items-center gap-x-2 dark:bg-neutral-800 light:bg-neutral-200 rounded-xl"
       >
         <UIcon :name="chatroomRolesVis.viewer.icon" class="text-xl" />
@@ -166,15 +166,22 @@ const overlay = useOverlay();
 const leaveModal = overlay.create(ModalChatroomLeave);
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
-const route = useRoute();
-const routeChatroomId = computed(() => {
-  const params = route.params;
-  return params.id as string;
-});
-const isViewer = ref(false);
 const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
+const routeChatroomId = useRouteIdParam();
+
+// Save as last opened chatroom in shared state
 lastChatroomState.value = routeChatroomId.value;
+
+const isViewer = ref<boolean | undefined>(undefined);
+
 const cachedChatroomDataObject = useCachedChatroom(routeChatroomId.value);
+watchEffect(() => {
+  if (cachedChatroomDataObject.value) {
+    isViewer.value = cachedChatroomDataObject.value.current_user_role === "viewer";
+  };
+  scrollToBottom(true);
+});
+
 const hasOtherUserLeft = computed(
   () =>
     !!cachedChatroomDataObject.value &&
@@ -351,37 +358,15 @@ async function onContainerScroll() {
   }, minTimeAfterScrolling);
 }
 
-const testChannel = supabase
-  .channel('messages-insert')
-  .on('postgres_changes',
-    {
-      event: '*',
-      schema: 'public,',
-      table: 'messages',
-    },
-    (payload) => console.log(payload)
-  )
-  .subscribe();
-
 onMounted(() => {
-  isViewer.value =
-    cachedChatroomDataObject.value?.current_user_role === "viewer";
   messagesContainer.value?.addEventListener("scroll", onContainerScroll);
   window.addEventListener("keydown", handleKeyDown);
-  scrollToBottom(true);
 });
 
 onUnmounted(() => {
   messagesContainer.value?.removeEventListener("scroll", onContainerScroll);
   window.removeEventListener("keydown", handleKeyDown);
-  testChannel.unsubscribe();
 });
-const pinnedMsgReq = await supabase
-  .from("chatrooms")
-  .select("pinned_message")
-  .eq("id", routeChatroomId.value);
-const pinnedMsg = await pinnedMsgReq.data?.[0]?.pinned_message;
-console.log(pinnedMsg);
 </script>
 
 <style>

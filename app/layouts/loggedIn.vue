@@ -224,5 +224,3 @@ const items = ref<NavigationMenuItem[]>([
   },
 ]);
 </script>
-
-<style></style>
