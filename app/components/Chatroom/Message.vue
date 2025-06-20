@@ -23,7 +23,7 @@
           :src="imageUrl.value"
           :alt="message.content || 'Uploaded image'"
           class="chat-image object-contain cursor-pointer"
-          @click="openImageModal"
+          @click="handleImageClick"
           @load="emit('imageLoaded')" @error="handleImageError"
         />
         <p v-if="message.content" class="text-sm">{{ message.content }}</p>
@@ -165,6 +165,7 @@ const emit = defineEmits<{
   delete: [];
   update: [value: string];
   imageLoaded: [];
+  openFullImage: [string];
 }>();
 
 const dateMarkerText = computed(() =>
@@ -216,6 +217,16 @@ const imageUrl = computed(() => {
 const handleImageError = () => {
   console.error(`Fehler beim Laden des Bildes für Nachricht ${props.message.id} an Pfad: ${props.message.media?.[0]}`);
   imageError.value = true;
+};
+
+const handleImageClick = () => {
+  console.log("ChatroomMessage: Image clicked!");
+  if (imageUrl.value) {
+    console.log("ChatroomMessage: Emitting openFullImage with URL:", imageUrl.value.value);
+    emit('openFullImage', imageUrl.value.value!);
+  } else {
+    console.log("ChatroomMessage: imageUrl.value is undefined, not emitting.");
+  }
 };
 
 const { isLight } = useSSRSafeTheme();

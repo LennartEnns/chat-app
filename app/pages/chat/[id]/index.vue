@@ -68,6 +68,7 @@
               ))
           "
           :show-own-msg-popover="!scrolling"
+          @open-full-image="handleOpenFullImage"
           @delete="onDeleteMessage(message.id, index)"
           @update="onUpdateMessage(message.id, index, $event)"
           @imageLoaded="handleImageLoadedScroll"
@@ -194,7 +195,8 @@
       >
         <UIcon :name="chatroomRolesVis.viewer.icon" class="text-xl" />
         <div class="text-muted text-xl">You are a Viewer</div>
-      </div>
+    </div>
+
       <!-- UModal for Image Preview -->
       <UModal v-model:open="showImagePreview" v-if="selectedImage" class="z-[1000]">
         <template #content>
@@ -234,6 +236,17 @@
           </UButton>
         </div>
       </div>
+        </template>
+      </UModal>
+      <UModal v-model:open="showImageModal" class="z-[1000]">
+        <template #content>
+          <div class="imageBorder">
+            <img
+              v-if="currentModalImageUrl"
+              :src="currentModalImageUrl"
+              alt="Full size image"
+              class="max-w-full max-h-[80vh] object-contain mx-auto" />
+          </div>
         </template>
       </UModal>
     </div>
@@ -278,6 +291,9 @@ const user = useSupabaseUser();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
 const routeChatroomId = useRouteIdParam();
+
+const showImageModal = ref(false);
+const currentModalImageUrl = ref<string | null>(null);
 
 // Save as last opened chatroom in shared state
 lastChatroomState.value = routeChatroomId.value;
@@ -507,6 +523,13 @@ async function onHeaderClick() {
       uploading.value = false
     }
   }
+
+  const handleOpenFullImage = (imageUrl: string) => { // Parameter hier 'imageUrl' genannt, wie vom Event gesendet
+  console.log("Parent Component: Received openFullImage event with URL:", imageUrl); // DIESER LOG IST WICHTIG!
+  currentModalImageUrl.value = imageUrl;
+  showImageModal.value = true;
+  console.log("Parent Component: showImageModal:", showImageModal.value, "currentModalImageUrl:", currentModalImageUrl.value);
+};
 
 
   async function handleImageLoadedScroll() {
