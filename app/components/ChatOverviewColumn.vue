@@ -154,7 +154,7 @@ const {
 } = await useLazyAsyncData(
   "inboundInvitations",
   async () => {
-    // Could also be undefined, this is why I seemingly made this "beginner mistake"
+    // Could also be undefined, so explicitly check for false
     if (existUnhandledInvitations.value === false) return [];
 
     const { data, error } = await supabase

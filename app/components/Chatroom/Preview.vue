@@ -43,7 +43,6 @@ const props = defineProps<{
 }>();
 
 const drawerOpen = useOpenDrawer();
-const cachedChatroomDataObject = useCachedChatroom(props.chatroomId);
 const route = useRoute();
 
 async function onChatroomSelect() {
@@ -53,13 +52,6 @@ async function onChatroomSelect() {
     (route.params.id as string) === props.chatroomId
   )
     return;
-
-  // When opening the chatroom, reset unread messages to 0 in the local state
-  setTimeout(() => {
-    if (cachedChatroomDataObject.value && cachedChatroomDataObject.value.number_new_messages !== 0) {
-      cachedChatroomDataObject.value = { ...cachedChatroomDataObject.value, number_new_messages: 0 };
-    }
-  }, 500);
   drawerOpen.value = false;
   navigateTo(`/chat/${props.chatroomId}`);
 }

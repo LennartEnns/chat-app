@@ -46,19 +46,8 @@ const previewQuery = supabase
   .order("last_activity", { ascending: false });
 type ChatroomsPreviews = NonNullable<Awaited<typeof previewQuery>['data']>;
 
-const refreshChatroomsOnStateUpdate = ref(true);
-const fetchingChatroomsFromDB = ref(false);
-
-async function getChatroomList(): Promise<ChatroomsPreviews> {
-  console.log("Fetching chatrooms...");
-  // Prefer using cached chatrooms if cache exists and the opened chatroom is available in cache
-  if (cachedChatrooms.value) {
-    console.log("Using cached chatrooms");
-    return chatroomsMapToArray(cachedChatrooms.value);
-  }
-
-  console.log("Fetching from DB...")
-  fetchingChatroomsFromDB.value = true;
+async function fetchChatroomsFromDb(): Promise<ChatroomsPreviews> {
+  console.log("Fetching chatrooms from DB...")
   const { data, error } = await previewQuery;
 
   if (error) {
@@ -73,31 +62,37 @@ async function getChatroomList(): Promise<ChatroomsPreviews> {
   return data;
 }
 
-const { data: chatrooms, status: chatroomsListFetchingStatus, refresh: refreshChatroomsList } = await useLazyAsyncData('chatroomsPreviewList', getChatroomList, {
-  server: false,
-  immediate: true,
+// Interface between chatrooms state (Map) and local list (Array)
+const chatrooms = computed<ChatroomsPreviews | undefined>({
+  get: () => {
+    return cachedChatrooms.value ? chatroomsMapToArray(cachedChatrooms.value) : undefined;
+  },
+  set: (rooms) => {
+    cachedChatrooms.value = rooms ? chatroomsArrayToMap(rooms) : undefined;
+  }
 });
-// Re-fetch chatroom previews from local state when it is updated
-watch(cachedChatrooms, () => {
-  if (!refreshChatroomsOnStateUpdate.value) return;
-
-  console.log("Refreshing chatrooms from local state");
-  refreshChatroomsList();
-}, {
+const {
+  data: fetchedChatrooms,
+  status: chatroomsListFetchingStatus,
+  execute: executeFetchChatroomsFromDb,
+  refresh: refetchChatroomsFromDb
+} = await useLazyAsyncData('chatroomsPreviewList', fetchChatroomsFromDb, {
   immediate: false,
-  deep: true,
+  server: false,
+});
+// Write chatrooms to state after fetching from db
+watch(chatroomsListFetchingStatus, (status, oldStatus) => {
+  if (!!oldStatus && status === 'success') {
+    chatrooms.value = fetchedChatrooms.value;
+  }
+}, {
+  immediate: true,
 });
 
 // Loads the avatar URLs whenever the chatroom list changes.
 // Prefer cached URLs
-const { data: chatroomAvatarRefs } = await useLazyAsyncData('chatroomsAvatarUrls', async () => {
+const { data: chatroomAvatarRefs } = await useLazyAsyncData('chatroomAvatarRefs', async () => {
   if (!chatrooms.value || chatrooms.value.length === 0) return ({});
-  if (cachedChatrooms.value) {
-    // Load avatar urls from cache
-    return Object.fromEntries(
-      Object.entries(cachedChatrooms.value).map(([id, data]) => [id, ref(data?.avatarUrl)])
-    );
-  }
 
   return Object.fromEntries(
     chatrooms.value.map((chatroom) =>
@@ -108,7 +103,7 @@ const { data: chatroomAvatarRefs } = await useLazyAsyncData('chatroomsAvatarUrls
     )])
   );
 }, {
-    immediate: false,
+    immediate: true,
     server: false,
     watch: [() => chatrooms.value?.map((room) => room.id)],
   }
@@ -121,24 +116,17 @@ const chatroomsWithAvatarUrl = computed(() => {
   ) : undefined;
 });
 
-// Caches the chatrooms if and only if they have just been fetched from the DB (not from cache)
-watch(chatroomsWithAvatarUrl, (rooms) => {
-  if (!rooms || !fetchingChatroomsFromDB.value) return;
-  fetchingChatroomsFromDB.value = false;
-
-  // Cache newly fetched chatrooms in shared state
-  console.log("Caching chatrooms...");
-  // Ignore this state change to avoid unnecessary refetch/reactive loop
-  refreshChatroomsOnStateUpdate.value = false;
-  cachedChatrooms.value = chatroomsArrayToMap(rooms);
-  nextTick(() => refreshChatroomsOnStateUpdate.value = true);
-}, {
-  immediate: false,
-});
-
 async function onRefreshChats() {
-  cachedChatrooms.value = undefined;
+  refetchChatroomsFromDb();
 }
+
+onMounted(() => {
+  if (!cachedChatrooms.value) {
+    executeFetchChatroomsFromDb();
+  }
+});
+////////////////// Realtime Logic ////////////////////
+
 </script>
 
 <style>

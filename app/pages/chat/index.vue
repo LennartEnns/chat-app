@@ -65,7 +65,7 @@ const themedSeparatorMobile = computed(() =>
   isLight.value ? "separator-dark-mobile" : "separator-light-mobile"
 );
 
-if(isMobile){
+if(isMobile.value) {
 
   async function getLastActivity(chatroom_id: string): Promise<string | undefined>{
     const { data: last_activity } = await supabase.from("user_to_abstract_chatroom").select("last_inside").eq("user_id", userData.id).eq("chatroom_id", chatroom_id).single();

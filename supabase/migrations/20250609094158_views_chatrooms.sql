@@ -8,6 +8,7 @@ select
       select max(m.created_at)
       from public.messages m
       where m.chatroom_id = c.id
+      and m.user_id != (select auth.uid())
     ),
     c.created_at
   ) as last_activity

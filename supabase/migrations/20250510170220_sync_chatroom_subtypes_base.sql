@@ -1,5 +1,5 @@
 -- Triggers to create base chatroom before a corresponding subtype entry is created
-create function public.before_insert_group_chatroom()
+create function before_insert_group_chatroom()
 returns trigger
 language plpgsql
 security definer
@@ -17,14 +17,15 @@ begin
   return new;
 end;
 $$;
+revoke all on function before_insert_group_chatroom() from authenticated, anon;
 
 create trigger auto_create_group_chatroom_base
   before insert on public.group_chatrooms
   for each row
-  execute procedure public.before_insert_group_chatroom();
+  execute procedure before_insert_group_chatroom();
 
 
-create function public.before_insert_direct_chatroom()
+create function before_insert_direct_chatroom()
 returns trigger
 language plpgsql
 security definer
@@ -46,16 +47,16 @@ begin
   return new;
 end;
 $$;
-revoke all on function public.before_insert_direct_chatroom() from authenticated, anon;
+revoke all on function before_insert_direct_chatroom() from authenticated, anon;
 
 create trigger auto_create_direct_chatroom_base
   before insert on public.direct_chatrooms
   for each row
-  execute procedure public.before_insert_direct_chatroom();
+  execute procedure before_insert_direct_chatroom();
 
 
 -- Triggers to delete base chatroom after the corresponding subtype entry has been deleted
-create function public.after_delete_subtype_chatroom()
+create function after_delete_subtype_chatroom()
 returns trigger
 language plpgsql
 security definer
@@ -67,14 +68,14 @@ begin
   return null;
 end;
 $$;
-revoke all on function public.after_delete_subtype_chatroom() from authenticated, anon;
+revoke all on function after_delete_subtype_chatroom() from authenticated, anon;
 
 create trigger auto_delete_group_chatroom_base
   after delete on public.group_chatrooms
   for each row
-  execute procedure public.after_delete_subtype_chatroom();
+  execute procedure after_delete_subtype_chatroom();
 
 create trigger auto_delete_direct_chatroom_base
   after delete on public.direct_chatrooms
   for each row
-  execute procedure public.after_delete_subtype_chatroom();
+  execute procedure after_delete_subtype_chatroom();

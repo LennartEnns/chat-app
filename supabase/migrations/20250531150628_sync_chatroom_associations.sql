@@ -2,7 +2,7 @@
 -- Also handles auto-deletion of invitations and abandoned chatrooms.
 
 ---------------------- AFTER INSERT triggers -----------------------
-create function public.after_insert_user_to_group()
+create function after_insert_user_to_group()
 returns trigger
 language plpgsql
 security definer set search_path = ''
@@ -20,14 +20,14 @@ begin
   return new;
 end;
 $$;
-revoke all on function public.after_insert_user_to_group() from authenticated, anon;
+revoke all on function after_insert_user_to_group() from authenticated, anon;
 
 create trigger after_insert_user_to_group
   after insert on public.user_to_group
-  for each row execute procedure public.after_insert_user_to_group();
+  for each row execute procedure after_insert_user_to_group();
 
 
-create function public.after_insert_direct_chatrooms()
+create function after_insert_direct_chatrooms()
 returns trigger
 language plpgsql
 security definer set search_path = ''
@@ -41,14 +41,14 @@ begin
   return new;
 end;
 $$;
-revoke all on function public.after_insert_direct_chatrooms() from authenticated, anon;
+revoke all on function after_insert_direct_chatrooms() from authenticated, anon;
 
 create trigger after_insert_direct_chatrooms
   after insert on public.direct_chatrooms
-  for each row execute procedure public.after_insert_direct_chatrooms();
+  for each row execute procedure after_insert_direct_chatrooms();
 
 ---------------------- AFTER DELETE triggers -----------------------
-create function public.after_delete_user_to_group()
+create function after_delete_user_to_group()
 returns trigger
 language plpgsql
 security definer set search_path = ''
@@ -71,6 +71,7 @@ begin
   return null;
 end;
 $$;
+revoke all on function after_delete_user_to_group() from authenticated, anon;
 
 create trigger after_delete_user_to_group
   after delete on public.user_to_group
@@ -78,7 +79,7 @@ create trigger after_delete_user_to_group
   execute procedure after_delete_user_to_group();
 
 ---------------------- AFTER UPDATE triggers -----------------------
-create function public.after_update_direct_chatrooms()
+create function after_update_direct_chatrooms()
 returns trigger
 language plpgsql
 security definer set search_path = ''
@@ -107,9 +108,9 @@ begin
   return null;
 end;
 $$;
-revoke all on function public.after_update_direct_chatrooms() from authenticated, anon;
+revoke all on function after_update_direct_chatrooms() from authenticated, anon;
 
 create trigger after_update_direct_chatrooms
   after update on public.direct_chatrooms
   for each row
-  execute procedure public.after_update_direct_chatrooms();
+  execute procedure after_update_direct_chatrooms();
