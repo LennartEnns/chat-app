@@ -35,7 +35,7 @@
               class="flex w-fit"
             />
             <UButton
-              v-if="editMode"
+              v-if="editMode && chatroom.current_user_role == 'admin'"
               :icon="isEditingName ? 'i-lucide-x' : 'i-lucide-pen'"
               size="xl"
               variant="ghost"
@@ -68,7 +68,7 @@
               </p>
               <div class="flex flex-row size-fit">
                 <UButton
-                  v-if="editMode"
+                  v-if="editMode && chatroom.current_user_role == 'admin'"
                   :icon="isEditingDescription ? 'i-lucide-x' : 'i-lucide-pen'"
                   size="sm"
                   variant="ghost"
@@ -100,19 +100,35 @@
             />
             <p
               v-if="!isEditingDescription"
-              :class="`w-full whitespace-pre-line wrap-anywhere ${isFalsy(chatroom.description) ? 'text-muted' : ''}`"
+              :class="`w-full whitespace-pre-line wrap-anywhere ${
+                isFalsy(chatroom.description) ? 'text-muted' : ''
+              }`"
             >
               {{ chatroom.description || "No Description" }}
             </p>
+            <UButton
+              class="mt-5"
+              color="error"
+              :label="
+                editMode && chatroom.current_user_role === 'admin'
+                  ? 'Delete Group'
+                  : 'Leave Group'
+              "
+              @click="handleDeleteLeave"
+            />
           </div>
         </div>
         <!-- Members Column-->
         <div
           class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
-          <div class="pb-5 text-neutral-700 dark:text-white">
+          <div class="text-neutral-700 dark:text-white">
             <p :class="`font-bold ${themedSectionLabelClasses}`">Members</p>
             <UButton
+              v-if="
+                chatroom.current_user_role == 'admin' ||
+                chatroom.current_user_role == 'mod'
+              "
               class="flex size-fit absolute top-0 right-5 mt-3 md:mt-0"
               size="md"
               icon="i-lucide-user-plus"
@@ -126,7 +142,7 @@
               class="ring-0 glassContainer text-neutral-700 dark:text-white member relative"
             >
               <UButton
-                v-if="member.role != 'admin' && editMode"
+                v-if="ChangeAllowed(member)"
                 icon="i-lucide-minus"
                 size="xs"
                 class="size-fit absolute right-1 top-1"
@@ -153,7 +169,7 @@
                     {{ chatroomRolesVis[member.role].label }}
                   </UBadge>
                   <USelect
-                    v-if="editMode && member.role != 'admin'"
+                    v-if="editMode && ChangeAllowed(member)"
                     v-model="chatMembers[index]!.role"
                     trailing-icon=""
                     variant="outline"
@@ -187,8 +203,14 @@
                     </template>
 
                     <template #content-bottom>
-                      <UButton icon="i-lucide-circle-help" variant="outline" color="info" class="text-muted flex justify-center" @click="rolesHelpModal.open()" />
-                  </template>
+                      <UButton
+                        icon="i-lucide-circle-help"
+                        variant="outline"
+                        color="info"
+                        class="text-muted flex justify-center"
+                        @click="rolesHelpModal.open()"
+                      />
+                    </template>
                   </USelect>
                 </div>
               </div>
@@ -219,7 +241,7 @@
             </div>
             <div class="hidden md:block">
               <UButton
-                v-if="!editMode"
+                v-if="!editMode && editAllowed"
                 class="flex size-fit"
                 size="xl"
                 icon="i-lucide-pencil-line"
@@ -298,22 +320,29 @@ import {
 import InviteToGroup from "~/components/Modal/Chatroom/InviteToGroup.vue";
 import RolesInfo from "~/components/Modal/Chatroom/RolesInfo.vue";
 import type { Enums, Tables } from "~~/database.types";
-import type { NonEmptyArray, RequireNonNull } from "~/types/tsUtils/helperTypes";
+import type {
+  NonEmptyArray,
+  RequireNonNull,
+} from "~/types/tsUtils/helperTypes";
 import chatroomRolesVis from "~/visualization/chatroomRoles";
+import { ModalChatroomDelete, ModalChatroomLeave } from "#components";
 
 type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
   "id" | "invitee_id" | "as_role" | "invitee_username"
 >;
-type CRViewNonNullable = RequireNonNull<Tables<"group_chatrooms_last_activity_current_role">, 'chatroom_id' | 'name'>;
-type Chatroom = Omit<
-  CRViewNonNullable,
-  "last_activity" | "avatarUrl"
-> & {
+type CRViewNonNullable = RequireNonNull<
+  Tables<"group_chatrooms_last_activity_current_role">,
+  "chatroom_id" | "name"
+>;
+type Chatroom = Omit<CRViewNonNullable, "last_activity" | "avatarUrl"> & {
   avatarPath: string;
   avatarUrl: Ref<string | undefined>;
 };
-type ChatroomMember = RequireNonNull<Tables<"group_chatroom_members">, 'role' | 'user_id'>;
+type ChatroomMember = RequireNonNull<
+  Tables<"group_chatroom_members">,
+  "role" | "user_id"
+>;
 
 const routeChatroomId = useRouteIdParam();
 const { isLight } = useSSRSafeTheme();
@@ -328,12 +357,21 @@ const rolesHelpModal = overlay.create(RolesInfo);
 const drawerOpen = ref(false);
 const chatMembers = ref<ChatroomMember[]>([]);
 
+const userData = useUserData();
+
 const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
   "admin",
   "mod",
   "member",
   "viewer",
 ];
+
+const editAllowed = computed(() =>
+  chatroom.value.current_user_role == "admin" ||
+  chatroom.value.current_user_role == "mod"
+    ? true
+    : false
+);
 
 const chatInvitations = ref<ChatInvitation[]>([]);
 
@@ -347,6 +385,26 @@ const isEditingName = ref<boolean>(false);
 
 // Save as last opened chatroom in shared state
 lastChatroomState.value = routeChatroomId.value;
+
+const notFoundError = {
+  statusCode: 404,
+  message: "This chatroom does not exist",
+  data: {
+    headline: "No Yapping Here!",
+  },
+};
+// If the chatroom does not exist, show error page
+async function checkExistsChatroom() {
+  const { count } = await supabase
+    .from("chatrooms")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("id", routeChatroomId.value);
+  if (!count) showError(notFoundError);
+}
+await checkExistsChatroom();
 
 async function openDrawer() {
   drawerOpen.value = true;
@@ -371,6 +429,9 @@ const newName = ref<string>();
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
 
+const leaveModal = overlay.create(ModalChatroomLeave);
+const DeleteModal = overlay.create(ModalChatroomDelete);
+
 const chatroom = ref<Chatroom>({
   chatroom_id: routeChatroomId.value,
   name: "Loading name...",
@@ -379,6 +440,44 @@ const chatroom = ref<Chatroom>({
   avatarPath: avatarPath,
   avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, false),
 });
+
+function ChangeAllowed(member: ChatroomMember) {
+  if (
+    editMode.value &&
+    member.role != "admin" &&
+    member.role != chatroom.value.current_user_role &&
+    userData.username != member.username
+  ) {
+    return true;
+  }
+  return false;
+}
+
+async function handleDeleteLeave() {
+  if (editMode.value && chatroom.value.current_user_role === "admin") {
+    onDeleteChatroom();
+  } else {
+    onLeaveChatroom();
+  }
+}
+
+async function onLeaveChatroom() {
+  const instance = leaveModal.open({
+    chatroomId: routeChatroomId.value,
+  });
+  const success = await instance.result;
+  if (!success) return;
+  navigateTo("/chat");
+}
+
+async function onDeleteChatroom() {
+  const instance = DeleteModal.open({
+    chatroomId: routeChatroomId.value,
+  });
+  const success = await instance.result;
+  if (!success) return;
+  navigateTo("/chat");
+}
 
 async function updateGroupDescription() {
   toggleEdit();
@@ -474,7 +573,7 @@ async function loadChatMembers() {
     return;
   }
   data.forEach((element) => {
-    chatMembers.value.push((element as ChatroomMember));
+    chatMembers.value.push(element as ChatroomMember);
   });
   chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
 }
