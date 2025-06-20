@@ -44,6 +44,7 @@
           :message="message"
           :show-user-info="
             !!messages &&
+            cachedChatroom?.type !== 'direct' &&
             (index === 0 || messages[index - 1]?.username !== message.username)
           "
           :show-date-marker="
@@ -149,7 +150,7 @@ import { logPostgrestError } from "~~/errors/postgrestErrors";
 import { messageLimits } from "~~/validation/commonLimits";
 import chatroomRolesVis from "~/visualization/chatroomRoles";
 import { ModalChatroomLeave } from "#components";
-import type { CachedChatroomsMap } from "~/types/chatroom";
+import type { CachedChatroomsAvatarUrlMap, CachedChatroomsMap } from "~/types/chatroom";
 import type { Message } from "~/types/messages/messageLoading";
 
 const newMessage = ref<string>("");
@@ -186,7 +187,18 @@ lastChatroomState.value = routeChatroomId.value;
 const isViewer = ref<boolean | undefined>(undefined);
 
 const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
-  const cachedChatroom = computed(() => cachedChatrooms.value ? cachedChatrooms.value[routeChatroomId.value] : undefined);
+const cachedChatroomsAvatarUrlMap = useState<CachedChatroomsAvatarUrlMap | undefined>('chatroom-avatar-urls');
+const cachedChatroom = computed(() => {
+  if (cachedChatrooms.value) {
+    const cr = cachedChatrooms.value[routeChatroomId.value];
+    if (!cr) return undefined;
+    return {
+      ...cr,
+      avatarUrl: cachedChatroomsAvatarUrlMap.value?.[routeChatroomId.value],
+    };
+  }
+  return undefined;
+});
 watchEffect(() => {
   if (cachedChatroom.value) {
     if (!isViewer.value) scrollToBottom(true);
@@ -217,7 +229,14 @@ async function checkExistsChatroom() {
       head: true,
     })
     .eq("id", routeChatroomId.value);
-  if (!count) showError(notFoundError);
+  if (!count) {
+    // Remove from chatrooms list and show 404 page
+    if (cachedChatrooms.value) {
+      cachedChatrooms.value[routeChatroomId.value] = undefined;
+    }
+    lastChatroomState.value = undefined;
+    showError(notFoundError);
+  }
 }
 
 // Freeze number of messages in time before setting it to 0 for the new messages marker to not disappear
@@ -242,9 +261,9 @@ const chatroomPreview = computed(() => {
 // Indicates whether the realtime connection is not up.
 // If it is down, fallback to immediate insert.
 // Otherwise, the handler will take care of the insert instead.
-const immediateMessageInsert = ref(false);
+const immediateOwnMessageManipulation = ref(false);
 const { messages, sendMessage, deleteMessage, updateMessage } =
-  useMessagesManager(routeChatroomId.value, messagesContainer, immediateMessageInsert);
+  useMessagesManager(routeChatroomId.value, messagesContainer, immediateOwnMessageManipulation);
 watch(messages, (newMsgs, oldMsgs) => {
   if (newMsgs && !oldMsgs && newMsgs.length > 0) {
     scrollToBottom(true);
@@ -267,16 +286,17 @@ watch(isNearBottom, (isNear) => {
   }
 });
 
-// Initiate realtime listener, which can modify the reactive messages array
+// Initiate realtime listener, which can modify the reactive messages array.
+// Tied to the lifecycle of this page (specific chatroom).
 const realtimeStatus = await useRealtimeRoomListener(routeChatroomId.value, messages, onNewMessage);
 watch(realtimeStatus, (status) => {
-  // Status is not resolved or not successful => Switch to immediate insert
+  // Status is not resolved or not successful => Switch to immediate manipulation through messages manager
   if (status !== 'SUBSCRIBED') {
-    immediateMessageInsert.value = true;
+    immediateOwnMessageManipulation.value = true;
   }
-  // Status is resolved and successful => Switch to realtime insert
+  // Status is resolved and successful => Switch to realtime manipulation triggered by db events
   else {
-    immediateMessageInsert.value = false;
+    immediateOwnMessageManipulation.value = false;
   }
 });
 
@@ -415,7 +435,8 @@ onMounted(async () => {
   // When opening the chatroom, reset unread messages to 0 in the local state
   setTimeout(() => {
     if (cachedChatroom.value && cachedChatroom.value.number_new_messages !== 0) {
-      cachedChatroom.value.number_new_messages = 0;
+      const cachedCrObject = cachedChatrooms.value ? cachedChatrooms.value[routeChatroomId.value] : undefined;
+      if (cachedCrObject) cachedCrObject.number_new_messages = 0;
     }
   }, 500);
 });

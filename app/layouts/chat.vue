@@ -10,6 +10,7 @@
           <ChatOverviewColumn
             class="max-h-[80dvh]"
             :chatrooms-list-fetching-status="chatroomsListFetchingStatus"
+            :refreshing-chatrooms="refreshingChatrooms"
             :chatrooms-with-avatar-url="chatroomsWithAvatarUrl"
             @refresh-chats="onRefreshChats"
           />
@@ -19,6 +20,7 @@
       <ChatOverviewColumn
         v-if="!isMobile"
         :chatrooms-list-fetching-status="chatroomsListFetchingStatus"
+        :refreshing-chatrooms="refreshingChatrooms"
         :chatrooms-with-avatar-url="chatroomsWithAvatarUrl"
         @refresh-chats="onRefreshChats"
       />
@@ -28,7 +30,8 @@
 </template>
 
 <script lang="ts" setup>
-import type { CachedChatroomsMap } from "~/types/chatroom";
+import { useCachedChatroomsList } from "~/composables/useCachedChatroomsList";
+import type { CachedChatroomsAvatarUrlMap } from "~/types/chatroom";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
 
 const isMobile = useMobileDetector();
@@ -36,7 +39,7 @@ const drawerOpen = useOpenDrawer();
 const { isLight } = useSSRSafeTheme();
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
-const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
+const cachedChatroomsAvatarUrlMap = useState<CachedChatroomsAvatarUrlMap | undefined>('chatroom-avatar-urls');
   
 //////////////////// Logic for Chatroom Preview Fetching ////////////////////////
 
@@ -62,15 +65,7 @@ async function fetchChatroomsFromDb(): Promise<ChatroomsPreviews> {
   return data;
 }
 
-// Interface between chatrooms state (Map) and local list (Array)
-const chatrooms = computed<ChatroomsPreviews | undefined>({
-  get: () => {
-    return cachedChatrooms.value ? chatroomsMapToArray(cachedChatrooms.value) : undefined;
-  },
-  set: (rooms) => {
-    cachedChatrooms.value = rooms ? chatroomsArrayToMap(rooms) : undefined;
-  }
-});
+const chatrooms = useCachedChatroomsList();
 const {
   data: fetchedChatrooms,
   status: chatroomsListFetchingStatus,
@@ -108,6 +103,15 @@ const { data: chatroomAvatarRefs } = await useLazyAsyncData('chatroomAvatarRefs'
     watch: [() => chatrooms.value?.map((room) => room.id)],
   }
 );
+// Update cached URLs from refs
+watch(chatroomAvatarRefs, (refs) => {
+  if (!refs) cachedChatroomsAvatarUrlMap.value = {};
+  cachedChatroomsAvatarUrlMap.value = Object.fromEntries(
+    Object.entries(refs!).map(([id, data]) => [id, data.value])
+  );
+}, {
+  deep: true,
+});
 const chatroomsWithAvatarUrl = computed(() => {
   return chatroomAvatarRefs.value ? chatrooms.value?.map((chatroom) => ({
       ...chatroom,
@@ -116,17 +120,19 @@ const chatroomsWithAvatarUrl = computed(() => {
   ) : undefined;
 });
 
+const refreshingChatrooms = ref(false);
 async function onRefreshChats() {
-  refetchChatroomsFromDb();
+  refreshingChatrooms.value = true;
+  await refetchChatroomsFromDb();
+  refreshingChatrooms.value = false;
 }
 
 onMounted(() => {
-  if (!cachedChatrooms.value) {
+  // Chatrooms from state are undefined, so fetch from DB
+  if (!chatrooms.value) {
     executeFetchChatroomsFromDb();
   }
 });
-////////////////// Realtime Logic ////////////////////
-
 </script>
 
 <style>

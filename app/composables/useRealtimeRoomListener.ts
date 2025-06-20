@@ -9,7 +9,7 @@ type MessageDeletePayload = Pick<Tables<'messages'>, 'id'>;
 
 /**
  * Composable for listening to realtime events concerning the specified chatroom.
- * Updates the passed `messages` array ref when an event occurs.
+ * Modifies the passed `messages` array ref when an event occurs.
  */
 export const useRealtimeRoomListener = async (roomId: string, messages: Ref<Message[] | undefined>, onNewMessage: (msg: Message) => unknown) => {
   const supabase = useSupabaseClient();

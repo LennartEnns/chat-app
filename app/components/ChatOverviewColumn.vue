@@ -36,7 +36,7 @@
           @click="onRefreshChatList" />
         <ClientOnly>
           <div
-            v-if="chatroomsListFetchingStatus === 'success' || chatroomsListFetchingStatus === 'idle'"
+            v-if="!refreshingChatrooms && (chatroomsListFetchingStatus === 'success' || chatroomsListFetchingStatus === 'idle')"
           >
             <div
               v-if="!!chatroomsWithAvatarUrl && chatroomsWithAvatarUrl.length > 0"
@@ -62,7 +62,7 @@
               No chatrooms
             </div>
           </div>
-          <div v-else-if="chatroomsListFetchingStatus === 'pending'" class="mt-1 w-full space-y-4">
+          <div v-else-if="refreshingChatrooms || chatroomsListFetchingStatus === 'pending'" class="mt-1 w-full space-y-4">
             <USkeleton v-for="i in 3" :key="i" class="w-full h-10" />
           </div>
           <div v-else class="flex flex-row gap-x-2 items-center justify-center flex-wrap">
@@ -81,7 +81,7 @@
           @click="onRefreshInvitations" />
         <ChatroomInvitationList
           :invitations="inboundInvitations"
-          :loading="invitationsPreviewPending"
+          :loading="invitationsPreviewPending || refreshingInvitations"
           @remove-invitation="onRemoveInvitation"
         />
       </template>
@@ -111,7 +111,8 @@ import type { CachedChatroomData } from "~/types/chatroom";
 
 defineProps<{
   chatroomsListFetchingStatus: AsyncDataRequestStatus,
-  chatroomsWithAvatarUrl?: CachedChatroomData[],
+  refreshingChatrooms: boolean,
+  chatroomsWithAvatarUrl?: (CachedChatroomData & { avatarUrl: string | undefined })[],
 }>();
 
 const emit = defineEmits<{
@@ -121,7 +122,6 @@ const emit = defineEmits<{
 const routeChatroomId = useRouteIdParam();
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
-const toast = useToast();
 const userData = useUserData();
 const overlay = useOverlay();
 const createChatroomModal = overlay.create(CreateChatroom);
@@ -146,6 +146,7 @@ const { data: existUnhandledInvitations, refresh: refreshExistUnhandledInvitatio
 );
 
 // This will be executed when the invitations tab is opened (lazy loading)
+const refreshingInvitations = ref(false);
 const {
   data: inboundInvitations,
   execute: executeFetchInvitations,
@@ -214,7 +215,9 @@ async function onCreateChat() {
 }
 async function onRemoveInvitation() {
   // When an invitation has been rejected, reload all invitations
-  refreshFetchInvitations();
+  refreshingInvitations.value = true;
+  await refreshFetchInvitations();
+  refreshingInvitations.value = false;
 }
 
 // Prevent spamming the refresh buttons
@@ -225,16 +228,15 @@ async function debounceRefresh() {
 async function onRefreshInvitations() {
   if (!refreshingAllowed.value) return;
   refreshingAllowed.value = false;
+  refreshingInvitations.value = true;
   await refreshExistUnhandledInvitations();
   if (!existUnhandledInvitations.value) {
-    toast.add({
-      color: 'info',
-      title: 'No new invitations',
-    });
+    refreshingInvitations.value = false;
     debounceRefresh();
     return;
   }
   await refreshFetchInvitations();
+  refreshingInvitations.value = false;
   debounceRefresh();
 }
 async function onRefreshChatList() {

@@ -92,15 +92,18 @@ import { logPostgrestError } from "~~/errors/postgrestErrors";
 const selectedGroup = defineModel<SelectedGroup | undefined>({
   required: true,
 });
-const selectedGroupAvatarUrl = computed(() =>
-  selectedGroup.value?.chatroom_id
-    ? useCachedSignedImageUrl(
-        "chatroom_avatars",
-        getGroupAvatarPath(selectedGroup.value.chatroom_id),
-        true
-      ).value
-    : undefined
-);
+const { data: selectedGroupAvatarUrl } = useLazyAsyncData('selectedGroupAvatarUrl', async () => {
+  const selectedId = selectedGroup.value?.chatroom_id;
+  if (!selectedId) return undefined;
+  return await getCachedSignedImageUrl(
+    "chatroom_avatars",
+    getGroupAvatarPath(selectedId)
+  );
+}, {
+  immediate: true,
+  watch: [() => selectedGroup.value?.chatroom_id],
+});
+watch(selectedGroupAvatarUrl, (url) => console.log(url));
 
 const props = defineProps<{
   // Only display groups where the current user has one of these roles

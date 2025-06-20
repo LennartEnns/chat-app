@@ -38,6 +38,7 @@ const supabase = useSupabaseClient();
 const { data } = await supabase.auth.getSession();
 const authenticated = data.session?.user.role;
 const primaryColor = useCookie("uiPrimary").value;
+const toast = useToast();
 
 type CustomNuxtError = NuxtError & {
   data: {
@@ -52,6 +53,8 @@ const themedUserColor = computed(() =>
   isLight.value ? "user-light-mode" : "user-dark-mode"
 );
 const handleError = () => {
+  // Clear possible toasts triggered by error handlers before this page has been mounted
+  toast.clear();
   if(authenticated == "authenticated"){
     clearError({ redirect: '/chat'});
   } else clearError({ redirect: '/' });

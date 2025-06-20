@@ -3,7 +3,10 @@
 -- => 'update' event: Only id and new content
 -- => 'delete' event: Only id
 
--- 'preview:[id]' for sending only truncated new message content (no other columns) on insert
+-- 'preview:[id]' for sending only the data needed for previewing chatrooms and their content
+-- => 'insert-msg' event: Truncated message content (for previewing new last message) and created_at (to avoid race conditions) => Change last msg, unread msgs ++
+-- => 'update-last' event: Truncated message content => Change last msg, unread msgs stays unchanged
+-- => 'delete-msg' event: created_at => Client decides whether it was a new message. If yes, unread msgs --. If it was the last message, followed by update-last.
 
 -- CLIENT-SIDE:
 -- Client should subscribe to preview of all their chatrooms
@@ -61,13 +64,16 @@ language plpgsql
 security definer set search_path = ''
 as $$
 declare
+  cid uuid;
   room_topic text;
   preview_topic text;
   msg_username text;
+  latest_msg_id uuid;
 begin
-  select 'room:' || (coalesce(OLD.chatroom_id, NEW.chatroom_id)::text) into room_topic;
+  select coalesce(OLD.chatroom_id, NEW.chatroom_id) into cid;
+  select 'room:' || (cid::text) into room_topic;
+  select 'preview:' || (cid::text) into preview_topic;
   if TG_OP = 'INSERT' then
-    select 'preview:' || (NEW.chatroom_id::text) into preview_topic;
     select p.username from public.profiles p where p.user_id = NEW.user_id into msg_username;
     -- Send insert events to room and preview channel
     perform realtime.send(
@@ -84,14 +90,20 @@ begin
     );
     perform realtime.send(
       jsonb_build_object(
-        'content', NEW.content
+        'content', (select utils.truncate(NEW.content, 30)),
+        'created_at': NEW.created_at,
       ),
-      'insert',
+      'insert-msg',
       preview_topic,
       true
     );
     return null;
   elsif TG_OP = 'UPDATE' then
+    select msg.id from public.messages msg
+    where msg.chatroom_id = cid
+    order by created_at desc limit 1
+    into latest_msg_id;
+
     perform realtime.send(
       jsonb_build_object(
         'id', NEW.id,
@@ -101,6 +113,17 @@ begin
       room_topic,
       true
     );
+    -- Only send update-last if the latest message has been updated
+    if NEW.id = latest_msg_id then
+      perform realtime.send(
+        jsonb_build_object(
+          'content', (select utils.truncate(NEW.content, 30)),
+        ),
+        'update-last',
+        preview_topic,
+        true
+      );
+    end if;
     return null;
   elsif TG_OP = 'DELETE' then
     perform realtime.send(
@@ -111,6 +134,34 @@ begin
       room_topic,
       true
     );
+
+    perform realtime.send(
+      jsonb_build_object(
+        'created_at', OLD.created_at,
+      ),
+      'delete-msg',
+      preview_topic,
+      true
+    );
+    -- Only send update-last if the latest message has been deleted
+    if OLD.created_at > (
+      select max(created_at) from public.messages msg
+      where msg.chatroom_id = cid
+    ) then
+      perform realtime.send(
+        jsonb_build_object(
+          -- Truncated content of new last message if it exists, otherwise null
+          'content', (select utils.truncate(
+            select msg.content from public.messages msg
+            where msg.chatroom_id = cid
+            order by created_at desc limit 1
+          ))
+        ),
+        'update-last',
+        preview_topic,
+        true
+      );
+    end if;
     return null;
   end if;
   return null;
