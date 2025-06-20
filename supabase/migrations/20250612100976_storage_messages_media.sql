@@ -12,13 +12,6 @@ on storage.objects for select
 to authenticated
 using (bucket_id = 'messages_media');
 
--- Policy für Download (SELECT)
-create policy "Users can view their own media" on storage.objects
-for select using (
-  bucket_id = 'messages_media' and
-  (string_to_array(name, '/'))[1] = auth.uid()::text
-);
-
 -- Policy für Delete
 create policy "Users can delete their own media" on storage.objects
 for delete using (

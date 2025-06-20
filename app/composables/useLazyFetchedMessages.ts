@@ -113,14 +113,38 @@ export const useLazyFetchedMessages = (
         const mediaArray = (msg as any).media as Array<
           { id: string; type: string; file_path: string }
         >;
+
+        //DEBUG INFO
+        console.log(`[DEBUG FETCH] Processing message ID: ${msg.id}`);
+        console.log(`[DEBUG FETCH] Raw media from DB:`, (msg as any).media);
+
+        let messageMediaType: "text" | "image" | "audio" = "text";
+        let messageMedia: Message["media"] = null;
+        //DEBUG INFO
+
         if (mediaArray && mediaArray.length > 0 && mediaArray[0]!.file_path) {
-          console.log(
-            `[DEBUG FETCH] msg ID: ${msg.id}, raw file_path:`,
-            mediaArray[0]!.file_path,
-          );
+          //DEBUG INFO
+          const firstMediaItem = mediaArray[0];
+          console.log(`[DEBUG FETCH] First media item:`, firstMediaItem);
+          //DEBUG INFO
+          if (firstMediaItem?.type === "image" && firstMediaItem.file_path) {
+            messageMediaType = "image";
+            messageMedia = [{
+              id: firstMediaItem.id,
+              type: "image",
+              url: firstMediaItem.file_path, // HIER NUR DEN FILE_PATH ZUWEISEN!
+            }];
+            console.log(
+              `[DEBUG FETCH] Image path found for msg ID ${msg.id}: ${firstMediaItem.file_path}`,
+            );
+          } else {
+            console.log(
+              `[DEBUG FETCH] No image file_path found or type not image for msg ID ${msg.id}.`,
+            );
+          }
         } else {
           console.log(
-            `[DEBUG FETCH] msg ID: ${msg.id}, no file_path found or mediaArray is empty.`,
+            `[DEBUG FETCH] No mediaArray or empty for msg ID ${msg.id}.`,
           );
         }
         const baseMsg: Message = {
@@ -130,18 +154,8 @@ export const useLazyFetchedMessages = (
           user_id: msg.user_id,
           username: msg.username,
           is_own: msg.is_own,
-          message_type: (mediaArray && mediaArray.length > 0)
-            ? "image"
-            : "text",
-          media:
-            (mediaArray && mediaArray.length > 0 && mediaArray[0]!.file_path &&
-                mediaArray[0]?.type === "image")
-              ? [{
-                id: mediaArray[0]!.id,
-                type: "image",
-                url: mediaArray[0]!.file_path,
-              }]
-              : null,
+          message_type: messageMediaType,
+          media: messageMedia,
         };
         return baseMsg;
       });

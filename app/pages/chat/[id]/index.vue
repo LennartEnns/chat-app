@@ -471,7 +471,8 @@ async function onHeaderClick() {
           .insert({
             message_id: message.id,
             media_id: mediaId,
-            type: 'image'
+            type: 'image',
+            file_path: imageUrl.value!
           })
       
       if (mediaError) throw mediaError
