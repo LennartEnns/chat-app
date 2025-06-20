@@ -186,11 +186,29 @@ export const useChatroomActions = () => {
     return true;
   }
 
+  async function deleteChatroom(id: string) {
+    const { error } = await supabase
+    .from("group_chatrooms")
+    .delete()
+    .eq("chatroom_id", id);
+  if (error) {
+    logPostgrestError(error, "group deletion");
+    operationFeedbackHandler.displayError(
+      getPostgrestErrorMessage(error, "Could not delete chatroom.")
+    );
+    return false
+  } else {
+    operationFeedbackHandler.displaySuccess("Deleted chatroom.");
+    return true;
+  }
+  }
+
   return {
     createDirectChatroom,
     createGroupChatroom,
     inviteUsers,
     joinGroupWithInvitation,
     leaveChatroom,
+    deleteChatroom,
   };
 }
