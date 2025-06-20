@@ -29,7 +29,7 @@
           }"
           @update:open="onOpenUpdate"
         >
-          <template #empty> Enter a search term </template>
+          <template #empty>{{ `No ${!!selectedGroup ? 'other ' : ''} groups` }}</template>
           <template #item-trailing="{ index }">
             <div class="flex flex-row items-center justify-end">
               <UIcon
@@ -103,7 +103,6 @@ const { data: selectedGroupAvatarUrl } = useLazyAsyncData('selectedGroupAvatarUr
   immediate: true,
   watch: [() => selectedGroup.value?.chatroom_id],
 });
-watch(selectedGroupAvatarUrl, (url) => console.log(url));
 
 const props = defineProps<{
   // Only display groups where the current user has one of these roles
@@ -122,28 +121,28 @@ const searchTerm = ref("");
 const allGroups = ref<SelectedGroup[]>([]);
 let groupsLoaded = false;
 const loadingGroups = ref(false);
-const groupSearchItems = computed<CommandPaletteItem[]>(() =>
-  allGroups.value
-    // @ts-expect-error ignore deep type instantiation warning
-    .map(
-      (group) =>
-        ({
-          id: group.chatroom_id,
-          label: group.name,
-          avatar: {
-            src: useCachedSignedImageUrl(
-              "chatroom_avatars",
-              getGroupAvatarPath(group.chatroom_id),
-              true
-            ).value,
-            icon: "i-lucide-user",
-            ui: {
-              icon: "size-11/12",
-            },
-          },
-          onSelect: () => onGroupSelected(group),
-        } as CommandPaletteItem)
-    )
+const { data: groupSearchItems } = useLazyAsyncData<CommandPaletteItem[]>('groupSearchItems', async () =>
+  await Promise.all(allGroups.value.map(async (group) =>
+    ({
+      id: group.chatroom_id,
+      label: group.name,
+      avatar: {
+        src: await getCachedSignedImageUrl(
+          "chatroom_avatars",
+          getGroupAvatarPath(group.chatroom_id),
+        ),
+        icon: "i-lucide-user",
+        ui: {
+          icon: "size-11/12",
+        },
+      },
+      onSelect: () => onGroupSelected(group),
+    } as CommandPaletteItem))
+  ), {
+    immediate: true,
+    server: true,
+    watch: [() => allGroups.value.map((group) => group.chatroom_id)],
+  }
 );
 // @ts-expect-error ignore deep type instantiation warning
 const groupCPGroups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(
