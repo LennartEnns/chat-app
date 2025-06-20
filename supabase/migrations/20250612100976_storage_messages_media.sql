@@ -7,6 +7,11 @@ for insert with check (
   (string_to_array(name, '/'))[1] = auth.uid()::text
 );
 
+create policy "Allow authenticated user to view files"
+on storage.objects for select
+to authenticated
+using (bucket_id = 'messages_media');
+
 -- Policy für Download (SELECT)
 create policy "Users can view their own media" on storage.objects
 for select using (

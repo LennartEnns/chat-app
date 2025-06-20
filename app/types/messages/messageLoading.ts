@@ -9,11 +9,11 @@ type MessageNeeded = Omit<
 export type Message = RequireNonNull<MessageNeeded, "content"> & {
     created_at: Date;
     message_type: "image" | "audio" | "text";
-    media?: MediaItem[];
+    media: MediaItem[] | null | undefined;
 };
 
 export interface MediaItem {
     id: string;
     type: "image" | "audio";
-    url: Ref<string | undefined, string | undefined>;
+    url: string;
 }

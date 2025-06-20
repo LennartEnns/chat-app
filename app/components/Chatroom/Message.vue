@@ -12,120 +12,126 @@
   >
     {{ dateMarkerText }}
   </div>
+
   <div :class="`max-w-[90%] mt-2.5 flex flex-col gap-1 ${messagePosition}`">
-    <div v-if="message.is_own" class="flex flex-row gap-1 w-full justify-end">
-      <UPopover
-        v-if="showOwnMsgPopover && !editingMessage"
-        v-model:open="popoverOpen"
-        mode="hover"
-        arrow
-        :content="{
-          align: 'center',
-          side: 'left',
-        }"
-        :ui="{
-          content: 'rounded-xl',
-        }"
-      >
-        <!-- Bild-Nachricht -->
-        <div v-if="message.message_type === 'image'" :class="`flex flex-col gap-2 rounded-md ${speechBubbleLook} ${themedMessageColor} p-2`">
-          <img 
-            v-if="message.media && message.media[0]"
-            :src="message.media[0].url.value" 
-            :alt="message.content || 'Uploaded image'"
-            class="max-w-full max-h-64 object-contain rounded-md cursor-pointer"
-            @click="openImageModal"
-          />
-          <p v-if="message.content" class="text-sm">{{ message.content }}</p>
-        </div>
-        <!-- eslint-disable vue/no-v-html -->
-         <div v-else
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
-          @touchstart="popoverOpen = true"
-          v-html="contentLinkified"
+
+    <template v-if="message.message_type === 'image'">
+      <div :class="`flex flex-col gap-2 rounded-md ${speechBubbleLook} ${themedMessageColor} p-2`">
+        <template v-if="imageUrl">
+          <img
+          v-if="message.media && message.media[0] && message.media[0].url && message.media[0].url"
+          :src="imageUrl.value"
+          :alt="message.content || 'Uploaded image'"
+          class="max-w-full max-h-64 object-contain rounded-md cursor-pointer"
+          @click="openImageModal"
+          @load="emit('imageLoaded')" @error="handleImageError"
         />
-        <template #content>
-          <div class="p-1 flex flex-row">
-            <UButton
-              icon="i-lucide-trash-2"
-              variant="ghost"
-              color="error"
-              @click="emit('delete')"
-            />
-            <UButton
-              icon="i-lucide-edit"
-              variant="ghost"
-              color="primary"
-              @click="onEditMessage"
-            />
-          </div>
+        <p v-if="message.content" class="text-sm">{{ message.content }}</p>
         </template>
-      </UPopover>
-      <div v-else-if="editingMessage" class="flex-grow">
-        <UTextarea
-          id="editArea"
-          v-model="newMessage"
-          size="xl"
-          variant="ghost"
-          autofocus
-          autoresize
-          :ui="{
-            trailing: 'pointer-events-none',
+      </div>
+    </template>
+
+    <template v-else-if="message.is_own">
+      <div class="flex flex-row gap-1 w-full justify-end">
+        <UPopover
+          v-if="showOwnMsgPopover && !editingMessage"
+          v-model:open="popoverOpen"
+          mode="hover"
+          arrow
+          :content="{
+            align: 'center',
+            side: 'left',
           }"
-          @vue:mounted="attachEditAreaEventHandler"
-          @blur="handleEditAreaBlur"
+          :ui="{
+            content: 'rounded-xl',
+          }"
         >
-          <template #trailing>
-            <div ref="editMsgButtonArea">
+          <div
+            :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-md w-full ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+            @touchstart.passive="popoverOpen = true"
+            v-html="contentLinkified"
+          />
+          <template #content>
+            <div class="p-1 flex flex-row">
               <UButton
-                icon="i-lucide-check"
+                icon="i-lucide-trash-2"
                 variant="ghost"
-                :class="{
-                  'pointer-events-auto': !disableMessageUpdate,
-                }"
-                :disabled="disableMessageUpdate"
-                @click="onUpdateMessage"
+                color="error"
+                @click="emit('delete')"
+              />
+              <UButton
+                icon="i-lucide-edit"
+                variant="ghost"
+                color="primary"
+                @click="onEditMessage"
               />
             </div>
           </template>
-        </UTextarea>
-      </div>
-      <div
-        v-else
-        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
-        v-html="contentLinkified"
-      />
-    </div>
-
-    <div
-      v-else
-      class="grid items-start"
-      :style="{ gridTemplateColumns: '40px 1fr' }"
-    >
-      <div class="flex justify-center">
-        <UButton
-          v-if="showUserInfo && message.username"
-          variant="ghost"
-          class="p-0 h-fit"
-          @click="onAvatarClick"
-        >
-          <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" :alt="usernameInitials" />
-        </UButton>
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <div
-          v-if="showUserInfo && message.username"
-          class="text-muted text-sm whitespace-nowrap select-none"
-        >
-          {{ message.username }}
+        </UPopover>
+        <div v-else-if="editingMessage" class="flex-grow">
+          <UTextarea
+            id="editArea"
+            v-model="newMessage"
+            size="xl"
+            variant="ghost"
+            autofocus
+            autoresize
+            :ui="{
+              trailing: 'pointer-events-none',
+            }"
+            @vue:mounted="attachEditAreaEventHandler"
+            @blur="handleEditAreaBlur"
+          >
+            <template #trailing>
+              <div ref="editMsgButtonArea">
+                <UButton
+                  icon="i-lucide-check"
+                  variant="ghost"
+                  :class="{
+                    'pointer-events-auto': !disableMessageUpdate,
+                  }"
+                  :disabled="disableMessageUpdate"
+                  @click="onUpdateMessage"
+                />
+              </div>
+            </template>
+          </UTextarea>
         </div>
         <div
+          v-else
           :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           v-html="contentLinkified"
         />
       </div>
-    </div>
+    </template>
+
+    <template v-else>
+      <div class="grid items-start" :style="{ gridTemplateColumns: '40px 1fr' }">
+        <div class="flex justify-center">
+          <UButton
+            v-if="showUserInfo && message.username"
+            variant="ghost"
+            class="p-0 h-fit"
+            @click="onAvatarClick"
+          >
+            <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" :alt="usernameInitials" />
+          </UButton>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div
+            v-if="showUserInfo && message.username"
+            class="text-muted text-sm whitespace-nowrap select-none"
+          >
+            {{ message.username }}
+          </div>
+          <div
+            :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+            v-html="contentLinkified"
+          />
+        </div>
+      </div>
+    </template>
 
     <div
       v-if="showHmTime"
@@ -139,9 +145,13 @@
 </template>
 
 <script lang="ts" setup>
-import type { Message } from "~/types/messages/messageLoading";
+import type { Message, MediaItem } from "~/types/messages/messageLoading";
+import { useCachedSignedImageUrl } from '~/composables/useCachedSignedImageUrl';
+import { file } from "valibot";
 
 const dateMarker = ref<HTMLElement | null>(null);
+
+const imageError = ref(false);
 
 const props = defineProps<{
   message: Message;
@@ -155,6 +165,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   delete: [];
   update: [value: string];
+  imageLoaded: [];
 }>();
 
 const dateMarkerText = computed(() =>
@@ -188,6 +199,26 @@ const msgSize = computed(() =>
   singleEmojiRegex.test(props.message.content) ? "text-4xl" : ""
 );
 
+
+const imageUrl = computed(() => {
+  imageError.value = false;
+
+  if (props.message.message_type === 'image' && props.message.media && props.message.media.length > 0) {
+    const mediaItem = props.message.media[0];
+    if (mediaItem && mediaItem.url && mediaItem.url) {
+      const filePath = useCachedSignedImageUrl("messages_media", mediaItem?.url, true);
+      console.log(filePath);
+      return filePath;
+    }
+  }
+  return undefined; 
+});
+
+const handleImageError = () => {
+  console.error(`Fehler beim Laden des Bildes für Nachricht ${props.message.id} an Pfad: ${props.message.media?.[0]}`);
+  imageError.value = true;
+};
+
 const { isLight } = useSSRSafeTheme();
 const messagePosition = computed(() =>
   props.message.is_own ? "user" : "partner"
@@ -211,6 +242,7 @@ watch(() => props.showOwnMsgPopover, (show) => {
   if (!show) {
     popoverOpen.value = false;
   }
+}
 );
 async function onEditMessage() {
   popoverOpen.value = false;

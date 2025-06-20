@@ -1,13 +1,17 @@
-import type { CachedChatroomsMap } from '~/types/chatroom';
-import type { Message } from '~/types/messages/messageLoading';
-import { logPostgrestError } from '~~/errors/postgrestErrors';
+import type { RefSymbol } from "@vue/reactivity";
+import type { CachedChatroomsMap } from "~/types/chatroom";
+import type { Message } from "~/types/messages/messageLoading";
+import { logPostgrestError } from "~~/errors/postgrestErrors";
 
 const scrollTopTreshold = 50; // px
 const messagesChunkSize = 20; // Load max. 20 messages at once
 const alwaysFutureDate = new Date(86400000000000);
 
-async function waitForScrollHeightChange(container: HTMLElement, oldHeight: number) {
-  const maxTries = 40; // Generous timeout for even the 
+async function waitForScrollHeightChange(
+  container: HTMLElement,
+  oldHeight: number,
+) {
+  const maxTries = 40; // Generous timeout for even the
   let tries = 0;
   while (tries < maxTries && container.scrollHeight === oldHeight) {
     await new Promise((resolve) => setTimeout(resolve, 16)); // wait ~1 frame
@@ -15,27 +19,37 @@ async function waitForScrollHeightChange(container: HTMLElement, oldHeight: numb
   }
 }
 
-export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Ref<HTMLElement | null>) => {
+export const useLazyFetchedMessages = (
+  chatroomId: string,
+  messagesContainer: Ref<HTMLElement | null>,
+) => {
   const supabase = useSupabaseClient();
   const operationFeedbackHandler = useOperationFeedbackHandler();
-  const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
-  const cachedChatroom = computed(() => cachedChatrooms.value ? cachedChatrooms.value[chatroomId] : undefined);
+  const cachedChatrooms = useState<CachedChatroomsMap | undefined>("chatrooms");
+  const cachedChatroom = computed(() =>
+    cachedChatrooms.value ? cachedChatrooms.value[chatroomId] : undefined
+  );
 
   const containerScrollTop = ref(0);
-  const almostAtTheTop = computed(() => containerScrollTop.value <= scrollTopTreshold);
+  const almostAtTheTop = computed(() =>
+    containerScrollTop.value <= scrollTopTreshold
+  );
 
   // Causes the corresponding database field to be set to the current time
   // Should be called after potentially new messages have been fetched or after sending a message
   async function updateLastInsideChatroom() {
-    await supabase.rpc('update_last_inside_chatroom', { cid: chatroomId });
+    await supabase.rpc("update_last_inside_chatroom", { cid: chatroomId });
   }
 
-  const { data: messages } = useLazyAsyncData(`chatMessages-${chatroomId}`, async () => {
-    const msgs = (await fetchEarlierMessages(false)).toReversed();
-    updateLastInsideChatroom();
+  const { data: messages } = useLazyAsyncData(
+    `chatMessages-${chatroomId}`,
+    async () => {
+      const msgs = (await fetchEarlierMessages(false)).toReversed();
+      updateLastInsideChatroom();
 
-    return msgs;
-  });
+      return msgs;
+    },
+  );
   function getEarliestMessageTime() {
     return (!messages.value || messages.value.length === 0)
       ? alwaysFutureDate
@@ -47,6 +61,13 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
   async function updateScrollTop() {
     if (messagesContainer.value) {
       containerScrollTop.value = messagesContainer.value.scrollTop;
+    }
+  }
+
+  function addImageMessage(newMessage: Message) {
+    if (messages.value) {
+      messages.value?.push(newMessage);
+      updateLastInsideChatroom();
     }
   }
 
@@ -64,12 +85,12 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
     const newScrollHeight = container.scrollHeight;
     container.scrollTo({
       top: container.scrollTop + (newScrollHeight - oldScrollHeight),
-      behavior: 'instant', // Override smooth scrolling
+      behavior: "instant", // Override smooth scrolling
     });
   }
   async function fetchEarlierMessages(checkBeforeTime: boolean) {
     let query = supabase.from("messages_view")
-      .select("is_own, id, content, created_at, user_id, username")
+      .select("is_own, id, content, created_at, user_id, username, media")
       .eq("chatroom_id", chatroomId)
       .order("created_at", { ascending: false })
       .limit(messagesChunkSize);
@@ -88,12 +109,43 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
         reachedEarliestMessage = true;
         return [];
       }
-      const dataWithDates = data.map((msg) => ({
-        ...msg,
-        created_at: new Date(msg.created_at!),
-      })) as Message[];
-
-      return dataWithDates;
+      const msgs = data.map((msg) => {
+        const mediaArray = (msg as any).media as Array<
+          { id: string; type: string; file_path: string }
+        >;
+        if (mediaArray && mediaArray.length > 0 && mediaArray[0]!.file_path) {
+          console.log(
+            `[DEBUG FETCH] msg ID: ${msg.id}, raw file_path:`,
+            mediaArray[0]!.file_path,
+          );
+        } else {
+          console.log(
+            `[DEBUG FETCH] msg ID: ${msg.id}, no file_path found or mediaArray is empty.`,
+          );
+        }
+        const baseMsg: Message = {
+          id: msg.id,
+          content: msg.content,
+          created_at: new Date(msg.created_at!),
+          user_id: msg.user_id,
+          username: msg.username,
+          is_own: msg.is_own,
+          message_type: (mediaArray && mediaArray.length > 0)
+            ? "image"
+            : "text",
+          media:
+            (mediaArray && mediaArray.length > 0 && mediaArray[0]!.file_path &&
+                mediaArray[0]?.type === "image")
+              ? [{
+                id: mediaArray[0]!.id,
+                type: "image",
+                url: mediaArray[0]!.file_path,
+              }]
+              : null,
+        };
+        return baseMsg;
+      });
+      return msgs; //.toReversed();
     }
     return [];
   }
@@ -129,11 +181,12 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
       id: newId,
       content,
       created_at: new Date(),
-      message_type: "text",
+      message_type: "text" as const,
       // null because it's the user's own message
       user_id: null,
       username: null,
       is_own: true,
+      media: null,
     };
     updateLastInsideChatroom();
     // Update chatroom state
@@ -160,7 +213,8 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
     messages.value = messages.value?.toSpliced(index, 1);
     if (cachedChatroom.value && index === messages.value?.length) {
       // Last message deleted => Update chatroom state
-      cachedChatroom.value.last_message = messages.value[messages.value.length - 1]?.content ?? null;
+      cachedChatroom.value.last_message =
+        messages.value[messages.value.length - 1]?.content ?? null;
     }
   }
   async function updateMessage(id: string, index: number, newContent: string) {
@@ -196,5 +250,6 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
     sendMessage,
     deleteMessage,
     updateMessage,
+    addImageMessage,
   };
 };

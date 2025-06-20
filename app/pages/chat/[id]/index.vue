@@ -40,7 +40,7 @@
         <!-- Group by Hours-Minute-Time -->
         <ChatroomMessage
           v-for="(message, index) in messages"
-          :key="index"
+          :key="message.id!"
           :message="message"
           :show-user-info="
             !!messages &&
@@ -70,6 +70,13 @@
           :show-own-msg-popover="!scrolling"
           @delete="onDeleteMessage(message.id, index)"
           @update="onUpdateMessage(message.id, index, $event)"
+          @imageLoaded="handleImageLoadedScroll"
+        />
+        <div ref="scrollTarget" class="h-1 w-full"></div> <UButton
+          v-if="!isAtBottom"
+          icon="i-lucide-arrow-down"
+          class="absolute w-min bottom-20 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
+          @click="scrollToBottom()"
         />
         <UButton
           v-if="!isAtBottom"
@@ -96,62 +103,63 @@
           @click="saveCaret"
           @keyup="saveCaret"
         >
-          <template #trailing>
-              <div>
-                <input
-                  ref="imageInput"
-                  type="file"
-                  accept="image/*"
-                  @change="handleImageSelect"
-                  class="hidden"
-                />
-                
-                <input
-                  ref="audioInput"
-                  type="file"
-                  accept="audio/*"
-                  @change="handleAudioSelect"
-                  class="hidden"
-                />
+        <template #trailing>
+          <div class="flex items-center gap-1">
+            <input
+              ref="imageInput"
+              type="file"
+              accept="image/*"
+              @change="handleImageSelect"
+              class="hidden"
+            />
+            
+            <input
+              ref="audioInput"
+              type="file"
+              accept="audio/*"
+              @change="handleAudioSelect"
+              class="hidden"
+            />
 
-                <!-- Popover with Media Buttons -->
-                <UPopover
-                  arrow
-                  :content="{
-                    align: 'center',
-                    side: 'top'
-                  }"
-                >
-                  <UButton icon="i-lucide-paperclip" variant="ghost" class="text-muted"/>
-                  <template #content>
-                    <div class="flex gap-4 p-3">
-                      <!-- Image Button -->
-                      <div class="flex flex-col items-center gap-1">
-                        <UButton 
-                          icon="i-lucide-image" 
-                          variant="ghost" 
-                          class="text-muted"
-                          @click="openImageUpload"
-                          :disabled="uploading"
-                        />
-                        <span class="text-xs text-muted-foreground">Bild</span>
-                      </div>
-                      
-                      <!-- Audio Button -->
-                      <div class="flex flex-col items-center gap-1">
-                        <UButton 
-                          icon="i-lucide-headphones" 
-                          variant="ghost" 
-                          class="text-muted"
-                          @click="openAudioUpload"
-                          :disabled="uploading"
-                        />
-                        <span class="text-xs text-muted-foreground">Audio</span>
-                      </div>
-                    </div>
-                  </template>
-                </UPopover>
-              </div>
+            <!-- Popover with Media Buttons -->
+            <UPopover
+              arrow
+              :content="{
+                align: 'center',
+                side: 'top'
+              }"
+            >
+              <UButton icon="i-lucide-paperclip" variant="ghost" class="text-muted"/>
+              <template #content>
+                <div class="flex gap-4 p-3">
+                  <!-- Image Button -->
+                  <div class="flex flex-col items-center gap-1">
+                    <UButton 
+                      icon="i-lucide-image" 
+                      variant="ghost" 
+                      class="text-muted"
+                      @click="openImageUpload"
+                      :disabled="uploading"
+                    />
+                    <span class="text-xs text-muted-foreground">Bild</span>
+                  </div>
+                  
+                  <!-- Audio Button -->
+                  <div class="flex flex-col items-center gap-1">
+                    <UButton 
+                      icon="i-lucide-headphones" 
+                      variant="ghost" 
+                      class="text-muted"
+                      @click="openAudioUpload"
+                      :disabled="uploading"
+                    />
+                    <span class="text-xs text-muted-foreground">Audio</span>
+                  </div>
+                </div>
+              </template>
+            </UPopover>
+
+            <!-- Emoji Button -->
             <UPopover
               arrow
               :content="{
@@ -173,7 +181,8 @@
                 />
               </template>
             </UPopover>
-          </template>
+          </div>
+        </template>
         </UTextarea>
         <UButton :class="`${themedSendButtonColor}`" @click="onSendMessage">
           <UIcon name="i-lucide-send-horizontal" size="xs" />
@@ -240,6 +249,9 @@ import { messageLimits } from "~~/validation/commonLimits";
 import chatroomRolesVis from "~/visualization/chatroomRoles";
 import type { Message } from '~/types/messages/messageLoading';
 import { ModalChatroomLeave } from "#components";
+
+const scrollTarget = ref<HTMLElement | null>(null); // New ref
+let intersectionObserver: IntersectionObserver | null = null;
 
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -326,13 +338,24 @@ const chatroomPreview = computed(() => {
   };
 });
 
-const { messages, sendMessage, deleteMessage, updateMessage } =
+const { messages, sendMessage, deleteMessage, updateMessage, addImageMessage } =
   useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
-watch(messages, (newMsgs, oldMsgs) => {
-  if (newMsgs && !oldMsgs && newMsgs.length > 0) {
-    scrollToBottom(true);
+  watch(messages, (newMsgs, oldMsgs) => {
+    if (newMsgs && !oldMsgs && newMsgs.length > 0) {
+      scrollToBottom(true);
+    }
   }
-});
+);
+
+watch(() => messages.value?.length, (newLength, oldLength) => {
+  if (newLength && oldLength && newLength > oldLength) {
+    if (messagesContainer.value && isAtBottom.value) { 
+      scrollToBottom();
+    }
+  }
+}, { deep: true });
+
+const pendingImageScrollMessageId = ref<string | null>(null);
 
 async function onHeaderClick() {
   if (!cachedChatroomDataObject.value?.type) return;
@@ -423,8 +446,9 @@ async function onHeaderClick() {
       if (uploadError) throw uploadError
 
       const newId = crypto.randomUUID();
+
+      const imageUrl = useCachedSignedImageUrl("messages_media", filePath, true);
       
-      //Einen Message Eintrag erstellen -> Problem hier
       const { data: message, error: messageError } = await supabase
       .from('messages')
       .insert({
@@ -462,13 +486,14 @@ async function onHeaderClick() {
         username: null,
         media: [{
           id: mediaId,
-          type: 'image' as const,
-          url: useCachedSignedImageUrl("messages_media", filePath, true),
+          type: "image" as const,
+          url: imageUrl.value!,
         }]
       };
+      pendingImageScrollMessageId.value = newMessage.id;
     
       if (messages.value) {
-        messages.value.push(newMessage);
+        await addImageMessage(newMessage);
       }
       await nextTick(() => {
         scrollToBottom();
@@ -481,6 +506,14 @@ async function onHeaderClick() {
       uploading.value = false
     }
   }
+
+
+  async function handleImageLoadedScroll() {
+  if (isAtBottom.value && !scrolling.value) {
+    await nextTick();
+    scrollToBottom(true); 
+  }
+}
 
   const cancelImageSelection = () => {
     selectedImage.value = null
@@ -659,7 +692,7 @@ async function onSendMessage() {
   if (!isFalsy(msgTrimmed)) {
     await sendMessage(msgTrimmed);
     newMessage.value = "";
-    scrollToBottom();
+    //scrollToBottom();
   }
 }
 async function onDeleteMessage(id: string | null, index: number) {
@@ -718,11 +751,39 @@ async function onContainerScroll() {
 onMounted(() => {
   messagesContainer.value?.addEventListener("scroll", onContainerScroll);
   window.addEventListener("keydown", handleKeyDown);
+
+  // Initialize IntersectionObserver
+  if (scrollTarget.value) {
+    intersectionObserver = new IntersectionObserver((entries) => {
+      const targetEntry = entries[0];
+      // If the scrollTarget is visible (meaning we are at or near the bottom)
+      // or if it's new and just entered the viewport, scroll to it.
+      if (targetEntry!.isIntersecting && !isAtBottom.value) {
+        // This means the user wasn't at the bottom, but a new message appeared
+        // at the bottom, so we should scroll.
+        scrollToBottom();
+      } else if (targetEntry!.boundingClientRect.top <= messagesContainer.value!.clientHeight) {
+         // This condition handles initial load or if the target is within the viewport.
+         // Ensure it only triggers if we are close to the bottom.
+         // A more reliable way is to just scroll when a new message is added AND the user IS at the bottom.
+         // The `watch(messages)` above handles this.
+      }
+    }, {
+      root: messagesContainer.value, // Observe within the messages container
+      rootMargin: '0px',
+      threshold: 0.1 // When 10% of the target is visible
+    });
+    intersectionObserver.observe(scrollTarget.value);
+  }
 });
 
 onUnmounted(() => {
   messagesContainer.value?.removeEventListener("scroll", onContainerScroll);
   window.removeEventListener("keydown", handleKeyDown);
+
+  if (intersectionObserver) {
+    intersectionObserver.disconnect();
+  }
 });
 </script>
 
