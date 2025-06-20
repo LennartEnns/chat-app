@@ -122,7 +122,7 @@
         <div
           class="flex flex-col items-center p-5 col-span-2 relative border border-defaultNeutral-700 border-l-0 border-r-0 md:border-t-0 md:border-b-0 md:border-l lg:border-t-0 lg:border-b-0 lg:border-r lg:p-0"
         >
-          <div class="pb-5 text-neutral-700 dark:text-white">
+          <div class="text-neutral-700 dark:text-white">
             <p :class="`font-bold ${themedSectionLabelClasses}`">Members</p>
             <UButton
               v-if="
