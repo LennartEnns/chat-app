@@ -106,7 +106,16 @@
             >
               {{ chatroom.description || "No Description" }}
             </p>
-            <UButton> leave gRoup </UButton>
+            <UButton
+              class="mt-5"
+              color="error"
+              :label="
+                editMode && chatroom.current_user_role === 'admin'
+                  ? 'Delete Group'
+                  : 'Leave Group'
+              "
+              @click="handleDeleteLeave"
+            />
           </div>
         </div>
         <!-- Members Column-->
@@ -316,6 +325,7 @@ import type {
   RequireNonNull,
 } from "~/types/tsUtils/helperTypes";
 import chatroomRolesVis from "~/visualization/chatroomRoles";
+import { ModalChatroomDelete, ModalChatroomLeave } from "#components";
 
 type ChatInvitation = Pick<
   Tables<"group_invitations_preview">,
@@ -376,6 +386,26 @@ const isEditingName = ref<boolean>(false);
 // Save as last opened chatroom in shared state
 lastChatroomState.value = routeChatroomId.value;
 
+const notFoundError = {
+  statusCode: 404,
+  message: "This chatroom does not exist",
+  data: {
+    headline: "No Yapping Here!",
+  },
+};
+// If the chatroom does not exist, show error page
+async function checkExistsChatroom() {
+  const { count } = await supabase
+    .from("chatrooms")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("id", routeChatroomId.value);
+  if (!count) showError(notFoundError);
+}
+await checkExistsChatroom();
+
 async function openDrawer() {
   drawerOpen.value = true;
 }
@@ -399,6 +429,9 @@ const newName = ref<string>();
 
 const avatarPath = `${routeChatroomId.value}.jpg`;
 
+const leaveModal = overlay.create(ModalChatroomLeave);
+const DeleteModal = overlay.create(ModalChatroomDelete);
+
 const chatroom = ref<Chatroom>({
   chatroom_id: routeChatroomId.value,
   name: "Loading name...",
@@ -410,6 +443,7 @@ const chatroom = ref<Chatroom>({
 
 function ChangeAllowed(member: ChatroomMember) {
   if (
+    editMode.value &&
     member.role != "admin" &&
     member.role != chatroom.value.current_user_role &&
     userData.username != member.username
@@ -417,6 +451,32 @@ function ChangeAllowed(member: ChatroomMember) {
     return true;
   }
   return false;
+}
+
+async function handleDeleteLeave() {
+  if (editMode.value && chatroom.value.current_user_role === "admin") {
+    onDeleteChatroom();
+  } else {
+    onLeaveChatroom();
+  }
+}
+
+async function onLeaveChatroom() {
+  const instance = leaveModal.open({
+    chatroomId: routeChatroomId.value,
+  });
+  const success = await instance.result;
+  if (!success) return;
+  navigateTo("/chat");
+}
+
+async function onDeleteChatroom() {
+  const instance = DeleteModal.open({
+    chatroomId: routeChatroomId.value,
+  });
+  const success = await instance.result;
+  if (!success) return;
+  navigateTo("/chat");
 }
 
 async function updateGroupDescription() {
