@@ -16,13 +16,13 @@
   <div :class="`max-w-[90%] mt-2.5 flex flex-col gap-1 ${messagePosition}`">
 
     <template v-if="message.message_type === 'image'">
-      <div :class="`flex flex-col gap-2 rounded-md ${speechBubbleLook} ${themedMessageColor} p-2`">
+      <div :class="`flex flex-col gap-2 rounded-sm ${themedMessageColor} ${speechBubbleLook} p-0.5 self-start ml-10`">
         <template v-if="imageUrl">
           <img
           v-if="message.media && message.media[0] && message.media[0].url && message.media[0].url"
           :src="imageUrl.value"
           :alt="message.content || 'Uploaded image'"
-          class="max-w-full max-h-64 object-contain rounded-md cursor-pointer"
+          class="chat-image object-contain cursor-pointer"
           @click="openImageModal"
           @load="emit('imageLoaded')" @error="handleImageError"
         />
@@ -121,7 +121,7 @@
         <div class="flex flex-col gap-1">
           <div
             v-if="showUserInfo && message.username"
-            class="text-muted text-sm whitespace-nowrap select-none"
+            class="text-muted text-sm whitespace-nowrap select-none "
           >
             {{ message.username }}
           </div>
@@ -147,7 +147,6 @@
 <script lang="ts" setup>
 import type { Message, MediaItem } from "~/types/messages/messageLoading";
 import { useCachedSignedImageUrl } from '~/composables/useCachedSignedImageUrl';
-import { file } from "valibot";
 
 const dateMarker = ref<HTMLElement | null>(null);
 

@@ -140,3 +140,14 @@
   overflow-y: auto;
   z-index: 3;
 }
+
+.chat-image {
+  max-width: 300px;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  /* Optional: Zentrierung innerhalb des flex-Containers (wenn der flex-Container dafür zuständig ist) */
+  /* margin: 0 auto; */
+}
