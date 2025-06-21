@@ -73,7 +73,6 @@ const chatroomTypeTabItems = ref<TabsItem[]>([{
   icon: 'i-lucide-users'
 }]);
 
-
 async function onCreateDirectChatroom(chatroomData: z.output<typeof createDirectChatroomSchema>) {
   const id = await createDirectChatroom({
     otherUserId: chatroomData.otherUser.user_id,

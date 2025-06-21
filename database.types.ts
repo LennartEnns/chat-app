@@ -321,6 +321,7 @@ export type Database = {
           current_user_role: Database["public"]["Enums"]["chatroom_role"] | null
           id: string | null
           last_activity: string | null
+          last_inside: string | null
           last_message: string | null
           name: string | null
           number_new_messages: number | null

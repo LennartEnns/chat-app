@@ -1,4 +1,3 @@
-import type { CachedChatroomsMap } from '~/types/chatroom';
 import type { Message } from '~/types/messages/messageLoading';
 import { logPostgrestError } from '~~/errors/postgrestErrors';
 
@@ -7,7 +6,7 @@ const messagesChunkSize = 20; // Load max. 20 messages at once
 const alwaysFutureDate = new Date(86400000000000);
 
 async function waitForScrollHeightChange(container: HTMLElement, oldHeight: number) {
-  const maxTries = 40; // Generous timeout for even the 
+  const maxTries = 40; // Generous timeout for even the slowest users
   let tries = 0;
   while (tries < maxTries && container.scrollHeight === oldHeight) {
     await new Promise((resolve) => setTimeout(resolve, 16)); // wait ~1 frame
@@ -15,27 +14,21 @@ async function waitForScrollHeightChange(container: HTMLElement, oldHeight: numb
   }
 }
 
-export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Ref<HTMLElement | null>) => {
+export const useMessagesManager = (chatroomId: string, messagesContainer: Ref<HTMLElement | null>, immediateOwnMessageManipulation: Ref<boolean>) => {
   const supabase = useSupabaseClient();
+  const updateLastInsideChatroom = useUpdateLastInsideChatroom();
   const operationFeedbackHandler = useOperationFeedbackHandler();
-  const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
-  const cachedChatroom = computed(() => cachedChatrooms.value ? cachedChatrooms.value[chatroomId] : undefined);
 
   const containerScrollTop = ref(0);
   const almostAtTheTop = computed(() => containerScrollTop.value <= scrollTopTreshold);
 
-  // Causes the corresponding database field to be set to the current time
-  // Should be called after potentially new messages have been fetched or after sending a message
-  async function updateLastInsideChatroom() {
-    await supabase.rpc('update_last_inside_chatroom', { cid: chatroomId });
-  }
-
   const { data: messages } = useLazyAsyncData(`chatMessages-${chatroomId}`, async () => {
     const msgs = (await fetchEarlierMessages(false)).toReversed();
-    updateLastInsideChatroom();
+    updateLastInsideChatroom(chatroomId);
 
     return msgs;
   });
+  const messagesManipulator = useLocalMessagesManipulator(chatroomId, messages);
 
   function getEarliestMessageTime() {
     return (!messages.value || messages.value.length === 0) ? alwaysFutureDate : new Date(messages.value[0]!.created_at);
@@ -52,8 +45,9 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
   async function insertMessages(newMessages: Message[]) {
     if (!messages.value || newMessages.length === 0) return;
     const oldScrollHeight = messagesContainer.value?.scrollHeight ?? 0;
-    // New messages are in descending order, so insert each one at the start of messages
-    newMessages.forEach((newMsg) => messages.value!.unshift(newMsg));
+
+    messagesManipulator.insertOlderMessagesDescending(newMessages);
+
     // Adjust scrollTop to keep the view "pinned"
     if (!messagesContainer.value) return;
     const container = messagesContainer.value;
@@ -104,8 +98,12 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
     };
   });
 
-  onMounted(() => {
-    messagesContainer.value?.addEventListener('scroll', updateScrollTop);
+  watch(messagesContainer, (container) => {
+    if (container) {
+      container.addEventListener('scroll', updateScrollTop);
+    }
+  }, {
+    immediate: true,
   });
   onUnmounted(() => {
     messagesContainer.value?.removeEventListener('scroll', updateScrollTop);
@@ -124,6 +122,13 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
       operationFeedbackHandler.displayError('Could not send the message');
       return;
     }
+
+    // Only insert new message directly if realtime connection is not up
+    // Otherwise, the realtime handler will insert the message upon arrival
+    // and update last inside chatroom
+    if (!immediateOwnMessageManipulation.value) return;
+
+    updateLastInsideChatroom(chatroomId);
     const newMessage = {
       id: newId,
       content,
@@ -133,14 +138,7 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
       username: null,
       is_own: true,
     };
-    updateLastInsideChatroom();
-    // Update chatroom state
-    if (cachedChatroom.value) {
-      // Insert was performed, so update last activity
-      cachedChatroom.value.last_activity = new Date().toISOString();
-      cachedChatroom.value.last_message = content;
-    }
-    messages.value?.push(newMessage);
+    messagesManipulator.appendMessage(newMessage);
   }
   async function deleteMessage(id: string, index: number) {
     // Request deletion
@@ -154,12 +152,9 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
       return;
     }
 
+    if (!immediateOwnMessageManipulation.value) return;
     // Remove message from local list after successful deletion
-    messages.value = messages.value?.toSpliced(index, 1);
-    if (cachedChatroom.value && index === messages.value?.length) {
-      // Last message deleted => Update chatroom state
-      cachedChatroom.value.last_message = messages.value[messages.value.length - 1]?.content ?? null;
-    }
+    messagesManipulator.deleteMessage(index);
   }
   async function updateMessage(id: string, index: number, newContent: string) {
     // Request update
@@ -175,18 +170,9 @@ export const useLazyFetchedMessages = (chatroomId: string, messagesContainer: Re
       return;
     }
 
+    if (!immediateOwnMessageManipulation.value) return;
     // Update displayed message after successful db update
-    if (!messages.value || messages.value.length <= index) return;
-    const oldMsg = messages.value[index]!;
-    const newMsg = {
-      ...oldMsg,
-      content: newContent,
-    };
-    messages.value = messages.value.toSpliced(index, 1, newMsg); // Remove old + insert new
-    if (cachedChatroom.value && index === messages.value.length - 1) {
-      // Last message updated => Update chatroom state
-      cachedChatroom.value.last_message = newContent;
-    }
+    messagesManipulator.updateMessageContent(index, newContent);
   }
 
   return {

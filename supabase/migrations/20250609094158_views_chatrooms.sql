@@ -1,3 +1,19 @@
+create function utils.truncate(t text, len int)
+returns text
+language plpgsql
+security definer set search_path = ''
+stable
+as $$
+begin
+  return case
+    when length(t) > len
+    then left(t, len) || '...'
+    else t
+  end;
+end;
+$$;
+
+
 create or replace view public.chatrooms_with_last_activity
 with (security_invoker)
 as
@@ -8,6 +24,7 @@ select
       select max(m.created_at)
       from public.messages m
       where m.chatroom_id = c.id
+      and m.user_id != (select auth.uid())
     ),
     c.created_at
   ) as last_activity
@@ -68,18 +85,14 @@ select
   end
   as name,
 
+  utac.last_inside,
   (
-    select case
-      when length(msg.content) > 30
-      then left(msg.content, 27) || '...'
-      else msg.content
-    end
+    select utils.truncate(msg.content, 30)
     from public.messages msg
     where chatroom_id = cwla.id
     order by msg.created_at desc
     limit 1
   ) as last_message,
-
   (
     select count(1)
     from public.messages

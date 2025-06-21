@@ -4,11 +4,7 @@ as
 select
   (msg.user_id = (select auth.uid())) as is_own,
 
-  -- User only needs to know message ID for own messages (to update/delete)
-  case when msg.user_id = (select auth.uid())
-    then msg.id
-    else null
-  end as id,
+  msg.id,
   msg.chatroom_id,
   msg.content,
   msg.created_at,

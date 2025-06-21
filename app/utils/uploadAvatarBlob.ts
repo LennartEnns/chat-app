@@ -10,8 +10,6 @@ export default async (blob: Blob, bucket_name: string, path: string) => {
       upsert: true,
       contentType: "image/jpeg",
       cacheControl: "0",
-
-      // Kind of unnecessary next to max-age=0, but better be on the safe side ;)
       headers: {
         "cache-control": "no-cache",
       },

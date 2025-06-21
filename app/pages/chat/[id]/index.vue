@@ -8,9 +8,9 @@
         }"
       >
         <UButton variant="ghost" class="flex items-center m-0 py-1 px-2" @click="onHeaderClick">
-          <UAvatar :src="cachedChatroomDataObject?.avatarUrl" icon="i-lucide-user" />
+          <UAvatar :src="cachedChatroom?.avatarUrl" icon="i-lucide-user" />
           <ClientOnly>
-            <div v-if="cachedChatroomDataObject">
+            <div v-if="cachedChatroom">
               <h1 v-if="!hasOtherUserLeft" class="text-black dark:text-white">
                 {{ chatroomPreview.name }}
               </h1>
@@ -44,6 +44,7 @@
           :message="message"
           :show-user-info="
             !!messages &&
+            cachedChatroom?.type !== 'direct' &&
             (index === 0 || messages[index - 1]?.username !== message.username)
           "
           :show-date-marker="
@@ -71,12 +72,18 @@
           @delete="onDeleteMessage(message.id, index)"
           @update="onUpdateMessage(message.id, index, $event)"
         />
-        <UButton
-          v-if="!isAtBottom"
+        <div>
+          <UButton
+          v-if="!isNearBottom"
           icon="i-lucide-arrow-down"
           class="absolute w-min bottom-20 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
-          @click="scrollToBottom()"
-        />
+          @click="onScrollToBottomClicked"
+        >
+          <template #trailing>
+            <div v-if="!!numberUnseenMessagesAtBottom" class="mr-1 animate-pulse">{{ numberUnseenMessagesAtBottom }}</div>
+          </template>
+        </UButton>
+        </div>
       </div>
       <div v-if="isViewer !== undefined && !isViewer" class="write">
         <UTextarea
@@ -143,11 +150,13 @@ import { logPostgrestError } from "~~/errors/postgrestErrors";
 import { messageLimits } from "~~/validation/commonLimits";
 import chatroomRolesVis from "~/visualization/chatroomRoles";
 import { ModalChatroomLeave } from "#components";
+import type { CachedChatroomsAvatarUrlMap, CachedChatroomsMap } from "~/types/chatroom";
+import type { Message } from "~/types/messages/messageLoading";
 
 const newMessage = ref<string>("");
 const messagesContainer = ref<HTMLElement | null>(null);
-const isAtBottom = ref(true);
-const bottomDetectionThreshold = 10;
+const isNearBottom = ref(true);
+const bottomDetectionThreshold = 175;
 
 const scrolling = ref(false);
 const minTimeAfterScrolling = 100;
@@ -167,26 +176,41 @@ const leaveModal = overlay.create(ModalChatroomLeave);
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
-const routeChatroomId = useRouteIdParam();
+const routeChatroomId = useRouteIdParam() as Ref<string>; // ID will always be given in this route
+
+// Show number of new messages at the bottom on the "scroll to bottom" button if not at the bottom
+const numberUnseenMessagesAtBottom = ref(0);
 
 // Save as last opened chatroom in shared state
 lastChatroomState.value = routeChatroomId.value;
 
 const isViewer = ref<boolean | undefined>(undefined);
 
-const cachedChatroomDataObject = useCachedChatroom(routeChatroomId.value);
+const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
+const cachedChatroomsAvatarUrlMap = useState<CachedChatroomsAvatarUrlMap | undefined>('chatroom-avatar-urls');
+const cachedChatroom = computed(() => {
+  if (cachedChatrooms.value) {
+    const cr = cachedChatrooms.value[routeChatroomId.value];
+    if (!cr) return undefined;
+    return {
+      ...cr,
+      avatarUrl: cachedChatroomsAvatarUrlMap.value?.[routeChatroomId.value],
+    };
+  }
+  return undefined;
+});
 watchEffect(() => {
-  if (cachedChatroomDataObject.value) {
-    isViewer.value = cachedChatroomDataObject.value.current_user_role === "viewer";
+  if (cachedChatroom.value) {
+    if (!isViewer.value) scrollToBottom(true);
+    isViewer.value = cachedChatroom.value.current_user_role === "viewer";
   };
-  scrollToBottom(true);
 });
 
 const hasOtherUserLeft = computed(
   () =>
-    !!cachedChatroomDataObject.value &&
-    cachedChatroomDataObject.value.type === "direct" &&
-    !cachedChatroomDataObject.value.other_user_id
+    !!cachedChatroom.value &&
+    cachedChatroom.value.type === "direct" &&
+    !cachedChatroom.value.other_user_id
 );
 
 const notFoundError = {
@@ -205,13 +229,19 @@ async function checkExistsChatroom() {
       head: true,
     })
     .eq("id", routeChatroomId.value);
-  if (!count) showError(notFoundError);
+  if (!count) {
+    // Remove from chatrooms list and show 404 page
+    if (cachedChatrooms.value) {
+      cachedChatrooms.value[routeChatroomId.value] = undefined;
+    }
+    lastChatroomState.value = undefined;
+    showError(notFoundError);
+  }
 }
-await checkExistsChatroom();
 
 // Freeze number of messages in time before setting it to 0 for the new messages marker to not disappear
 const numberNewMessagesFrozen = ref(
-  cachedChatroomDataObject.value?.number_new_messages ?? 0
+  cachedChatroom.value?.number_new_messages ?? 0
 );
 async function removeNewMessagesMarker() {
   // Make new messages marker disappear
@@ -219,30 +249,64 @@ async function removeNewMessagesMarker() {
 }
 
 const chatroomPreview = computed(() => {
-  if (!cachedChatroomDataObject.value) return {
+  if (!cachedChatroom.value) return {
     name: 'Chatroom',
   };
-  const cpData = cachedChatroomDataObject.value;
+  const cpData = cachedChatroom.value;
   return {
     name: cpData.name!,
   };
 });
 
+// Indicates whether the realtime connection is not up.
+// If it is down, fallback to immediate insert.
+// Otherwise, the handler will take care of the insert instead.
+const immediateOwnMessageManipulation = ref(false);
 const { messages, sendMessage, deleteMessage, updateMessage } =
-  useLazyFetchedMessages(routeChatroomId.value, messagesContainer);
+  useMessagesManager(routeChatroomId.value, messagesContainer, immediateOwnMessageManipulation);
 watch(messages, (newMsgs, oldMsgs) => {
   if (newMsgs && !oldMsgs && newMsgs.length > 0) {
     scrollToBottom(true);
   }
 });
 
+async function onScrollToBottomClicked() {
+  scrollToBottom();
+}
+async function onNewMessage(msg: Message) {
+  if (msg.is_own || isNearBottom.value) {
+    scrollToBottom();
+  } else {
+    numberUnseenMessagesAtBottom.value++;
+  }
+}
+watch(isNearBottom, (isNear) => {
+  if (isNear) {
+    numberUnseenMessagesAtBottom.value = 0;
+  }
+});
+
+// Initiate realtime listener, which can modify the reactive messages array.
+// Tied to the lifecycle of this page (specific chatroom).
+const realtimeStatus = useRealtimeRoomListener(routeChatroomId.value, messages, onNewMessage);
+watch(realtimeStatus, (status) => {
+  // Status is not resolved or not successful => Switch to immediate manipulation through messages manager
+  if (status !== 'SUBSCRIBED') {
+    immediateOwnMessageManipulation.value = true;
+  }
+  // Status is resolved and successful => Switch to realtime manipulation triggered by db events
+  else {
+    immediateOwnMessageManipulation.value = false;
+  }
+});
+
 async function onHeaderClick() {
-  if (!cachedChatroomDataObject.value?.type) return;
-  const type = cachedChatroomDataObject.value.type;
+  if (!cachedChatroom.value?.type) return;
+  const type = cachedChatroom.value.type;
   if (type === "direct") {
     // Handle direct chatroom redirect
-    if (!cachedChatroomDataObject.value.other_user_id) return;
-    const otherUserId = cachedChatroomDataObject.value.other_user_id;
+    if (!cachedChatroom.value.other_user_id) return;
+    const otherUserId = cachedChatroom.value.other_user_id;
 
     // Fetch other user name based on other_user_id
     const { data, error } = await supabase
@@ -302,7 +366,6 @@ async function onSendMessage() {
   if (!isFalsy(msgTrimmed)) {
     await sendMessage(msgTrimmed);
     newMessage.value = "";
-    scrollToBottom();
   }
 }
 async function onDeleteMessage(id: string | null, index: number) {
@@ -349,7 +412,7 @@ async function scrollToBottom(instant: boolean = false) {
 async function onContainerScroll() {
   const el = messagesContainer.value;
   if (!el) return;
-  isAtBottom.value =
+  isNearBottom.value =
     el.scrollHeight - el.scrollTop - el.clientHeight < bottomDetectionThreshold;
   if (scrollingTimeout) clearTimeout(scrollingTimeout);
   scrolling.value = true;
@@ -358,9 +421,24 @@ async function onContainerScroll() {
   }, minTimeAfterScrolling);
 }
 
-onMounted(() => {
-  messagesContainer.value?.addEventListener("scroll", onContainerScroll);
+watch(messagesContainer, (container) => {
+  if (container) {
+    container.addEventListener('scroll', onContainerScroll);
+  }
+}, {
+  immediate: true,
+});
+onMounted(async () => {
+  await checkExistsChatroom();
   window.addEventListener("keydown", handleKeyDown);
+
+  // When opening the chatroom, reset unread messages to 0 in the local state
+  setTimeout(() => {
+    if (cachedChatroom.value && cachedChatroom.value.number_new_messages !== 0) {
+      const cachedCrObject = cachedChatrooms.value ? cachedChatrooms.value[routeChatroomId.value] : undefined;
+      if (cachedCrObject) cachedCrObject.number_new_messages = 0;
+    }
+  }, 500);
 });
 
 onUnmounted(() => {

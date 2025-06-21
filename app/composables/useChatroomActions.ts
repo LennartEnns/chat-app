@@ -2,7 +2,7 @@ import type * as z from 'zod';
 import type { createGroupChatroomSchema } from "~~/validation/schemas/input/inputChatroomSchemas";
 import { logPostgrestError, getPostgrestErrorMessage } from '~~/errors/postgrestErrors';
 import type { TablesInsert } from '~~/database.types';
-import type { CachedChatroomsMap } from '~/types/chatroom';
+import type { CachedChatroomData, CachedChatroomsMap } from '~/types/chatroom';
 import type { InvitationPreview } from '~/types/invitations/invitationsPreview';
 
 type DirectChatroomData = {
@@ -65,7 +65,7 @@ export const useChatroomActions = () => {
         return newId;
       }
       // Cache in the cached chatrooms object
-      cachedChatrooms.value[newId] = {
+      const newCachedChatroom = {
         name: singleCrData.name,
         type: 'direct',
         other_user_id: chatroomData.otherUserId,
@@ -74,7 +74,8 @@ export const useChatroomActions = () => {
         last_activity: new Date().toISOString(),
         last_message: null,
         number_new_messages: 0,
-      };
+      } as CachedChatroomData;
+      cachedChatrooms.value[newId] = newCachedChatroom;
     }
 
     operationFeedbackHandler.displaySuccess('New chatroom has been created');

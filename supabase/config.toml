@@ -302,7 +302,7 @@ deno_version = 1
 
 [analytics]
 enabled = true
-port = 54327
+port = 54328
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
 

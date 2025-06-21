@@ -25,8 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import logo_lightened from '@/assets/images/logo.png'
-import logo_darkened from '@/assets/images/logo_dark.png'
+import logo_lightened from '@/assets/images/logo.webp'
+import logo_darkened from '@/assets/images/logo_dark.webp'
 
 const { isLight } = useSSRSafeTheme();
 
