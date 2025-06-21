@@ -138,6 +138,7 @@
           <div class="flex flex-wrap justify-center gap-3 p-5">
             <div
               v-for="(member, index) in chatMembers"
+              @click="goToProfile(member)"
               :key="index"
               class="ring-0 glassContainer text-neutral-700 dark:text-white member relative"
             >
@@ -215,11 +216,7 @@
                 </div>
               </div>
               <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
-                <p class="truncate font-bold">
-                  <NuxtLink :to="`/profile/${member.username}`">{{
-                    member.name
-                  }}</NuxtLink>
-                </p>
+                <p class="truncate font-bold">{{ member.name }}</p>
                 <p class="line-clamp-2 leading-4">
                   {{ member.description ?? "Hey there! I am using YapSpace." }}
                 </p>
@@ -361,6 +358,8 @@ const chatMembers = ref<ChatroomMember[]>([]);
 
 const userData = useUserData();
 
+const router = useRouter();
+
 const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
   "admin",
   "mod",
@@ -460,6 +459,12 @@ async function handleDeleteLeave() {
     onDeleteChatroom();
   } else {
     onLeaveChatroom();
+  }
+}
+
+async function goToProfile(member: ChatroomMember) {
+  if (!editMode.value) {
+    router.push(`/profile/${member.username}`);
   }
 }
 
