@@ -34,7 +34,12 @@
         </div>
       </div>
       <UButton
-        v-if="props.user_role === 'admin'"
+        v-if="
+          props.user_role === 'admin ' ||
+          (invitation.as_role !== 'admin' &&
+            invitation.as_role !== 'mod' &&
+            user_role === 'mod')
+        "
         icon="i-lucide-trash-2"
         class="size-fit"
         @click="deleteInvite(index, invitation.id)"
