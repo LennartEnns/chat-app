@@ -1,11 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  // vite: {
-  //   esbuild: {
-  //     drop: ['console', 'debugger'], // remove all console.* and debugger statements in production
-  //   },
-  // },
+  vite: {
+    esbuild: {
+      drop: ['console', 'debugger'], // remove all console.* and debugger statements in production
+    },
+  },
 
   modules: [
     '@nuxt/ui',

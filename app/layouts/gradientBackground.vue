@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="`min-h-[100vh] h-[100%] flex flex-col align-content-center justify-center ${
+    :class="`min-h-dvh flex flex-col align-content-center justify-center ${
       isLight ? 'landing-background-light' : 'landing-background-dark'
     }`"
   >
