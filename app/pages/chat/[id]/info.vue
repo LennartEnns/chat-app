@@ -1,3 +1,9 @@
+TODO:
+- useLazyAsyncData
+- Die ganze Member Card soll clickbar sein, nicht nur der Name
+- Invitations wenn möglich als v-model an InvitationColumn übergeben
+- Invitations in Column dynamisch löschen und hinzufügen
+
 <template>
   <UApp>
     <NuxtLayout name="logged-in" :class="`${isLight ? 'base' : false}`">
@@ -5,8 +11,8 @@
         <!-- Chat Info Column-->
         <div class="flex flex-col items-center p-5 overflow-hidden">
           <div class="pt-10 pb-5">
-            <div class="h-70 w-70 md:h-50 md:w-50">
-              <div class="relative h-70 w-70 md:h-50 md:w-50">
+            <div class="h-50 w-50">
+              <div class="relative h-50 w-50">
                 <EditableAvatar
                   :src="chatroom.avatarUrl"
                   bucket-name="chatroom_avatars"
@@ -15,7 +21,7 @@
                   :editable="editMode"
                   :clearable="editMode"
                   styling="border-2 border-defaultNeutral-700 size-full"
-                  root-styling="relative h-70 w-70 md:h-50 md:w-50"
+                  root-styling="relative h-50 w-50"
                   icon-styling="border-2 border-defaultNeutral-700 size-full"
                 />
               </div>
@@ -135,18 +141,21 @@
               @click="onInviteUser"
             />
           </div>
-          <div class="flex flex-wrap justify-center gap-3 p-5">
+          <UInput icon="i-lucide-search" class="mt-2" placeholder="Search..." v-model="memberSearchTerm" />
+          <div class="flex flex-wrap justify-center gap-3 p-5 max-h-80 md:max-h-[70dvh] overflow-y-auto">
             <div
-              v-for="(member, index) in chatMembers"
+              v-for="(member, index) in membersFiltered"
               :key="index"
-              class="ring-0 glassContainer text-neutral-700 dark:text-white member relative"
+              :class="`ring-0 glassContainer text-neutral-700 dark:text-white member relative ${
+              editMode ? '' : 'cursor-pointer'}`"
+              @click="onMemberClick(member)"
             >
               <UButton
-                v-if="ChangeAllowed(member)"
+                v-if="memberChangeAllowed(member)"
                 icon="i-lucide-minus"
                 size="xs"
                 class="size-fit absolute right-1 top-1"
-                @click="removeMember(index, member.user_id)"
+                @click="removeMember(member.user_id)"
               />
               <div class="flex flex-col items-center w-max">
                 <UAvatar
@@ -162,27 +171,31 @@
                     v-if="!editMode"
                     class="font-bold rounded-full cursor-pointer"
                     :color="chatroomRolesVis[member.role].color"
+                    :icon="chatroomRolesVis[member.role].icon"
                     :ui="{
-                      base: 'max-w-11 h-5 w-11 text-[10px] flex justify-center',
+                      base: 'text-[10px] flex justify-center',
                     }"
                   >
                     {{ chatroomRolesVis[member.role].label }}
                   </UBadge>
                   <USelect
-                    v-if="editMode && ChangeAllowed(member)"
-                    v-model="chatMembers[index]!.role"
-                    trailing-icon=""
+                    v-if="editMode && memberChangeAllowed(member)"
+                    v-model="member.role"
                     variant="outline"
-                    :items="availableRoles"
-                    @change="() => handleRoleChange(index)"
+                    :items="chatroom.current_user_role === 'admin' ? availableRolesAdmin : availableRolesMod"
+                    :ui="{
+                      item: 'flex justify-center'
+                    }"
+                    @change="() => handleRoleChange(member)"
                   >
                     <!-- Trigger: badge showing current role -->
                     <template #default>
                       <UBadge
                         class="font-bold rounded-full cursor-pointer"
                         :color="chatroomRolesVis[member.role].color"
+                        :icon="chatroomRolesVis[member.role].icon"
                         :ui="{
-                          base: 'max-w-11 w-11 h-5 text-[10px] flex justify-center',
+                          base: 'text-[10px] flex justify-center',
                         }"
                       >
                         {{ chatroomRolesVis[member.role].label }}
@@ -194,8 +207,9 @@
                       <UBadge
                         class="font-bold rounded-full"
                         :color="chatroomRolesVis[item].color"
+                        :icon="chatroomRolesVis[item].icon"
                         :ui="{
-                          base: 'max-w-11 w-full h-5 text-[10px] flex justify-center',
+                          base: 'h-5 text-[10px] flex justify-center',
                         }"
                       >
                         {{ chatroomRolesVis[item].label }}
@@ -216,9 +230,7 @@
               </div>
               <div class="flex flex-col justify-center px-[0.6rem] min-w-0">
                 <p class="truncate font-bold">
-                  <NuxtLink :to="`/profile/${member.username}`">{{
-                    member.name
-                  }}</NuxtLink>
+                  {{ member.name }}
                 </p>
                 <p class="line-clamp-2 leading-4">
                   {{ member.description ?? "Hey there! I am using YapSpace." }}
@@ -228,7 +240,7 @@
           </div>
           <div class="absolute bottom-5 right-5 flex flex-col">
             <div class="flex flex-row justify-end">
-              <div class="hidden md:block lg:hidden">
+              <div v-if="!lgOrAbove" class="hidden md:block">
                 <UTooltip text="View invitations">
                   <UButton
                     class="flex size-fit mb-3"
@@ -264,10 +276,11 @@
         </div>
         <!-- Invitations Column-->
         <UDrawer
+          v-if="mdOrAbove && !lgOrAbove"
           v-model:open="drawerOpen"
           :handle="false"
           direction="right"
-          class="hidden md:block lg:hidden"
+          class="block"
         >
           <template #body>
             <div class="flex flex-col items-center px-5">
@@ -279,13 +292,13 @@
             </div>
           </template>
         </UDrawer>
-        <div class="flex flex-col items-center px-5 lg:block md:hidden">
+        <div v-if="!mdOrAbove" class="flex flex-col items-center px-5">          
           <ChatroomInfoInvitationColumn
             :invitations="chatInvitations"
             :edit-boolean="editMode"
             :text-theme="themedSectionLabelClasses"
           />
-          <div class="md:hidden p-10">
+          <div class="p-10">
             <UButton
               v-if="!editMode"
               class="flex size-fit"
@@ -341,9 +354,10 @@ type Chatroom = Omit<CRViewNonNullable, "last_activity" | "avatarUrl"> & {
 };
 type ChatroomMember = RequireNonNull<
   Tables<"group_chatroom_members">,
-  "role" | "user_id"
+  "role" | "user_id" | "name"
 >;
 
+const { mdOrAbove, lgOrAbove } = useTailwindBreakpoints();
 const routeChatroomId = useRouteIdParam() as Ref<string>; // ID will always be given in this route
 const { isLight } = useSSRSafeTheme();
 const operationFeedbackHandler = useOperationFeedbackHandler();
@@ -356,12 +370,18 @@ const rolesHelpModal = overlay.create(RolesInfo);
 
 const drawerOpen = ref(false);
 const chatMembers = ref<ChatroomMember[]>([]);
+const memberSearchTerm = ref("");
+const membersFiltered = computed(() => chatMembers.value.filter((mem) => mem.name.toLowerCase().includes(memberSearchTerm.value.toLowerCase())));
 
 const userData = useUserData();
 
-const availableRoles: NonEmptyArray<Enums<"chatroom_role">> = [
+const availableRolesAdmin: NonEmptyArray<Enums<"chatroom_role">> = [
   "admin",
   "mod",
+  "member",
+  "viewer",
+];
+const availableRolesMod: NonEmptyArray<Enums<"chatroom_role">> = [
   "member",
   "viewer",
 ];
@@ -441,12 +461,12 @@ const chatroom = ref<Chatroom>({
   avatarUrl: useCachedSignedImageUrl("chatroom_avatars", avatarPath, false),
 });
 
-function ChangeAllowed(member: ChatroomMember) {
+function memberChangeAllowed(member: ChatroomMember) {
   if (
     editMode.value &&
-    member.role != "admin" &&
-    member.role != chatroom.value.current_user_role &&
-    userData.username != member.username
+    member.role !== "admin" &&
+    member.role !== chatroom.value.current_user_role &&
+    userData.username !== member.username
   ) {
     return true;
   }
@@ -574,6 +594,14 @@ async function loadChatMembers() {
   }
   data.forEach((element) => {
     chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
+    chatMembers.value.push(element as ChatroomMember);
   });
   chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
 }
@@ -606,7 +634,16 @@ async function onInviteUser() {
   });
 }
 
-async function removeMember(index: number, user_id: string | null) {
+async function onMemberClick(member: ChatroomMember) {
+  if (!editMode.value) navigateTo(`/profile/${member.username}`);
+}
+
+async function removeMember(user_id: string) {
+  const index = chatMembers.value.findIndex((mem) => mem.user_id = user_id);
+  if (index < 0) {
+    operationFeedbackHandler.displayError("Could not remove user from chatroom.");
+    return;
+  }
   chatMembers.value = chatMembers.value.toSpliced(index, 1);
   const { error } = await supabase
     .from("user_to_group")
@@ -622,10 +659,9 @@ async function removeMember(index: number, user_id: string | null) {
   }
 }
 
-async function handleRoleChange(index: number) {
-  if (!chatMembers.value[index]) return;
-  const newRole = chatMembers.value[index].role;
-  const userId = chatMembers.value[index].user_id;
+async function handleRoleChange(member: ChatroomMember) {
+  const newRole = member.role;
+  const userId = member.user_id;
   const { error } = await supabase
     .from("user_to_group")
     .update({ role: newRole })

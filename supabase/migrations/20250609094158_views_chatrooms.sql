@@ -116,7 +116,7 @@ select
   user_to_group.chatroom_id,
   pf.user_id,
   user_to_group.role,
-  pf.description,
+  utils.truncate(pf.description, 40) as description,
   pf.username,
   coalesce(pf.displayname, pf.username) as name
 from public.profiles pf
