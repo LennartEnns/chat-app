@@ -1,5 +1,5 @@
 <template>
-  <div class="align-column p-0">
+  <div class="align-column px-2 py-0">
     <div class="flex mb-2 gap-4 justify-center items-center">
       <ModalSearchUser class="h-min" @close="onUserSelect">
         <UButton

@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="chat">
-    <div class="align-column">
+    <div class="align-column px-2">
       <UCard
         variant="subtle"
         :ui="{
@@ -36,7 +36,7 @@
           />
         </ClientOnly>
       </UCard>
-      <div ref="messagesContainer" class="messages py-2 px-4 md:px-6">
+      <div ref="messagesContainer" class="messages py-2 px-0 md:px-6">
         <!-- Group by Hours-Minute-Time -->
         <ChatroomMessage
           v-for="(message, index) in messages"
@@ -76,7 +76,8 @@
           <UButton
           v-if="!isNearBottom"
           icon="i-lucide-arrow-down"
-          class="absolute w-min bottom-20 right-5 md:right-10 lg:right-20 rounded-full shadow-lg z-50"
+          :class="`absolute border-1 w-min bottom-28 right-5 md:right-10 rounded-full shadow-lg z-50 ${numberUnseenMessagesAtBottom ? 'animate-bounce' : ''}`"
+          :size="isMobile ? 'xl' : 'lg'"
           @click="onScrollToBottomClicked"
         >
           <template #trailing>
@@ -166,6 +167,7 @@ const newMessageArea = ref<{ $el: HTMLElement } | null>(null);
 const newMsgSelectionStart = ref(0);
 const newMsgSelectionEnd = ref(0);
 
+const isMobile = useMobileDetector();
 const { isLight } = useSSRSafeTheme();
 const themedSendButtonColor = computed(() =>
   isLight.value ? "user-light" : "user-dark"
