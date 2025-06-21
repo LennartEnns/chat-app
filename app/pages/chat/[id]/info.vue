@@ -567,7 +567,6 @@ watch(
 );
 
 async function loadChatMembers() {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   const { data, error } = await supabase
     .from("group_chatroom_members")
     .select("*")
