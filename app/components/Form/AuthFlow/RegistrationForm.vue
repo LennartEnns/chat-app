@@ -88,7 +88,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Check if the username already exists
   const { data: existingUser } = await supabase
     .from("profiles")
-    .select("user_id")
+    .select("username")
     .eq("username", event.data.username)
     .maybeSingle();
   if (existingUser) {
