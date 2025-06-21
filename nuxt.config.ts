@@ -2,6 +2,11 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
+  vite: {
+    esbuild: {
+      drop: ['console', 'debugger'], // remove all console.* and debugger statements in production
+    },
+  },
   modules: [
     '@nuxt/ui',
     '@nuxt/eslint',

@@ -1,4 +1,5 @@
 import type { Tables } from '~~/database.types';
+import type { RequireNonNull } from './tsUtils/helperTypes';
 
 export interface DirectChatroomData {
     chatroom_id: string;
@@ -17,6 +18,6 @@ export interface GroupChatroomData {
 }
 
 
-export type CachedChatroomData = Tables<'chatrooms_preview'>;
+export type CachedChatroomData = RequireNonNull<Tables<'chatrooms_preview'>, 'id' | 'last_activity' | 'last_inside' | 'number_new_messages'>;
 export type CachedChatroomsMap = Record<NonNullable<Tables<'chatrooms_preview'>['id']>, Omit<CachedChatroomData, 'id'> | undefined>
 export type CachedChatroomsAvatarUrlMap = Record<keyof CachedChatroomsMap, string | undefined>

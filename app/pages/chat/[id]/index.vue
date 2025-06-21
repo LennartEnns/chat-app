@@ -176,7 +176,7 @@ const leaveModal = overlay.create(ModalChatroomLeave);
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
-const routeChatroomId = useRouteIdParam();
+const routeChatroomId = useRouteIdParam() as Ref<string>; // ID will always be given in this route
 
 // Show number of new messages at the bottom on the "scroll to bottom" button if not at the bottom
 const numberUnseenMessagesAtBottom = ref(0);
@@ -288,7 +288,7 @@ watch(isNearBottom, (isNear) => {
 
 // Initiate realtime listener, which can modify the reactive messages array.
 // Tied to the lifecycle of this page (specific chatroom).
-const realtimeStatus = await useRealtimeRoomListener(routeChatroomId.value, messages, onNewMessage);
+const realtimeStatus = useRealtimeRoomListener(routeChatroomId.value, messages, onNewMessage);
 watch(realtimeStatus, (status) => {
   // Status is not resolved or not successful => Switch to immediate manipulation through messages manager
   if (status !== 'SUBSCRIBED') {

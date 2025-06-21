@@ -5,7 +5,7 @@
 
 -- 'preview:[id]' for sending only the data needed for previewing chatrooms and their content
 -- => 'insert-msg' event: Truncated message content (for previewing new last message) and created_at (to avoid race conditions) => Change last msg, unread msgs ++
--- => 'update-last' event: Truncated message content => Change last msg, unread msgs stays unchanged
+-- => 'update-last' event: Same as with insert-msg, but content is nullable => Change last msg, unread msgs stays unchanged
 -- => 'delete-msg' event: created_at => Client decides whether it was a new message. If yes, unread msgs --. If it was the last message, followed by update-last.
 
 -- CLIENT-SIDE:
@@ -69,6 +69,7 @@ declare
   preview_topic text;
   msg_username text;
   latest_msg_id uuid;
+  latest_msg_time timestamptz;
 begin
   select coalesce(OLD.chatroom_id, NEW.chatroom_id) into cid;
   select 'room:' || (cid::text) into room_topic;
@@ -91,7 +92,7 @@ begin
     perform realtime.send(
       jsonb_build_object(
         'content', (select utils.truncate(NEW.content, 30)),
-        'created_at': NEW.created_at,
+        'created_at', NEW.created_at
       ),
       'insert-msg',
       preview_topic,
@@ -118,6 +119,7 @@ begin
       perform realtime.send(
         jsonb_build_object(
           'content', (select utils.truncate(NEW.content, 30)),
+          'created_at', coalesce(OLD.created_at, NEW.created_at)
         ),
         'update-last',
         preview_topic,
@@ -137,25 +139,24 @@ begin
 
     perform realtime.send(
       jsonb_build_object(
-        'created_at', OLD.created_at,
+        'created_at', OLD.created_at
       ),
       'delete-msg',
       preview_topic,
       true
     );
     -- Only send update-last if the latest message has been deleted
-    if OLD.created_at > (
-      select max(created_at) from public.messages msg
-      where msg.chatroom_id = cid
-    ) then
+    select max(msg.created_at) from public.messages msg where msg.chatroom_id = cid into latest_msg_time;
+    if latest_msg_time is null or OLD.created_at > latest_msg_time then
       perform realtime.send(
         jsonb_build_object(
           -- Truncated content of new last message if it exists, otherwise null
-          'content', (select utils.truncate(
-            select msg.content from public.messages msg
+          'content', (
+            select utils.truncate(msg.content, 30) from public.messages msg
             where msg.chatroom_id = cid
             order by created_at desc limit 1
-          ))
+          ),
+          'created_at', OLD.created_at
         ),
         'update-last',
         preview_topic,

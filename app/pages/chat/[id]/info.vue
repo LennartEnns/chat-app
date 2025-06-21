@@ -344,7 +344,7 @@ type ChatroomMember = RequireNonNull<
   "role" | "user_id"
 >;
 
-const routeChatroomId = useRouteIdParam();
+const routeChatroomId = useRouteIdParam() as Ref<string>; // ID will always be given in this route
 const { isLight } = useSSRSafeTheme();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const supabase = useSupabaseClient();

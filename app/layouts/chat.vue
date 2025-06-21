@@ -31,7 +31,7 @@
 
 <script lang="ts" setup>
 import { useCachedChatroomsList } from "~/composables/useCachedChatroomsList";
-import type { CachedChatroomsAvatarUrlMap } from "~/types/chatroom";
+import type { CachedChatroomData, CachedChatroomsAvatarUrlMap } from "~/types/chatroom";
 import { logPostgrestError } from "~~/errors/postgrestErrors";
 
 const isMobile = useMobileDetector();
@@ -40,16 +40,19 @@ const { isLight } = useSSRSafeTheme();
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const cachedChatroomsAvatarUrlMap = useState<CachedChatroomsAvatarUrlMap | undefined>('chatroom-avatar-urls');
-  
+
+// Initiate realtime preview listeners, which can modify the chatrooms preview list state.
+// Tied to the lifecycle of any page that uses this layout.
+useRealtimeMessagePreviewListeners();
+
 //////////////////// Logic for Chatroom Preview Fetching ////////////////////////
 
 const previewQuery = supabase
   .from("chatrooms_preview")
   .select("*")
   .order("last_activity", { ascending: false });
-type ChatroomsPreviews = NonNullable<Awaited<typeof previewQuery>['data']>;
 
-async function fetchChatroomsFromDb(): Promise<ChatroomsPreviews> {
+async function fetchChatroomsFromDb(): Promise<CachedChatroomData[]> {
   console.log("Fetching chatrooms from DB...")
   const { data, error } = await previewQuery;
 
@@ -62,7 +65,7 @@ async function fetchChatroomsFromDb(): Promise<ChatroomsPreviews> {
     return [];
   }
 
-  return data;
+  return data as CachedChatroomData[];
 }
 
 const chatrooms = useCachedChatroomsList();
@@ -76,8 +79,9 @@ const {
   server: false,
 });
 // Write chatrooms to state after fetching from db
-watch(chatroomsListFetchingStatus, (status, oldStatus) => {
-  if (!!oldStatus && status === 'success') {
+watch(chatroomsListFetchingStatus, (status) => {
+  if (status === 'success') {
+    console.log("Caching fetched chatrooms")
     chatrooms.value = fetchedChatrooms.value;
   }
 }, {

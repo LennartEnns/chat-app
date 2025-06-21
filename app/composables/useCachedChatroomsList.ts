@@ -1,11 +1,10 @@
-import type { CachedChatroomsMap } from "~/types/chatroom";
-import type { Tables } from "~~/database.types";
+import type { CachedChatroomData, CachedChatroomsMap } from "~/types/chatroom";
 
 export const useCachedChatroomsList = () => {
   const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
 
   // Interface between chatrooms state (Map) and local list (Array)
-  const chatrooms = computed<Tables<'chatrooms_preview'>[] | undefined>({
+  const chatrooms = computed<CachedChatroomData[] | undefined>({
     get: () => {
       return cachedChatrooms.value ? chatroomsMapToArray(cachedChatrooms.value) : undefined;
     },
