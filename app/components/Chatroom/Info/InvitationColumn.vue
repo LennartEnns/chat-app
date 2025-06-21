@@ -34,6 +34,7 @@
         </div>
       </div>
       <UButton
+        v-if="props.user_role === 'admin'"
         icon="i-lucide-trash-2"
         class="size-fit"
         @click="deleteInvite(index, invitation.id)"
@@ -48,12 +49,13 @@ import {
   getPostgrestErrorMessage,
   logPostgrestError,
 } from "~~/errors/postgrestErrors";
-import rolesVis from '~/visualization/chatroomRoles';
+import rolesVis from "~/visualization/chatroomRoles";
 
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 
 const props = defineProps<{
+  user_role: string;
   invitations: ChatInvitation[];
   editBoolean: boolean;
   textTheme: string;
@@ -78,6 +80,7 @@ async function deleteInvite(index: number, id: string | null) {
       getPostgrestErrorMessage(error, "Could not delete chatroom invitation.")
     );
   } else {
+    keepInvites.value.filter((invitation) => invitation.id !== id);
     operationFeedbackHandler.displaySuccess("Deleted Chatroom Invitation.");
   }
 }

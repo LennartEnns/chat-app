@@ -272,6 +272,7 @@
           <template #body>
             <div class="flex flex-col items-center px-5">
               <ChatroomInfoInvitationColumn
+                :user_role="chatroom.current_user_role!"
                 :invitations="chatInvitations"
                 :edit-boolean="editMode"
                 :text-theme="themedSectionLabelClasses"
@@ -281,6 +282,7 @@
         </UDrawer>
         <div class="flex flex-col items-center px-5 lg:block md:hidden">
           <ChatroomInfoInvitationColumn
+            :user_role="chatroom.current_user_role!"
             :invitations="chatInvitations"
             :edit-boolean="editMode"
             :text-theme="themedSectionLabelClasses"
