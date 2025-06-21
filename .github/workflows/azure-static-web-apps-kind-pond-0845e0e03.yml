@@ -47,7 +47,8 @@ jobs:
           ###### End of Repository/Build Configurations ######
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           NUXT_BASE_URL: ${{ secrets.NUXT_BASE_URL }}
 
   close_pull_request_job:
