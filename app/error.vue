@@ -8,7 +8,7 @@
         ref="astroRef"
         class="overlayImage" 
         :style="{ display: error.statusCode === 404 ? 'block' : 'none' }"
-        src="assets/images/astronaut.png" 
+        src="assets/images/astronaut.webp"
         alt="Lost astronaut floating in space"
         role="img">
     </div>
@@ -34,9 +34,7 @@ import type { NuxtError } from '#app';
 import colors from 'tailwindcss/colors';
 
 const { isLight } = useSSRSafeTheme();
-const supabase = useSupabaseClient();
-const { data } = await supabase.auth.getSession();
-const authenticated = data.session?.user.role;
+const session = useSupabaseSession();
 const primaryColor = useCookie("uiPrimary").value;
 const toast = useToast();
 
@@ -55,7 +53,7 @@ const themedUserColor = computed(() =>
 const handleError = () => {
   // Clear possible toasts triggered by error handlers before this page has been mounted
   toast.clear();
-  if(authenticated == "authenticated"){
+  if(session.value) { // If user is logged in
     clearError({ redirect: '/chat'});
   } else clearError({ redirect: '/' });
 }
@@ -207,18 +205,5 @@ const primaryColorValue = computed(() => {
   background-color: #0c0c0c;
   overflow: hidden;
   background-attachment: initial;
-}
-
-.landing-background::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("~/assets/images/stars.png");
-  background-repeat: repeat;
-  background-size: cover;
-  opacity: 0.1;
-  z-index: 1;
-  mix-blend-mode: color-dodge;
-  pointer-events: none;
 }
 </style>
