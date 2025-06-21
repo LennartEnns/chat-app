@@ -142,7 +142,7 @@
               class="ring-0 glassContainer text-neutral-700 dark:text-white member relative"
             >
               <UButton
-                v-if="ChangeAllowed(member)"
+                v-if="editMode && chatroom.current_user_role === 'admin'"
                 icon="i-lucide-minus"
                 size="xs"
                 class="size-fit absolute right-1 top-1"
@@ -559,6 +559,12 @@ watch(
   }
 );
 
+const { data: chatroomMembers } = await useAsyncData(
+  "chatroomMembers",
+  async () => {
+    return await loadChatMembers();
+  }
+);
 async function loadChatMembers() {
   const { data, error } = await supabase
     .from("group_chatroom_members")
@@ -570,14 +576,32 @@ async function loadChatMembers() {
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown members fetching error")
     );
-    return;
+    return null;
   }
-  data.forEach((element) => {
-    chatMembers.value.push(element as ChatroomMember);
-  });
-  chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
+  return data;
 }
+watch(
+  chatroomMembers,
+  (data) => {
+    if (!data) {
+      return;
+    }
+    data.forEach((element) => {
+      chatMembers.value.push(element as ChatroomMember);
+    });
+    chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
+  },
+  {
+    immediate: true,
+  }
+);
 
+const { data: chatroomInvitations } = await useAsyncData(
+  "chatroomInvitations",
+  async () => {
+    return await loadChatInvitations();
+  }
+);
 async function loadChatInvitations() {
   const { data, error } = await supabase
     .from("group_invitations_preview")
@@ -589,12 +613,24 @@ async function loadChatInvitations() {
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown invitations fetching error")
     );
-    return;
+    return null;
   }
-  data.forEach((element) => {
-    chatInvitations.value.push(element);
-  });
+  return data;
 }
+watch(
+  chatroomInvitations,
+  (data) => {
+    if (!data) {
+      return;
+    }
+    data.forEach((element) => {
+      chatInvitations.value.push(element as ChatInvitation);
+    });
+  },
+  {
+    immediate: true,
+  }
+);
 
 async function onInviteUser() {
   inviteModal.open({
@@ -639,11 +675,6 @@ async function handleRoleChange(index: number) {
     operationFeedbackHandler.displaySuccess("Updated member role.");
   }
 }
-
-onMounted(() => {
-  loadChatMembers();
-  loadChatInvitations();
-});
 </script>
 
 <style>
