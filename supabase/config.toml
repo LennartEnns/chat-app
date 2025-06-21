@@ -166,13 +166,13 @@ otp_expiry = 300
 
 # Use a production-ready SMTP server
 [auth.email.smtp]
-enabled = true
-host = "smtp-relay.brevo.com"
-port = 587
-user = "9034b9001@smtp-brevo.com"
-pass = "q9zVHjnDMgZXad83"
-admin_email = "lennart.enns@gmail.com"
-sender_name = "YapSpace"
+# enabled = true
+# host = "smtp-relay.brevo.com"
+# port = 587
+# user = "..."
+# pass = "..."
+# admin_email = "..."
+# sender_name = "YapSpace"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]

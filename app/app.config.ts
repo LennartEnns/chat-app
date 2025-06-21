@@ -3,7 +3,10 @@ export default defineAppConfig({
   ui: {
     textarea:{
       slots: {
-        base: ['w-full rounded-md border-0 placeholder:text-dimmed focus:outline-none disabled:cursor-default disabled:opacity-75','transition-colors']
+        base: [
+          'w-full rounded-md border-0 placeholder:text-dimmed focus:outline-none disabled:cursor-default disabled:opacity-75',
+          'transition-colors'
+        ]
       }
     },
     button: {
