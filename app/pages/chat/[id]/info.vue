@@ -520,7 +520,7 @@ async function updateGroupName() {
   }
 }
 
-const { data: chatroomInfoData } = await useAsyncData(
+const { data: chatroomInfoData } = await useLazyAsyncData(
   "chatroomInfoData",
   async () => {
     return await loadChatInfo();
@@ -559,7 +559,7 @@ watch(
   }
 );
 
-const { data: chatroomMembers } = await useAsyncData(
+const { data: chatroomMembers } = await useLazyAsyncData(
   "chatroomMembers",
   async () => {
     return await loadChatMembers();
@@ -596,7 +596,7 @@ watch(
   }
 );
 
-const { data: chatroomInvitations } = await useAsyncData(
+const { data: chatroomInvitations } = await useLazyAsyncData(
   "chatroomInvitations",
   async () => {
     return await loadChatInvitations();
