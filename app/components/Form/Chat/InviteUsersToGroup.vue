@@ -60,6 +60,7 @@ watch(
 
     state.invitations = invs.map((inv) => ({
       invitee_id: inv.user_id,
+      invitee_username: inv.username,
       as_role: inv.asRole,
       isInvalid: inv.alreadyInGroup || inv.alreadyInvited,
     })) as Schema["invitations"];

@@ -2,7 +2,7 @@
   <div class="min-h-dvh h-full flex justify-center">
     <div class="w-full max-w-[120rem] flex flex-col pb-[2vh]">
       <div
-        :class="`flex flex-row items-center mx-2 md:mx-4 lg:mx-6  pb-[1vh]
+        :class="`flex flex-row items-center mx-2 md:mx-4 lg:mx-6 pb-[1vh]
             ${isMobile ? 'justify-between py-1' : ''}`"
       >
         <UButton

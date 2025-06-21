@@ -1,9 +1,3 @@
-TODO:
-- useLazyAsyncData
-- Die ganze Member Card soll clickbar sein, nicht nur der Name
-- Invitations wenn möglich als v-model an InvitationColumn übergeben
-- Invitations in Column dynamisch löschen und hinzufügen
-
 <template>
   <UApp>
     <NuxtLayout name="logged-in" :class="`${isLight ? 'base' : false}`">
@@ -138,11 +132,14 @@ TODO:
               class="flex size-fit absolute top-0 right-5 mt-3 md:mt-0"
               size="md"
               icon="i-lucide-user-plus"
-              @click="onInviteUser"
+              @click="onInviteUsers"
             />
           </div>
-          <UInput icon="i-lucide-search" class="mt-2" placeholder="Search..." v-model="memberSearchTerm" />
-          <div class="flex flex-wrap justify-center gap-3 p-5 max-h-80 md:max-h-[70dvh] overflow-y-auto">
+          <UInput v-model="memberSearchTerm" icon="i-lucide-search" class="mt-2" placeholder="Search..." />
+          <div v-if="chatMembersPending" class="flex flex-wrap justify-center gap-3 p-5 max-h-80 md:max-h-[70dvh] overflow-y-auto">
+            <USkeleton v-for="i in 3" :key="i" class="w-52 h-24" />
+          </div>
+          <div v-else class="flex flex-wrap justify-center gap-3 p-5 max-h-80 md:max-h-[70dvh] overflow-y-auto">
             <div
               v-for="(member, index) in membersFiltered"
               :key="index"
@@ -285,20 +282,22 @@ TODO:
           <template #body>
             <div class="flex flex-col items-center px-5">
               <ChatroomInfoInvitationColumn
-                :invitations="chatInvitations"
+                v-model="chatInvitations"
+                :pending="invitationsPending"
                 :edit-boolean="editMode"
                 :text-theme="themedSectionLabelClasses"
               />
             </div>
           </template>
         </UDrawer>
-        <div v-if="!mdOrAbove" class="flex flex-col items-center px-5">          
+        <div v-else class="flex flex-col items-center px-5">          
           <ChatroomInfoInvitationColumn
-            :invitations="chatInvitations"
+            v-model=chatInvitations
+            :pending="invitationsPending"
             :edit-boolean="editMode"
             :text-theme="themedSectionLabelClasses"
           />
-          <div class="p-10">
+          <div v-if="!mdOrAbove" class="p-10">
             <UButton
               v-if="!editMode"
               class="flex size-fit"
@@ -339,11 +338,8 @@ import type {
 } from "~/types/tsUtils/helperTypes";
 import chatroomRolesVis from "~/visualization/chatroomRoles";
 import { ModalChatroomDelete, ModalChatroomLeave } from "#components";
+import type { ChatInvitation } from "~/types/chatroomInfo";
 
-type ChatInvitation = Pick<
-  Tables<"group_invitations_preview">,
-  "id" | "invitee_id" | "as_role" | "invitee_username"
->;
 type CRViewNonNullable = RequireNonNull<
   Tables<"group_chatrooms_last_activity_current_role">,
   "chatroom_id" | "name"
@@ -369,9 +365,8 @@ const inviteModal = overlay.create(InviteToGroup);
 const rolesHelpModal = overlay.create(RolesInfo);
 
 const drawerOpen = ref(false);
-const chatMembers = ref<ChatroomMember[]>([]);
 const memberSearchTerm = ref("");
-const membersFiltered = computed(() => chatMembers.value.filter((mem) => mem.name.toLowerCase().includes(memberSearchTerm.value.toLowerCase())));
+const membersFiltered = computed(() => chatMembers.value?.filter((mem) => mem.name.toLowerCase().includes(memberSearchTerm.value.toLowerCase())));
 
 const userData = useUserData();
 
@@ -450,7 +445,7 @@ const newName = ref<string>();
 const avatarPath = `${routeChatroomId.value}.jpg`;
 
 const leaveModal = overlay.create(ModalChatroomLeave);
-const DeleteModal = overlay.create(ModalChatroomDelete);
+const deleteModal = overlay.create(ModalChatroomDelete);
 
 const chatroom = ref<Chatroom>({
   chatroom_id: routeChatroomId.value,
@@ -462,15 +457,12 @@ const chatroom = ref<Chatroom>({
 });
 
 function memberChangeAllowed(member: ChatroomMember) {
-  if (
+  return (
     editMode.value &&
     member.role !== "admin" &&
     member.role !== chatroom.value.current_user_role &&
-    userData.username !== member.username
-  ) {
-    return true;
-  }
-  return false;
+    userData.id !== member.user_id
+  );
 }
 
 async function handleDeleteLeave() {
@@ -491,7 +483,7 @@ async function onLeaveChatroom() {
 }
 
 async function onDeleteChatroom() {
-  const instance = DeleteModal.open({
+  const instance = deleteModal.open({
     chatroomId: routeChatroomId.value,
   });
   const success = await instance.result;
@@ -540,12 +532,6 @@ async function updateGroupName() {
   }
 }
 
-const { data: chatroomInfoData } = await useAsyncData(
-  "chatroomInfoData",
-  async () => {
-    return await loadChatInfo();
-  }
-);
 async function loadChatInfo() {
   const { data, error } = await supabase
     .from("group_chatrooms_last_activity_current_role")
@@ -562,6 +548,7 @@ async function loadChatInfo() {
   }
   return data;
 }
+const { data: chatroomInfoData } = await useLazyAsyncData('chatroomInfoData', loadChatInfo);
 watch(
   chatroomInfoData,
   (data) => {
@@ -580,6 +567,7 @@ watch(
 );
 
 async function loadChatMembers() {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   const { data, error } = await supabase
     .from("group_chatroom_members")
     .select("*")
@@ -590,48 +578,55 @@ async function loadChatMembers() {
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown members fetching error")
     );
-    return;
+    return [];
   }
-  data.forEach((element) => {
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-    chatMembers.value.push(element as ChatroomMember);
-  });
-  chatMembers.value.sort((a, b) => a.role!.localeCompare(b.role!));
+  // Sort descending by role precedence
+  return data.toSorted((a, b) =>
+    chatroomRolesVis[b.role!].precedence - chatroomRolesVis[a.role!].precedence) as ChatroomMember[];
 }
+const { data: chatMembers, pending: chatMembersPending } = useLazyAsyncData('chatroomInfoMembers', loadChatMembers);
 
 async function loadChatInvitations() {
   const { data, error } = await supabase
     .from("group_invitations_preview")
     .select("id, invitee_id, as_role, invitee_username")
-    .eq("chatroom_id", chatroom.value.chatroom_id!);
+    .eq("chatroom_id", chatroom.value.chatroom_id);
 
   if (error) {
     logPostgrestError(error, "invitations fetching");
     operationFeedbackHandler.displayError(
       getPostgrestErrorMessage(error, "Unknown invitations fetching error")
     );
-    return;
+    return [];
   }
-  data.forEach((element) => {
-    chatInvitations.value.push(element);
-  });
+  return data as ChatInvitation[];
 }
+const { data: fetchedInvitations, pending: invitationsPending } = useLazyAsyncData('chatroomInfoInvitations', loadChatInvitations);
+watch(fetchedInvitations, (fetched) => {
+  if (!fetched) return;
+  chatInvitations.value = fetched;
+}, {
+  immediate: true,
+});
 
-async function onInviteUser() {
-  inviteModal.open({
+async function onInviteUsers() {
+  const instance = inviteModal.open({
     presetGroup: {
       chatroom_id: chatroom.value.chatroom_id!,
       name: chatroom.value.name,
       current_user_role: chatroom.value.current_user_role,
     },
   });
+  const result = await instance.result;
+  for (const inv of result) {
+    if (inv.chatroom_id !== routeChatroomId.value) return; // Only add if it is for the current chatroom
+    chatInvitations.value.push({
+      id: inv.id!,
+      invitee_id: inv.invitee_id,
+      invitee_username: inv.invitee_username,
+      as_role: inv.as_role,
+    });
+  }
 }
 
 async function onMemberClick(member: ChatroomMember) {
@@ -639,12 +634,12 @@ async function onMemberClick(member: ChatroomMember) {
 }
 
 async function removeMember(user_id: string) {
-  const index = chatMembers.value.findIndex((mem) => mem.user_id = user_id);
-  if (index < 0) {
+  const index = chatMembers.value?.findIndex((mem) => mem.user_id = user_id);
+  if (!index || index < 0) {
     operationFeedbackHandler.displayError("Could not remove user from chatroom.");
     return;
   }
-  chatMembers.value = chatMembers.value.toSpliced(index, 1);
+  chatMembers.value = chatMembers.value!.toSpliced(index, 1);
   const { error } = await supabase
     .from("user_to_group")
     .delete()
@@ -675,11 +670,6 @@ async function handleRoleChange(member: ChatroomMember) {
     operationFeedbackHandler.displaySuccess("Updated member role.");
   }
 }
-
-onMounted(() => {
-  loadChatMembers();
-  loadChatInvitations();
-});
 </script>
 
 <style>

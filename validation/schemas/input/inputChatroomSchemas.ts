@@ -20,7 +20,7 @@ export const createGroupChatroomSchema = z.object({
 
 export const inviteUsersToGroupSchema = z.object({
   group: z.custom<SelectedGroup>((val) => !!val, 'You must specify a group'),
-  invitations: z.array(z.custom<GroupInvitation>())
+  invitations: z.array(z.custom<GroupInvitation & { invitee_username: string }>())
     .refine((arr) => arr.length > 0, 'Create at least 1 invitation')
     .refine((arr) => !arr.find((inv) => inv.isInvalid), 'You have invalid invitations'),
 });
