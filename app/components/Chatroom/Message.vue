@@ -89,7 +89,9 @@
     <div
       v-else
       class="grid items-start"
-      :style="{ gridTemplateColumns: '40px 1fr' }"
+      :style="{
+        gridTemplateColumns: showUserInfo ? '40px 1fr' : '',
+      }"
     >
       <div class="flex justify-center">
         <UButton
@@ -119,7 +121,7 @@
     <div
       v-if="showHmTime"
       :class="`text-xs text-muted px-2 ${
-        message.is_own ? 'self-end' : 'self-start ml-9'
+        message.is_own ? 'self-end' : `self-start ${showUserInfo ? 'ml-9' : ''}`
       }`"
     >
       {{ displayedTime }}

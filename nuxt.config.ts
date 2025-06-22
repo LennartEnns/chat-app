@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      baseUrl: process.env.BASE_URL ?? process.env.NUXT_PUBLIC_BASE_URL,
+      baseUrl: 'https://yapspace-chat.vercel.app',
     },
   },
 

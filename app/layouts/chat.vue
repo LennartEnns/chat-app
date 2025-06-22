@@ -69,6 +69,7 @@ async function fetchChatroomsFromDb(): Promise<CachedChatroomData[]> {
 }
 
 const chatrooms = useCachedChatroomsList();
+
 const {
   data: fetchedChatrooms,
   status: chatroomsListFetchingStatus,
@@ -79,8 +80,8 @@ const {
   server: false,
 });
 // Write chatrooms to state after fetching from db
-watch(chatroomsListFetchingStatus, (status) => {
-  if (status === 'success') {
+watch(chatroomsListFetchingStatus, (status, statusOld) => {
+  if (!!statusOld && status === 'success') {
     console.log("Caching fetched chatrooms")
     chatrooms.value = fetchedChatrooms.value;
   }

@@ -48,8 +48,10 @@ import { getAuthErrorMessage, logAuthError } from "../../../../errors/authErrors
 import PasswordToggleInput from "../../Input/PasswordToggleInput.vue";
 import ForgotPassword from "~/components/Modal/ForgotPassword.vue";
 import { FunctionsHttpError } from "@supabase/supabase-js";
+import type { CachedChatroomsMap } from "~/types/chatroom";
 
 const lastChatroomState = useState<string | undefined>('lastOpenedChatroomId');
+const cachedChatrooms = useState<CachedChatroomsMap | undefined>('chatrooms');
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();
 const { requestPasswordReset } = useFlowActions();
@@ -70,6 +72,8 @@ const successRedirectPath = "/chat";
 function onLoginSuccess() {
   // Clear last chatroom id to avoid navigating to an invalid chatroom
   lastChatroomState.value = undefined;
+  // Clear cached chatrooms for the same reason
+  cachedChatrooms.value = undefined;
   navigateTo(successRedirectPath);
 }
 
