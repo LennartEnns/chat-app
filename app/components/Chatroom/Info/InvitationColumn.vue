@@ -10,20 +10,21 @@
         class="ring-0 glassContainer text-neutral-700 dark:text-white member invitation mb-2"
       >
         <UAvatar
-          class="justify-self-center"
+          class="justify-self-center cursor-pointer"
           icon="i-lucide-user"
           :src="
             (invitation.invitee_id && getAvatarUrl(invitation.invitee_id)) ||
             undefined
           "
+          @click="navigateTo(`/profile/${invitation.invitee_username}`)"
         />
         <div
           class="flex flex-col items-center justify-center truncate px-[0.6rem]"
         >
           <div class="flex flex-row items-center w-full">
-            <div class="truncate text-center font-bold">
+            <ULink :to="`/profile/${invitation.invitee_username}`" class="truncate text-center font-bold">
               {{ invitation.invitee_username }}
-            </div>
+            </ULink>
             <UBadge
               :color="rolesVis[invitation.as_role!].color"
               class="ml-4 font-bold rounded-full"
