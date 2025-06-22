@@ -17,7 +17,6 @@ export interface GroupChatroomData {
     users: UserData[];
 }
 
-
 export type CachedChatroomData = RequireNonNull<Tables<'chatrooms_preview'>, 'id' | 'last_activity' | 'last_inside' | 'number_new_messages'>;
 export type CachedChatroomsMap = Record<NonNullable<Tables<'chatrooms_preview'>['id']>, Omit<CachedChatroomData, 'id'> | undefined>
 export type CachedChatroomsAvatarUrlMap = Record<keyof CachedChatroomsMap, string | undefined>

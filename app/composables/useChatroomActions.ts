@@ -69,9 +69,9 @@ export const useChatroomActions = () => {
         name: singleCrData.name,
         type: 'direct',
         other_user_id: chatroomData.otherUserId,
-        avatarUrl: getAvatarUrl(chatroomData.otherUserId),
         current_user_role: null,
         last_activity: new Date().toISOString(),
+        last_inside: new Date().toISOString(),
         last_message: null,
         number_new_messages: 0,
       } as CachedChatroomData;
@@ -105,9 +105,9 @@ export const useChatroomActions = () => {
         name: chatroomData.name,
         type: 'group',
         other_user_id: null,
-        avatarUrl: undefined, // Avatar URL will be set later, but definitely not on creation
         current_user_role: null,
         last_activity: new Date().toISOString(),
+        last_inside: new Date().toISOString(),
         last_message: null,
         number_new_messages: 0,
       };
@@ -158,9 +158,9 @@ export const useChatroomActions = () => {
         name: invitation.group_name!,
         type: 'group',
         other_user_id: null,
-        avatarUrl: await getCachedSignedImageUrl('chatroom_avatars', getGroupAvatarPath(invitation.chatroom_id)),
         current_user_role: invitation.as_role,
         last_activity: new Date().toISOString(),
+        last_inside: new Date().toISOString(),
         last_message: singleCrData.last_message,
         number_new_messages: 0,
       };
