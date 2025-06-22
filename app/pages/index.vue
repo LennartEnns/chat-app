@@ -5,8 +5,8 @@
       :options="particleOptions"
       @load="onParticlesLoad"
     />
-    <LandingPageHeader z-index="1" />
-    <LandingPageBody class="flex-grow" z-index="1" />
+    <LandingPageHeader z-index="1" :logged-in="loggedIn" />
+    <LandingPageBody class="flex-grow" z-index="1" :logged-in="loggedIn" />
     <LandingPageFooter z-index="1" @open-faq="slideoverOpen = true" />
     <FaqSlideover v-model="slideoverOpen" />
   </div>
@@ -20,6 +20,8 @@ import type {
 } from "@tsparticles/engine";
 import type { Reactive } from "vue";
 
+const session = useSupabaseSession();
+const loggedIn = computed(() => (!!session.value));
 const { isLight } = useSSRSafeTheme();
 const slideoverOpen = ref(false);
 

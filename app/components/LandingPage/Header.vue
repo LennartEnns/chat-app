@@ -16,7 +16,7 @@
 
       <div class="w-full" />
 
-      <div class="flex gap-2 flex-shrink-0">
+      <div v-if="!loggedIn" class="flex gap-2 flex-shrink-0">
         <UButton :class="`${registerButtonColor}`" label="Register" color="neutral" variant="ghost" size="xl" @click="navigateTo('/register')" />
         <UButton :class="`${loginButtonColor}`" label="Login" color="primary" variant="ghost" size="xl" @click="navigateTo('/login')" />
       </div>
@@ -27,6 +27,10 @@
 <script setup lang="ts">
 import logo_lightened from '@/assets/images/logo.webp'
 import logo_darkened from '@/assets/images/logo_dark.webp'
+
+defineProps<{
+  loggedIn: boolean,
+}>();
 
 const { isLight } = useSSRSafeTheme();
 

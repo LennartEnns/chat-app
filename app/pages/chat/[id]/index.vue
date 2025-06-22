@@ -390,6 +390,8 @@ async function onLeaveChatroom() {
   });
   const success = await instance.result;
   if (!success) return;
+  // Clear last opened chatroom as this is invalid now
+  lastChatroomState.value = undefined;
   navigateTo("/chat");
 }
 

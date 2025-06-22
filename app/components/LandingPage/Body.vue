@@ -1,11 +1,36 @@
 <template>
   <main class="body-section">
     <div class="main-content">
-      <h1 :class="`headline ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">The modern<br>Chat App</h1>
-      <p :class="`subtext ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
+      <h1 :class="`headline ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
+        <div v-if="!loggedIn">
+          The modern<br>Chat App
+        </div>
+        <div v-else class="space-y-3 font-normal">
+          <div v-if="!isFalsy(userData.username)">
+            Hello <span class="font-bold">{{ userData.username }}</span>
+          </div>
+          <div v-if="!isMobile">
+            Welcome Back to <span :class="`${themedPrimary} font-bold`">YapSpace!</span>
+          </div>
+          <div v-else>
+            Welcome Back!
+          </div>
+          <UButton
+            variant="ghost"
+            class="mt-2 md:mt-4 text-4xl space-x-2"
+            @click="navigateTo(chatUrl)"
+          >
+            <UIcon name="i-lucide-messages-square" />
+            <div>Open Chats</div>
+            <UIcon name="i-lucide-arrow-right" />
+          </UButton>
+        </div>
+      </h1>
+      <p v-if="!loggedIn" :class="`subtext ${isLight ? 'text-neutral-800' : 'text-neutral-50'}`">
         Connect to the world! <br> We do not steal your data like the big social media companies.
       </p>
       <UNavigationMenu
+        v-if="!loggedIn"
         :items="navigationItems"
         class="justify-center"
         :ui="{
@@ -20,7 +45,15 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+const userData = useUserData();
+
+defineProps<{
+  loggedIn: boolean,
+}>();
+
 const { isLight } = useSSRSafeTheme();
+const isMobile = useMobileDetector();
+const themedPrimary = computed(() => isLight.value ? 'text-primary-600' : 'text-primary');
 
 const navigationItems = ref<NavigationMenuItem[]>([
   { label: 'Chat', icon: 'i-lucide-messages-square', to: '/chat' },
@@ -28,6 +61,10 @@ const navigationItems = ref<NavigationMenuItem[]>([
   { label: 'Instagram', icon: 'i-simple-icons-instagram', to: 'https://www.youtube.com/watch?v=xvFZjo5PgG0', target: '_blank'}
 ]);
 const navItemColor = computed(() => isLight.value ? 'text-neutral-800' : 'text-neutral-300');
+
+// These will only be used in case the user is logged in
+const lastChatroomState = useState<string | undefined>("lastOpenedChatroomId");
+const chatUrl = computed(() => lastChatroomState.value ? `/chat/${lastChatroomState.value}` : '/chat');
 </script>
 
 <style scoped>

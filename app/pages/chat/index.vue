@@ -113,12 +113,13 @@ onMounted(() => {
       for (const element of data) {
         const users = await getOtherUsers(element);
         const name_and_count = await getChatroomNameAndNewMessages(element.chatroom_id);
+        if (!name_and_count) continue;
         const avatarUrl = await getAvatarUrl(element.chatroom_id, "group");
         groupChatrooms.value.push({
           chatroom_id: element.chatroom_id,
-          name: name_and_count?.name!,
+          name: name_and_count.name,
           avatar_url: avatarUrl?.avatarUrl,
-          new_messages: name_and_count?.new_messages!,
+          new_messages: name_and_count.new_messages,
           users: users
         });
       }

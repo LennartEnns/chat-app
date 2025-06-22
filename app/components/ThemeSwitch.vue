@@ -5,6 +5,9 @@
     unchecked-icon="i-lucide-moon"
     checked-icon="i-lucide-sun"
     size="lg"
+    :ui="{
+      base: 'data-[state=checked]:bg-primary-400'
+    }"
   />
 </template>
 
