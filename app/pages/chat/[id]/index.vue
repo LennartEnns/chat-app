@@ -70,6 +70,7 @@
           :show-own-msg-popover="!scrolling"
           @open-full-image="handleOpenFullImage"
           @delete="onDeleteMessage(message.id, index)"
+          @delete-message-and-media="handleDeleteMessageAndMedia"
           @update="onUpdateMessage(message.id, index, $event)"
           @imageLoaded="handleImageLoadedScroll"
         />
@@ -113,14 +114,6 @@
               @change="handleImageSelect"
               class="hidden"
             />
-            
-            <input
-              ref="audioInput"
-              type="file"
-              accept="audio/*"
-              @change="handleAudioSelect"
-              class="hidden"
-            />
 
             <!-- Popover with Media Buttons -->
             <UPopover
@@ -143,18 +136,6 @@
                       :disabled="uploading"
                     />
                     <span class="text-xs text-muted-foreground">Bild</span>
-                  </div>
-                  
-                  <!-- Audio Button -->
-                  <div class="flex flex-col items-center gap-1">
-                    <UButton 
-                      icon="i-lucide-headphones" 
-                      variant="ghost" 
-                      class="text-muted"
-                      @click="openAudioUpload"
-                      :disabled="uploading"
-                    />
-                    <span class="text-xs text-muted-foreground">Audio</span>
                   </div>
                 </div>
               </template>
@@ -405,15 +386,12 @@ async function onHeaderClick() {
 //////////////////////// <Logic for Multimedia /> ////////////////////////
 
   const imageInput = ref<HTMLInputElement>()
-  const audioInput = ref<HTMLInputElement>()
   const isPopoverOpen = ref(false)
 
   const selectedImage = ref<File | null>(null)
   const imagePreviewUrl = ref('')
   const imageCaption = ref('')
   const showImagePreview = ref(false)
-
-  const selectedAudio = ref<File | null>(null)
 
   const uploading = ref(false)
   const openImageUpload = () => {
@@ -462,8 +440,6 @@ async function onHeaderClick() {
       if (uploadError) throw uploadError
 
       const newId = crypto.randomUUID();
-
-      const imageUrl = useCachedSignedImageUrl("messages_media", filePath, true);
       
       const { data: message, error: messageError } = await supabase
       .from('messages')
@@ -488,7 +464,7 @@ async function onHeaderClick() {
             message_id: message.id,
             media_id: mediaId,
             type: 'image',
-            file_path: imageUrl.value!
+            file_path: filePath
           })
       
       if (mediaError) throw mediaError
@@ -504,7 +480,7 @@ async function onHeaderClick() {
         media: [{
           id: mediaId,
           type: "image" as const,
-          url: imageUrl.value!,
+          url: filePath,
         }]
       };
       pendingImageScrollMessageId.value = newMessage.id;
@@ -524,11 +500,39 @@ async function onHeaderClick() {
     }
   }
 
-  const handleOpenFullImage = (imageUrl: string) => { // Parameter hier 'imageUrl' genannt, wie vom Event gesendet
-  console.log("Parent Component: Received openFullImage event with URL:", imageUrl); // DIESER LOG IST WICHTIG!
+  const handleOpenFullImage = (imageUrl: string) => {
   currentModalImageUrl.value = imageUrl;
   showImageModal.value = true;
-  console.log("Parent Component: showImageModal:", showImageModal.value, "currentModalImageUrl:", currentModalImageUrl.value);
+};
+
+const handleDeleteMessageAndMedia = async (messageId: string, storageFilePath: string | null) => {
+  try {
+    if (storageFilePath) {
+      const { error: storageError } = await supabase.storage
+        .from('messages_media')
+        .remove([storageFilePath]);
+      if (storageError) {
+        console.warn("Warnung beim Löschen aus Storage:", storageError.message);
+      }
+    }
+
+    const { error: messageError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId);
+
+    if (messageError) throw messageError;
+
+    if (messages.value) {
+      const indexToDelete = messages.value.findIndex(msg => msg.id === messageId);
+      if (indexToDelete !== -1) {
+        messages.value.splice(indexToDelete, 1);
+      }
+    }
+    console.log(`Nachricht mit ID ${messageId} und zugehörige Medien erfolgreich gelöscht.`);
+  } catch (error) {
+    console.error("Fehler beim Löschen der Nachricht und Medien:", error);
+  }
 };
 
 
@@ -554,86 +558,6 @@ async function onHeaderClick() {
     }
   }
 
-  // Audio Upload
-  const openAudioUpload = () => {
-    isPopoverOpen.value = false
-    audioInput.value?.click()
-  }
-
-  const handleAudioSelect = async (event: Event) => {
-    const target = event.target as HTMLInputElement
-    const file = target.files?.[0]
-    
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        return
-      }
-      
-      if (!file.type.startsWith('audio/')) {
-        return
-      }
-      
-      selectedAudio.value = file
-      await sendAudio()
-    }
-  }
-
-  const sendAudio = async () => {
-    if (!selectedAudio.value || !user.value) return
-    
-    uploading.value = true
-    
-    try {
-      const mediaId = crypto.randomUUID()
-      const fileExtension = '.mp3'
-      const filePath = `${user.value.id}/audio/${mediaId}${fileExtension}`
-      
-      const { error: uploadError } = await supabase.storage
-        .from('messages_media')
-        .upload(filePath, selectedAudio.value, {
-          cacheControl: '3600',
-          upsert: false
-        })
-      
-      if (uploadError) throw uploadError
-      
-      // Erstelle Message-Eintrag
-      const { data: message, error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          chatroom_id: routeChatroomId.value,
-          user_id: user.value.id,
-          content: ''
-        })
-        .select()
-        .single()
-      
-      if (messageError) throw messageError
-      
-      // Erstelle messages_to_media Eintrag
-      const { error } = await supabase
-        .from('messages_to_media')
-        .insert({
-          message_id: message.id,
-          media_id: mediaId,
-          type: 'audio'
-        })
-      
-      if (error) throw error
-      
-      selectedAudio.value = null
-      
-      if (audioInput.value) {
-        audioInput.value.value = ''
-      }
-    } catch (error) {
-      console.error('Error sending audio:', error)
-    } finally {
-      uploading.value = false
-    }
-  }
-
-  // Helper function to convert images to JPG
   const convertImageToJpg = (file: File): Promise<File> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas')
@@ -716,7 +640,7 @@ async function onSendMessage() {
   if (!isFalsy(msgTrimmed)) {
     await sendMessage(msgTrimmed);
     newMessage.value = "";
-    //scrollToBottom();
+    scrollToBottom();
   }
 }
 async function onDeleteMessage(id: string | null, index: number) {
@@ -776,26 +700,17 @@ onMounted(() => {
   messagesContainer.value?.addEventListener("scroll", onContainerScroll);
   window.addEventListener("keydown", handleKeyDown);
 
-  // Initialize IntersectionObserver
   if (scrollTarget.value) {
     intersectionObserver = new IntersectionObserver((entries) => {
       const targetEntry = entries[0];
-      // If the scrollTarget is visible (meaning we are at or near the bottom)
-      // or if it's new and just entered the viewport, scroll to it.
       if (targetEntry!.isIntersecting && !isAtBottom.value) {
-        // This means the user wasn't at the bottom, but a new message appeared
-        // at the bottom, so we should scroll.
         scrollToBottom();
       } else if (targetEntry!.boundingClientRect.top <= messagesContainer.value!.clientHeight) {
-         // This condition handles initial load or if the target is within the viewport.
-         // Ensure it only triggers if we are close to the bottom.
-         // A more reliable way is to just scroll when a new message is added AND the user IS at the bottom.
-         // The `watch(messages)` above handles this.
       }
     }, {
-      root: messagesContainer.value, // Observe within the messages container
+      root: messagesContainer.value,
       rootMargin: '0px',
-      threshold: 0.1 // When 10% of the target is visible
+      threshold: 0.1
     });
     intersectionObserver.observe(scrollTarget.value);
   }

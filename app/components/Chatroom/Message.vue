@@ -16,18 +16,105 @@
   <div :class="`max-w-[90%] mt-2.5 flex flex-col gap-1 ${messagePosition}`">
 
     <template v-if="message.message_type === 'image'">
-      <div :class="`flex flex-col gap-2 rounded-sm ${themedMessageColor} ${speechBubbleLook} p-0.5 self-start ml-10`">
-        <template v-if="imageUrl">
-          <img
-          v-if="message.media && message.media[0] && message.media[0].url && message.media[0].url"
-          :src="imageUrl.value"
-          :alt="message.content || 'Uploaded image'"
-          class="chat-image object-contain cursor-pointer"
-          @click="handleImageClick"
-          @load="emit('imageLoaded')" @error="handleImageError"
-        />
-        <p v-if="message.content" class="text-sm">{{ message.content }}</p>
-        </template>
+      <div class="flex flex-row gap-1 w-full justify-start">
+        <UPopover
+          v-if="message.is_own && showOwnMsgPopover && !editingMessage"
+          v-model:open="popoverOpen"
+          mode="hover"
+          arrow
+          :content="{
+            align: 'center',
+            side: 'right',
+          }"
+          :ui="{
+            content: 'rounded-xl',
+          }"
+        >
+          <div 
+            :class="`flex flex-col gap-2 rounded-sm ${themedMessageColor} ${speechBubbleLook} p-0.5 ml-10`"
+            @touchstart.passive="popoverOpen = true"
+          >
+            <template v-if="imageUrl">
+              <!-- Loading placeholder -->
+              <div 
+                v-if="imageLoading" 
+                class="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-32 w-48 flex items-center justify-center"
+              >
+                <div class="text-gray-400 text-sm">Loading...</div>
+              </div>
+              <img
+                v-else-if="message.media && message.media[0] && message.media[0].url && message.media[0].url && !imageError"
+                :src="imageUrl.value"
+                :alt="message.content || 'Uploaded image'"
+                class="chat-image object-contain cursor-pointer"
+                @click="handleImageClick"
+                @load="handleImageLoad" 
+                @error="handleImageError"
+              />
+              <!-- Error placeholder -->
+              <div 
+                v-else-if="imageError" 
+                class="bg-red-100 dark:bg-red-900 rounded h-32 w-48 flex items-center justify-center text-red-600 dark:text-red-300"
+              >
+                <div class="text-center">
+                  <div class="text-sm">Failed to load image</div>
+                </div>
+              </div>
+              <p v-if="message.content" class="text-sm">{{ message.content }}</p>
+            </template>
+          </div>
+          <template #content>
+            <div class="p-1 flex flex-row">
+              <UButton
+                icon="i-lucide-trash-2"
+                variant="ghost"
+                color="error"
+                @click="handleDeleteClick"
+              />
+              <UButton
+                icon="i-lucide-edit"
+                variant="ghost"
+                color="primary"
+                @click="onEditMessage"
+              />
+            </div>
+          </template>
+        </UPopover>
+
+        <!-- Fallback -->
+        <div 
+          v-else
+          :class="`flex flex-col gap-2 rounded-sm ${themedMessageColor} ${speechBubbleLook} p-0.5 ${message.is_own ? '' : 'ml-10'}`"
+        >
+          <template v-if="imageUrl">
+            <!-- Loading placeholder -->
+            <div 
+              v-if="imageLoading" 
+              class="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-32 w-48 flex items-center justify-center"
+            >
+              <div class="text-gray-400 text-sm">Loading...</div>
+            </div>
+            <img
+              v-else-if="message.media && message.media[0] && message.media[0].url && message.media[0].url && !imageError"
+              :src="imageUrl.value"
+              :alt="message.content || 'Uploaded image'"
+              class="chat-image object-contain cursor-pointer"
+              @click="handleImageClick"
+              @load="handleImageLoad" 
+              @error="handleImageError"
+            />
+            <!-- Error placeholder -->
+            <div 
+              v-else-if="imageError" 
+              class="bg-red-100 dark:bg-red-900 rounded h-32 w-48 flex items-center justify-center text-red-600 dark:text-red-300"
+            >
+              <div class="text-center">
+                <div class="text-sm">Failed to load image</div>
+              </div>
+            </div>
+            <p v-if="message.content" class="text-sm">{{ message.content }}</p>
+          </template>
+        </div>
       </div>
     </template>
 
@@ -57,7 +144,7 @@
                 icon="i-lucide-trash-2"
                 variant="ghost"
                 color="error"
-                @click="emit('delete')"
+                @click="handleDeleteClick"
               />
               <UButton
                 icon="i-lucide-edit"
@@ -145,7 +232,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Message, MediaItem } from "~/types/messages/messageLoading";
+import type { Message} from "~/types/messages/messageLoading";
 import { useCachedSignedImageUrl } from '~/composables/useCachedSignedImageUrl';
 
 const dateMarker = ref<HTMLElement | null>(null);
@@ -162,7 +249,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  delete: [];
+  deleteMessageAndMedia: [messageId: string, storageFilePath: string | null];
   update: [value: string];
   imageLoaded: [];
   openFullImage: [string];
@@ -176,7 +263,6 @@ const editMsgButtonArea = ref<HTMLElement | null>(null);
 const popoverOpen = ref(false);
 const editingMessage = ref(false);
 const newMessage = ref("");
-const showImageModal = ref(false);
 const newMessageSanitized = computed(() => newMessage.value.trim());
 const messageContentChanged = computed(
   () => newMessageSanitized.value !== props.message.content
@@ -193,12 +279,43 @@ const contentLinkified = useLinkifiedText(
   computed(() => props.message.content)
 );
 
+const handleDeleteClick = () => {
+  const messageId = props.message.id;
+  const storageFilePath = props.message.media && props.message.media[0]?.url
+                          ? props.message.media[0].url
+                          : null;
+
+  emit('deleteMessageAndMedia', messageId!, storageFilePath);
+
+  setTimeout(() => {
+    window.location.reload();
+  }, 200);
+};
+
+
 // Make message bigger if it's just a single emoji
 const singleEmojiRegex = /^[\p{Extended_Pictographic}\u200D]+$/u;
 const msgSize = computed(() =>
   singleEmojiRegex.test(props.message.content) ? "text-4xl" : ""
 );
 
+
+// const imageUrl = computed(() => {
+//   imageError.value = false;
+
+//   if (props.message.message_type === 'image' && props.message.media && props.message.media.length > 0) {
+//     const mediaItem = props.message.media[0];
+//     if (mediaItem && mediaItem.url && mediaItem.url) {
+//       const filePath = useCachedSignedImageUrl("messages_media", mediaItem?.url, true);
+//       console.log(filePath);
+//       return filePath;
+//     }
+//   }
+//   return undefined; 
+// });
+
+
+const imageLoading = ref(true);
 
 const imageUrl = computed(() => {
   imageError.value = false;
@@ -213,6 +330,30 @@ const imageUrl = computed(() => {
   }
   return undefined; 
 });
+
+// Watch the imageUrl separately to handle loading state
+watch(imageUrl, (newImageUrl) => {
+  if (newImageUrl?.value) {
+    imageLoading.value = false;
+  } else if (props.message.message_type === 'image') {
+    imageLoading.value = true;
+  }
+}, { immediate: true, deep: true });
+
+const cachedImageUrl = ref();
+
+watch(() => cachedImageUrl.value?.value, (newUrl) => {
+  console.log('URL changed:', newUrl);
+  if (newUrl) {
+    imageLoading.value = false;
+  }
+}, { immediate: true });
+
+const handleImageLoad = () => {
+  imageLoading.value = false;
+  emit('imageLoaded');
+};
+
 
 const handleImageError = () => {
   console.error(`Fehler beim Laden des Bildes für Nachricht ${props.message.id} an Pfad: ${props.message.media?.[0]}`);
@@ -243,10 +384,6 @@ const speechBubbleLook = computed(() =>
   props.message.is_own ? "rounded-tr-xs" : "rounded-tl-xs"
 );
 const displayedTime = computed(() => dateToHMTime(props.message.created_at));
-
-const openImageModal = () => {
-  showImageModal.value = true;
-}
 
 watch(() => props.showOwnMsgPopover, (show) => {
   if (!show) {
