@@ -1,5 +1,6 @@
 import type { CachedChatroomsMap } from "~/types/chatroom";
 import type { Message } from "~/types/messages/messageLoading"
+import { truncate, messageLimits } from "~~/validation/commonLimits";
 
 /**
  * This composable is given a messages array ref to work on.
@@ -15,7 +16,7 @@ export const useLocalMessagesManipulator = (chatroomId: string, messages: Ref<Me
     if (cachedChatroom.value) {
       // Update last message/activity
       cachedChatroom.value.last_activity = last_activity.toISOString();
-      cachedChatroom.value.last_message = last_message;
+      cachedChatroom.value.last_message = last_message ? truncate(last_message, messageLimits.contentPreview) : null;
     }
   }
 
