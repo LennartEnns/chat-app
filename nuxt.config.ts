@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      baseUrl: 'https://yapspace-chat.vercel.app',
+      baseUrl: 'https://yapspace.de',
     },
   },
 
