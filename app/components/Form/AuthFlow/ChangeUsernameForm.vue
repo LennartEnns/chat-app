@@ -1,7 +1,7 @@
 <template>
   <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
   <UFormField label="New Username" name="username" required>
-    <UInput v-model="state.username" class="w-full" />
+    <UInput v-model="state.username" class="w-full" :maxlength="userLimits.username" />
   </UFormField>
 
   <UButton label="Change" variant="outline" class="cursor-pointer" type="submit" />
@@ -13,6 +13,7 @@ import { z } from 'zod';
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { usernameSchema } from '~~/validation/schemas/input/inputUserSchemas';
 import { getAuthErrorMessage, logAuthError } from '~~/errors/authErrors';
+import { userLimits } from '~~/validation/commonLimits';
 
 const supabase = useSupabaseClient();
 const operationFeedbackHandler = useOperationFeedbackHandler();

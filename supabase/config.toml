@@ -165,7 +165,7 @@ otp_length = 6
 otp_expiry = 300
 
 # Use a production-ready SMTP server
-[auth.email.smtp]
+# [auth.email.smtp]
 # enabled = true
 # host = "smtp-relay.brevo.com"
 # port = 587

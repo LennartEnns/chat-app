@@ -26,13 +26,14 @@ const seedTestUsers = async() => {
       email_confirm: true,
       password: defaultPassword,
       user_metadata: {
+        first_login: true,
         username: user.username,
         displayname: user.displayname,
         description: user.description,
       },
     })
     if (error) {
-      console.log(error);
+      console.error(error);
       process.exit();
     }
   }
