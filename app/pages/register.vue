@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="gradient-background">
-    <LandingPageHeader />
+    <LandingPageHeader :logged-in="false" />
     <RegistrationForm class="m-auto" />
   </NuxtLayout>
 </template>
