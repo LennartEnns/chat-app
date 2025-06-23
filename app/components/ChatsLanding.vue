@@ -56,7 +56,7 @@
                 :to="`/chat/${chatroom.chatroom_id}`"
                 @click="onUserSelect(chatroom.chatroom_id)"
             >
-            {{ getChatroomDisplayName(chatroom) }}
+                {{ getChatroomDisplayName(chatroom) }}
             </UButton>
         </div>
         </div>
