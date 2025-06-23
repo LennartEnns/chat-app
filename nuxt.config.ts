@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      baseUrl: 'https://yapspace.de',
+      baseUrl: 'https://www.yapspace.de',
     },
   },
 
