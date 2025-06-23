@@ -11,7 +11,7 @@ export const groupChatroomLimits = {
 }
 
 export const messageLimits = {
-    content: 511,
+    content: 2048,
     contentPreview: 30,
 }
 

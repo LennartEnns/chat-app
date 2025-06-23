@@ -12,3 +12,6 @@ begin
   end;
 end;
 $$;
+
+alter table public.messages drop constraint content_length_check;
+alter table public.messages add constraint content_length_check check (length(content) <= 2048);

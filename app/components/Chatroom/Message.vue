@@ -12,105 +12,105 @@
   >
     {{ dateMarkerText }}
   </div>
-  <div :class="`max-w-[90%] mt-2.5 flex flex-col gap-1 ${messagePosition}`">
-    <div v-if="message.is_own" class="flex flex-row gap-1 w-full justify-end">
-      <UPopover
-        v-if="showOwnMsgPopover && !editingMessage"
-        v-model:open="popoverOpen"
-        mode="hover"
-        arrow
-        :content="{
-          align: 'center',
-          side: 'left',
-        }"
-        :ui="{
-          content: 'rounded-xl',
-        }"
-      >
-        <!-- eslint-disable vue/no-v-html -->
-        <div
-          :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
-          @touchstart="popoverOpen = true"
-          v-html="contentLinkified"
-        />
-        <template #content>
-          <div class="p-1 flex flex-row">
-            <UButton
-              icon="i-lucide-trash-2"
-              variant="ghost"
-              color="error"
-              @click="emit('delete')"
+  <div :class="`${message.is_own ? 'w-full' : 'max-w-[90%]'} mt-2.5 flex flex-col gap-1 ${messagePosition}`">
+    <div v-if="message.is_own" class="w-full flex flex-row justify-end">
+      <div class="min-w-20" />
+      <div>
+        <div class="flex flex-row gap-1 w-full justify-end">
+          <UPopover
+            v-if="showOwnMsgPopover && !editingMessage"
+            v-model:open="popoverOpen"
+            mode="hover"
+            arrow
+            :content="{
+              align: 'center',
+              side: 'left',
+            }"
+            :ui="{
+              content: 'rounded-xl',
+            }"
+          >
+            <!-- eslint-disable vue/no-v-html -->
+            <div
+              :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+              @touchstart="popoverOpen = true"
+              v-html="contentLinkified"
             />
-            <UButton
-              icon="i-lucide-edit"
+            <template #content>
+              <div class="p-1 flex flex-row">
+                <UButton
+                  icon="i-lucide-trash-2"
+                  variant="ghost"
+                  color="error"
+                  @click="emit('delete')"
+                />
+                <UButton
+                  icon="i-lucide-edit"
+                  variant="ghost"
+                  color="primary"
+                  @click="onEditMessage"
+                />
+              </div>
+            </template>
+          </UPopover>
+          <div v-else-if="editingMessage" class="flex-grow">
+            <UTextarea
+              id="editArea"
+              v-model="newMessage"
+              size="xl"
               variant="ghost"
-              color="primary"
-              @click="onEditMessage"
-            />
+              autofocus
+              autoresize
+              :ui="{
+                trailing: 'pointer-events-none',
+              }"
+              @vue:mounted="attachEditAreaEventHandler"
+              @blur="handleEditAreaBlur"
+            >
+              <template #trailing>
+                <div ref="editMsgButtonArea">
+                  <UButton
+                    icon="i-lucide-check"
+                    variant="ghost"
+                    :class="{
+                      'pointer-events-auto': !disableMessageUpdate,
+                    }"
+                    :disabled="disableMessageUpdate"
+                    @click="onUpdateMessage"
+                  />
+                </div>
+              </template>
+            </UTextarea>
           </div>
-        </template>
-      </UPopover>
-      <div v-else-if="editingMessage" class="flex-grow">
-        <UTextarea
-          id="editArea"
-          v-model="newMessage"
-          size="xl"
-          variant="ghost"
-          autofocus
-          autoresize
-          :ui="{
-            trailing: 'pointer-events-none',
-          }"
-          @vue:mounted="attachEditAreaEventHandler"
-          @blur="handleEditAreaBlur"
-        >
-          <template #trailing>
-            <div ref="editMsgButtonArea">
-              <UButton
-                icon="i-lucide-check"
-                variant="ghost"
-                :class="{
-                  'pointer-events-auto': !disableMessageUpdate,
-                }"
-                :disabled="disableMessageUpdate"
-                @click="onUpdateMessage"
-              />
-            </div>
-          </template>
-        </UTextarea>
+          <div
+            v-else
+            :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
+            v-html="contentLinkified"
+          />
+        </div>
       </div>
-      <div
-        v-else
-        :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
-        v-html="contentLinkified"
-      />
     </div>
 
     <div
       v-else
-      class="grid items-start"
-      :style="{
-        gridTemplateColumns: showUserInfo ? '40px 1fr' : '',
-      }"
     >
-      <div class="flex justify-center">
+      <div v-if="showUserInfo && message.username" class="flex gap-2 justify-center items-center mb-1">
         <UButton
-          v-if="showUserInfo && message.username"
           variant="ghost"
           class="p-0 h-fit"
           @click="onAvatarClick"
         >
           <UAvatar class="justify-self-center" size="sm" :src="avatarUrl" :alt="usernameInitials" />
         </UButton>
-      </div>
-
-      <div class="flex flex-col gap-1">
         <div
           v-if="showUserInfo && message.username"
           class="text-muted text-sm whitespace-nowrap select-none"
         >
           {{ message.username }}
         </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
         <div
           :class="`whitespace-pre-line wrap-anywhere py-2 px-3 rounded-xl w-fit ${speechBubbleLook} ${themedMessageColor} ${msgSize}`"
           v-html="contentLinkified"
