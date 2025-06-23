@@ -103,6 +103,14 @@
   min-height: 35px;
   background-color: color-mix(in srgb, var(--ui-bg) 20%, transparent);
   filter: invert(40%);
+  padding-left: 4rem;
+  padding-right: 3rem;
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100%;
+  box-sizing: border-box;
 }
 .container-overlay {
   display: grid;
@@ -138,6 +146,8 @@
   grid-column: 1;
   grid-row: 1;
   z-index: 1;
+  overflow: hidden;
+  width: 100%;
 }
 .first-message-container {
   margin-top: 1rem;
@@ -151,4 +161,11 @@
 }
 .custom-button-text {
   color: var(--ui-primary) !important;
+  justify-content: flex-start !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  display: block !important;
+  text-align: left !important;
 }
