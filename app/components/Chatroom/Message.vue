@@ -94,7 +94,7 @@
     <div
       v-else
     >
-      <div v-if="showUserInfo && message.username" class="flex gap-2 justify-center items-center mb-1">
+      <div v-if="showUserInfo && message.username" class="flex flex-row gap-2 justify-start items-center mb-1">
         <UButton
           variant="ghost"
           class="p-0 h-fit"

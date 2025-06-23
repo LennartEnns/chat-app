@@ -1,12 +1,15 @@
 <template>
   <NuxtLayout>
     <UApp>
+      <Analytics />
       <NuxtPage />
     </UApp>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
+import { Analytics } from '@vercel/analytics/nuxt'
+
 const title = 'YapSpace';
 const description = 'A simple, but fun chat app for you and your friends!';
 
