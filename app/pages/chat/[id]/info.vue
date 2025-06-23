@@ -143,7 +143,11 @@
               class="ring-0 glassContainer text-neutral-700 dark:text-white member relative"
             >
               <UButton
-                v-if="editMode && chatroom.current_user_role === 'admin'"
+                v-if="
+                  editMode &&
+                  chatroom.current_user_role === 'admin' &&
+                  member.role !== 'admin'
+                "
                 icon="i-lucide-minus"
                 size="xs"
                 class="size-fit absolute right-1 top-1"
