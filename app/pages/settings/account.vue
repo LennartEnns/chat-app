@@ -48,6 +48,7 @@ import ChangeUsernameForm from "../../components/Form/AuthFlow/ChangeUsernameFor
 import ChangeEmailForm from "../../components/Form/AuthFlow/ChangeEmailForm.vue";
 import { ModalDeleteUser } from "#components";
 
+const supabase = useSupabaseClient();
 const userData = useUserData();
 const flowActions = useFlowActions();
 const overlay = useOverlay();
@@ -59,6 +60,10 @@ async function onDeleteUser() {
   if (res) {
     const deletionSuccessful = await flowActions.requestUserDeletion();
     if (deletionSuccessful) {
+      // Remove session data. Edge Function should have already done global logout.
+      await supabase.auth.signOut({
+        scope: 'local',
+      });
       navigateTo("/");
     }
   }
