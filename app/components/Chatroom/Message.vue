@@ -121,7 +121,7 @@
     <div
       v-if="showHmTime"
       :class="`text-xs text-muted px-2 ${
-        message.is_own ? 'self-end' : `self-start ${showUserInfo ? 'ml-9' : ''}`
+        message.is_own ? 'self-end' : `self-start`
       }`"
     >
       {{ displayedTime }}

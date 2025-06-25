@@ -27,10 +27,12 @@ export const useRealtimeMessagePreviewListeners = async () => {
     const cachedCr = cachedChatrooms.value[roomId];
     if (!cachedCr) return;
 
-    cachedCr.number_new_messages++;
-
     const insertedDate = new Date(payload.created_at);
     const lastMessageDate = new Date(cachedCr.last_activity);
+
+    if (insertedDate.getTime() > new Date(cachedCr.last_inside).getTime()) {
+      cachedCr.number_new_messages++;
+    } 
     // Check whether this event is not deprecated (sent after a newer message has been inserted)
     if (insertedDate.getTime() < lastMessageDate.getTime()) return;
     cachedCr.last_message = payload.content;
