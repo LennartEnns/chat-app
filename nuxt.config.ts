@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
     '@nuxt/eslint',
-    '@nuxtjs/supabase',
+    // '@nuxtjs/supabase',
     'nuxt-particles',
     '@nuxt/image',
   ],
@@ -28,16 +28,16 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2024-11-27',
 
-  supabase: {
-    url: process.env.SUPABASE_URL ?? process.env.NUXT_PUBLIC_SUPABASE_URL,
-    key: process.env.SUPABASE_ANON_KEY ?? process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-    redirectOptions: {
-      login: '/login',
-      callback: '/confirm',
-      exclude: ['/', '/register', '/flow/**'],
-    },
-    types: '~~/database.types.ts',
-  },
+  // supabase: {
+  //   url: process.env.SUPABASE_URL ?? process.env.NUXT_PUBLIC_SUPABASE_URL,
+  //   key: process.env.SUPABASE_ANON_KEY ?? process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+  //   redirectOptions: {
+  //     login: '/login',
+  //     callback: '/confirm',
+  //     exclude: ['/', '/register', '/flow/**'],
+  //   },
+  //   types: '~~/database.types.ts',
+  // },
 
   particles: {
     mode: 'slim',
